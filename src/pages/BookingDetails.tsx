@@ -81,7 +81,7 @@ const BookingDetails = () => {
         userEmail: userEmail || undefined
       });
       
-      // For hot-desk, send to Stripe payment
+      // For hot-desk, send an email and redirect to Stripe payment
       if (space.type === 'hot-desk') {
         // Send email with booking details to admin
         const emailDetails = {
@@ -99,8 +99,11 @@ const BookingDetails = () => {
         
         await sendEmail(emailDetails);
         
-        // Redirect to Stripe
-        window.location.href = 'https://buy.stripe.com/8wM16kexfaO74Eg144';
+        // Use window.location.href for direct redirection to external URL
+        toast.success('Redirecting to payment page...');
+        setTimeout(() => {
+          window.location.href = 'https://buy.stripe.com/8wM16kexfaO74Eg144';
+        }, 1000);
       } else {
         // For other space types, navigate to confirmation page
         navigate(`/confirmation/${booking.id}`);
