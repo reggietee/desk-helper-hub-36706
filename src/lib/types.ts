@@ -30,4 +30,11 @@ export interface Booking {
   };
   createdAt: string;
   status: 'confirmed' | 'cancelled' | 'completed';
+  userEmail?: string;
+}
+
+export interface EmailDetails {
+  to: string;
+  subject: string;
+  body: string;
 }

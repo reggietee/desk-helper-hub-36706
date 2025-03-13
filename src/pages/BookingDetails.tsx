@@ -12,6 +12,9 @@ import { spaces, addBooking } from '@/lib/data';
 import { Space, TimeSlot } from '@/lib/types';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { sendEmail } from '@/lib/email';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const BookingDetails = () => {
   const { spaceId } = useParams<{ spaceId: string }>();
@@ -20,6 +23,8 @@ const BookingDetails = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | null>(null);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
 
   useEffect(() => {
     // Find the space with the matching ID
@@ -33,9 +38,33 @@ const BookingDetails = () => {
     }
   }, [spaceId, navigate]);
 
-  const handleBooking = () => {
+  const validateEmail = (email: string) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUserEmail(e.target.value);
+    if (e.target.value && !validateEmail(e.target.value)) {
+      setEmailError('Please enter a valid email address');
+    } else {
+      setEmailError('');
+    }
+  };
+
+  const handleBooking = async () => {
     if (!space || !selectedDate || !selectedTimeSlot) {
       toast.error('Please select both date and time');
+      return;
+    }
+
+    if (space.type === 'hot-desk' && !userEmail) {
+      toast.error('Please enter your email address');
+      return;
+    }
+
+    if (emailError) {
+      toast.error('Please enter a valid email address');
       return;
     }
 
@@ -48,12 +77,35 @@ const BookingDetails = () => {
         timeSlot: {
           start: selectedTimeSlot.start,
           end: selectedTimeSlot.end
-        }
+        },
+        userEmail: userEmail || undefined
       });
       
-      // Navigate to confirmation page
-      navigate(`/confirmation/${booking.id}`);
-      toast.success('Booking created successfully');
+      // For hot-desk, send to Stripe payment
+      if (space.type === 'hot-desk') {
+        // Send email with booking details to admin
+        const emailDetails = {
+          to: 'reggie@storymode.co',
+          subject: 'New Hot Desk Booking',
+          body: `
+            New booking details:
+            - Space: ${booking.spaceName} (${booking.spaceType})
+            - Date: ${format(new Date(booking.date), 'EEEE, MMMM d, yyyy')}
+            - Time: ${booking.timeSlot.start} - ${booking.timeSlot.end}
+            - User Email: ${userEmail}
+            - Booking ID: ${booking.id}
+          `
+        };
+        
+        await sendEmail(emailDetails);
+        
+        // Redirect to Stripe
+        window.location.href = 'https://buy.stripe.com/8wM16kexfaO74Eg144';
+      } else {
+        // For other space types, navigate to confirmation page
+        navigate(`/confirmation/${booking.id}`);
+        toast.success('Booking created successfully');
+      }
     } catch (error) {
       toast.error('Failed to create booking');
       console.error(error);
@@ -146,6 +198,23 @@ const BookingDetails = () => {
                   selectedTimeSlot={selectedTimeSlot}
                   onTimeSelect={setSelectedTimeSlot}
                 />
+                
+                {space.type === 'hot-desk' && (
+                  <div className="mt-6">
+                    <Label htmlFor="email">Email Address</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="Enter your email"
+                      value={userEmail}
+                      onChange={handleEmailChange}
+                      className={emailError ? "border-red-300" : ""}
+                    />
+                    {emailError && (
+                      <p className="text-red-500 text-sm mt-1">{emailError}</p>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -186,9 +255,9 @@ const BookingDetails = () => {
                 <Button
                   className="w-full mt-6"
                   onClick={handleBooking}
-                  disabled={!selectedDate || !selectedTimeSlot}
+                  disabled={!selectedDate || !selectedTimeSlot || (space.type === 'hot-desk' && (!userEmail || !!emailError))}
                 >
-                  Complete Booking
+                  {space.type === 'hot-desk' ? 'Proceed to Payment' : 'Complete Booking'}
                 </Button>
               </CardContent>
             </Card>
