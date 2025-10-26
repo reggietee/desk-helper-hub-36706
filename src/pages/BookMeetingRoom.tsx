@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
 import { CalendarIcon, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
@@ -16,6 +17,7 @@ export default function BookMeetingRoom() {
   const [userName, setUserName] = useState('');
   const [userId, setUserId] = useState('');
   const [date, setDate] = useState<Date>();
+  const [time, setTime] = useState('09:00');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -46,7 +48,7 @@ export default function BookMeetingRoom() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!date) {
+    if (!date || !time) {
       toast.error('Please select a date and time');
       return;
     }
@@ -66,6 +68,18 @@ export default function BookMeetingRoom() {
         .single();
 
       if (error) throw error;
+
+      // Send email notification
+      await supabase.functions.invoke('send-notification', {
+        body: {
+          type: 'meeting_room',
+          data: {
+            user_name: userName,
+            date: format(date, 'PPP'),
+            time: time,
+          },
+        },
+      });
 
       toast.success('Redirecting to payment...');
       
@@ -108,7 +122,7 @@ export default function BookMeetingRoom() {
               </div>
 
               <div className="space-y-2">
-                <Label>Booking Date & Time</Label>
+                <Label>Booking Date</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -133,6 +147,25 @@ export default function BookMeetingRoom() {
                     />
                   </PopoverContent>
                 </Popover>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="time">Booking Time</Label>
+                <Select value={time} onValueChange={setTime}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 24 }, (_, i) => {
+                      const hour = i.toString().padStart(2, '0');
+                      return (
+                        <SelectItem key={hour} value={`${hour}:00`}>
+                          {`${hour}:00`}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
               </div>
 
               <Button type="submit" className="w-full" disabled={loading}>

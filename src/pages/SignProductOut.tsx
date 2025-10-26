@@ -24,6 +24,7 @@ export default function SignProductOut() {
   const [userId, setUserId] = useState('');
   const [selectedItem, setSelectedItem] = useState('');
   const [date, setDate] = useState<Date>();
+  const [time, setTime] = useState('09:00');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -54,7 +55,7 @@ export default function SignProductOut() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedItem || !date) {
+    if (!selectedItem || !date || !time) {
       toast.error('Please fill in all fields');
       return;
     }
@@ -72,6 +73,19 @@ export default function SignProductOut() {
         });
 
       if (error) throw error;
+
+      // Send email notification
+      await supabase.functions.invoke('send-notification', {
+        body: {
+          type: 'product_signout',
+          data: {
+            user_name: userName,
+            item_type: selectedItem,
+            date: format(date, 'PPP'),
+            time: time,
+          },
+        },
+      });
 
       toast.success('Product signed out successfully!');
       navigate('/dashboard');
@@ -127,7 +141,7 @@ export default function SignProductOut() {
               </div>
 
               <div className="space-y-2">
-                <Label>Checkout Date & Time</Label>
+                <Label>Checkout Date</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -151,6 +165,25 @@ export default function SignProductOut() {
                     />
                   </PopoverContent>
                 </Popover>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="time">Checkout Time</Label>
+                <Select value={time} onValueChange={setTime}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 24 }, (_, i) => {
+                      const hour = i.toString().padStart(2, '0');
+                      return (
+                        <SelectItem key={hour} value={`${hour}:00`}>
+                          {`${hour}:00`}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
               </div>
 
               <Button type="submit" className="w-full" disabled={loading}>

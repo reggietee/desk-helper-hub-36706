@@ -78,6 +78,18 @@ export default function SubmitIssue() {
 
       if (error) throw error;
 
+      // Send email notification
+      await supabase.functions.invoke('send-notification', {
+        body: {
+          type: 'issue',
+          data: {
+            user_name: userName,
+            issue_type: issueType,
+            details: details,
+          },
+        },
+      });
+
       toast.success('Issue submitted successfully! We will look into it.');
       navigate('/dashboard');
     } catch (error: any) {
