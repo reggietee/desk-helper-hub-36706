@@ -98,39 +98,39 @@ export default function SignProductOut() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" onClick={() => navigate('/dashboard')}>
+      <header className="bg-card border-b border-border shadow-sm">
+        <div className="container mx-auto px-6 py-5">
+          <Button variant="ghost" onClick={() => navigate('/dashboard')} className="rounded-xl">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Dashboard
           </Button>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-2xl">
-        <Card>
-          <CardHeader>
-            <CardTitle>Equipment Checkout</CardTitle>
-            <CardDescription>
+      <main className="container mx-auto px-6 py-12 max-w-3xl">
+        <Card className="haven-card border-0">
+          <CardHeader className="space-y-3">
+            <CardTitle className="text-3xl font-heading font-bold text-foreground">Equipment Checkout</CardTitle>
+            <CardDescription className="text-base text-muted-foreground">
               Request to borrow shared equipment for your workspace
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label>Your Name</Label>
-                <div className="p-3 bg-muted rounded-md">
-                  <p className="text-sm">{userName}</p>
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold text-foreground">Your Name</Label>
+                <div className="p-4 bg-muted rounded-xl">
+                  <p className="text-base font-medium">{userName}</p>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="item">Select Item</Label>
+              <div className="space-y-3">
+                <Label htmlFor="item" className="text-sm font-semibold text-foreground">Select Item</Label>
                 <Select value={selectedItem} onValueChange={setSelectedItem}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-12 rounded-xl border-2">
                     <SelectValue placeholder="Choose an item" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-xl">
                     {items.map((item) => (
                       <SelectItem key={item.value} value={item.value}>
                         {item.label}
@@ -140,14 +140,14 @@ export default function SignProductOut() {
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label>Checkout Date</Label>
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold text-foreground">Checkout Date</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       className={cn(
-                        'w-full justify-start text-left font-normal',
+                        'w-full h-12 justify-start text-left font-normal rounded-xl border-2',
                         !date && 'text-muted-foreground'
                       )}
                     >
@@ -155,25 +155,25 @@ export default function SignProductOut() {
                       {date ? format(date, 'PPP') : 'Pick a date'}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
+                  <PopoverContent className="w-auto p-0 rounded-xl" align="start">
                     <Calendar
                       mode="single"
                       selected={date}
                       onSelect={setDate}
                       initialFocus
-                      className="pointer-events-auto"
+                      className="pointer-events-auto rounded-xl"
                     />
                   </PopoverContent>
                 </Popover>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="time">Checkout Time</Label>
+              <div className="space-y-3">
+                <Label htmlFor="time" className="text-sm font-semibold text-foreground">Checkout Time</Label>
                 <Select value={time} onValueChange={setTime}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-12 rounded-xl border-2">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-xl">
                     {Array.from({ length: 24 }, (_, i) => {
                       const hour = i.toString().padStart(2, '0');
                       return (

@@ -144,21 +144,21 @@ export default function BookCallRoom() {
             </Alert>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label>Your Name</Label>
-                <div className="p-3 bg-muted rounded-md">
-                  <p className="text-sm">{userName}</p>
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold text-foreground">Your Name</Label>
+                <div className="p-4 bg-muted rounded-xl">
+                  <p className="text-base font-medium">{userName}</p>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label>Booking Date</Label>
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold text-foreground">Booking Date</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       className={cn(
-                        'w-full justify-start text-left font-normal',
+                        'w-full h-12 justify-start text-left font-normal rounded-xl border-2',
                         !date && 'text-muted-foreground'
                       )}
                     >
@@ -166,26 +166,26 @@ export default function BookCallRoom() {
                       {date ? format(date, 'PPP') : 'Pick a date'}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
+                  <PopoverContent className="w-auto p-0 rounded-xl" align="start">
                     <Calendar
                       mode="single"
                       selected={date}
                       onSelect={setDate}
                       initialFocus
                       disabled={(date) => date < new Date()}
-                      className="pointer-events-auto"
+                      className="pointer-events-auto rounded-xl"
                     />
                   </PopoverContent>
                 </Popover>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="time">Booking Time</Label>
+              <div className="space-y-3">
+                <Label htmlFor="time" className="text-sm font-semibold text-foreground">Booking Time</Label>
                 <Select value={time} onValueChange={setTime}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-12 rounded-xl border-2">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-xl">
                     {Array.from({ length: 24 }, (_, i) => {
                       const hour = i.toString().padStart(2, '0');
                       return (

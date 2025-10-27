@@ -95,40 +95,40 @@ export default function BookPrivateOffice() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" onClick={() => navigate('/dashboard')}>
+      <header className="bg-card border-b border-border shadow-sm">
+        <div className="container mx-auto px-6 py-5">
+          <Button variant="ghost" onClick={() => navigate('/dashboard')} className="rounded-xl">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Dashboard
           </Button>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-2xl">
-        <Card>
-          <CardHeader>
-            <CardTitle>Book Private Office</CardTitle>
-            <CardDescription>
+      <main className="container mx-auto px-6 py-12 max-w-3xl">
+        <Card className="haven-card border-0">
+          <CardHeader className="space-y-3">
+            <CardTitle className="text-3xl font-heading font-bold text-foreground">Book Private Office</CardTitle>
+            <CardDescription className="text-base text-muted-foreground">
               Reserve the private office for a full day
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label>Your Name</Label>
-                <div className="p-3 bg-muted rounded-md">
-                  <p className="text-sm">{userName}</p>
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold text-foreground">Your Name</Label>
+                <div className="p-4 bg-muted rounded-xl">
+                  <p className="text-base font-medium">{userName}</p>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label>Booking Date</Label>
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold text-foreground">Booking Date</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       className={cn(
-                        'w-full justify-start text-left font-normal',
+                        'w-full h-12 justify-start text-left font-normal rounded-xl border-2',
                         !date && 'text-muted-foreground'
                       )}
                     >
@@ -136,26 +136,26 @@ export default function BookPrivateOffice() {
                       {date ? format(date, 'PPP') : 'Pick a date'}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
+                  <PopoverContent className="w-auto p-0 rounded-xl" align="start">
                     <Calendar
                       mode="single"
                       selected={date}
                       onSelect={setDate}
                       initialFocus
                       disabled={(date) => date < new Date()}
-                      className="pointer-events-auto"
+                      className="pointer-events-auto rounded-xl"
                     />
                   </PopoverContent>
                 </Popover>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="time">Start Time</Label>
+              <div className="space-y-3">
+                <Label htmlFor="time" className="text-sm font-semibold text-foreground">Start Time</Label>
                 <Select value={startTime} onValueChange={setStartTime}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-12 rounded-xl border-2">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-xl">
                     {Array.from({ length: 24 }, (_, i) => {
                       const hour = i.toString().padStart(2, '0');
                       return (
@@ -168,18 +168,18 @@ export default function BookPrivateOffice() {
                 </Select>
               </div>
 
-              <div className="space-y-3">
-                <Label>Duration</Label>
-                <RadioGroup value={duration} onValueChange={setDuration}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="half" id="half" />
-                    <Label htmlFor="half" className="font-normal cursor-pointer">
+              <div className="space-y-4">
+                <Label className="text-sm font-semibold text-foreground">Duration</Label>
+                <RadioGroup value={duration} onValueChange={setDuration} className="space-y-3">
+                  <div className="flex items-center space-x-3 p-4 rounded-xl border-2 border-border hover:border-accent transition-colors cursor-pointer">
+                    <RadioGroupItem value="half" id="half" className="text-accent" />
+                    <Label htmlFor="half" className="font-medium cursor-pointer flex-1">
                       Half Day (4 hours)
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="full" id="full" />
-                    <Label htmlFor="full" className="font-normal cursor-pointer">
+                  <div className="flex items-center space-x-3 p-4 rounded-xl border-2 border-border hover:border-accent transition-colors cursor-pointer">
+                    <RadioGroupItem value="full" id="full" className="text-accent" />
+                    <Label htmlFor="full" className="font-medium cursor-pointer flex-1">
                       Full Day (8 hours)
                     </Label>
                   </div>

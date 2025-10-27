@@ -148,44 +148,51 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+      <header className="bg-card border-b border-border shadow-sm">
+        <div className="container mx-auto px-6 py-5 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold">Dashboard</h1>
-            <p className="text-sm text-muted-foreground">Welcome back, {userName}!</p>
+            <h1 className="text-2xl font-heading font-bold text-primary">Haven Workspace</h1>
+            <p className="text-sm text-muted-foreground mt-1">Welcome back, {userName}!</p>
           </div>
-          <Button variant="outline" onClick={handleLogout}>
+          <Button variant="ghost" onClick={handleLogout} className="rounded-xl">
             <LogOut className="mr-2 h-4 w-4" />
-            Logout
+            Sign Out
           </Button>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <main className="container mx-auto px-6 py-12">
+        <div className="mb-12">
+          <h2 className="text-4xl font-heading font-bold mb-3 text-foreground">
+            Hi {userName}, Welcome Back to Haven
+          </h2>
+          <p className="text-lg text-muted-foreground">
+            What would you like to do today?
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {cards.map((card) => (
             <Card
               key={card.path}
-              className="hover:shadow-lg transition-shadow cursor-pointer relative"
+              className="cursor-pointer haven-card border-0 group relative"
               onClick={() => navigate(card.path)}
             >
               {card.comingSoon && (
-                <Badge className="absolute top-4 right-4" variant="secondary">
+                <Badge className="absolute top-6 right-6 bg-accent/20 text-primary border-0" variant="secondary">
                   Coming Soon
                 </Badge>
               )}
-              <CardHeader>
-                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary mb-4">
-                  {card.icon}
+              <CardHeader className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-accent/10 rounded-2xl group-hover:bg-accent/20 transition-colors">
+                    {card.icon}
+                  </div>
+                  <CardTitle className="text-xl font-heading font-bold text-foreground">{card.title}</CardTitle>
                 </div>
-                <CardTitle>{card.title}</CardTitle>
-                <CardDescription>{card.description}</CardDescription>
+                <CardDescription className="text-base text-muted-foreground leading-relaxed">
+                  {card.description}
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <Button variant={card.comingSoon ? 'outline' : 'default'} className="w-full" disabled={card.comingSoon}>
-                  {card.comingSoon ? 'Coming Soon' : 'Open'}
-                </Button>
-              </CardContent>
             </Card>
           ))}
         </div>

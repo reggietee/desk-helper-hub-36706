@@ -5,44 +5,44 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
+    --background: 210 20% 98%;
+    --foreground: 0 0% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 0 0% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 0 0% 10%;
 
-    --primary: 210 100% 50%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 170 50% 15%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222 47% 11.2%;
+    --secondary: 72 60% 60%;
+    --secondary-foreground: 170 50% 15%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 210 20% 96%;
+    --muted-foreground: 0 0% 42%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 72 60% 60%;
+    --accent-foreground: 170 50% 15%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 0 0% 92%;
+    --input: 0 0% 92%;
+    --ring: 72 60% 60%;
 
-    --radius: 0.8rem;
+    --radius: 1.5rem;
 
     --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-foreground: 0 0% 10%;
+    --sidebar-primary: 170 50% 15%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 72 60% 60%;
+    --sidebar-accent-foreground: 170 50% 15%;
+    --sidebar-border: 0 0% 92%;
+    --sidebar-ring: 72 60% 60%;
   }
 }
 
@@ -59,11 +59,19 @@
   }
 
   @font-face {
-    font-family: 'Inter var';
-    font-weight: 100 900;
+    font-family: 'Plus Jakarta Sans';
+    font-weight: 200 800;
     font-display: swap;
     font-style: normal;
-    src: url('https://rsms.me/inter/font-files/Inter-roman.var.woff2?v=3.19') format('woff2');
+    src: url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200..800&display=swap');
+  }
+  
+  @font-face {
+    font-family: 'Manrope';
+    font-weight: 200 800;
+    font-display: swap;
+    font-style: normal;
+    src: url('https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap');
   }
 }
 
@@ -73,14 +81,18 @@
   }
   
   .blurred-background {
-    @apply bg-white/80 backdrop-blur-lg border border-gray-100;
+    @apply bg-white/80 backdrop-blur-lg border border-border;
   }
   
   .button-hover {
-    @apply transition-all duration-300 ease-in-out;
+    @apply transition-all duration-300 ease-in-out hover:-translate-y-0.5;
   }
   
   .card-shadow {
-    @apply shadow-[0_4px_20px_rgba(0,0,0,0.05)];
+    @apply shadow-[0_8px_24px_rgba(0,0,0,0.08)];
+  }
+  
+  .haven-card {
+    @apply bg-card rounded-[20px] p-6 card-shadow transition-all duration-300 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)];
   }
 }

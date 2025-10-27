@@ -109,63 +109,70 @@ export default function GuestDayPass() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" onClick={() => navigate('/dashboard')}>
+      <header className="bg-card border-b border-border shadow-sm">
+        <div className="container mx-auto px-6 py-5">
+          <Button variant="ghost" onClick={() => navigate('/dashboard')} className="rounded-xl">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Dashboard
           </Button>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-16 max-w-2xl">
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Guest Day Pass Information</CardTitle>
-            <CardDescription>
-              All members have access to free guest passes each month:
+      <main className="container mx-auto px-6 py-12 max-w-3xl">
+        <Card className="haven-card border-0 mb-8 bg-accent/5">
+          <CardHeader className="space-y-3">
+            <CardTitle className="text-2xl font-heading font-bold text-foreground">Guest Day Pass Information</CardTitle>
+            <CardDescription className="text-base text-muted-foreground">
+              All members have access to free guest passes each month
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-              <li>Monthly Members: 1 free guest pass per month</li>
-              <li>Annual Members: 2 free guest passes per month</li>
+            <ul className="space-y-3 text-muted-foreground">
+              <li className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-accent"></div>
+                <span className="text-base">Monthly Members: 1 free guest pass per month</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-accent"></div>
+                <span className="text-base">Annual Members: 2 free guest passes per month</span>
+              </li>
             </ul>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Request Guest Day Pass</CardTitle>
-            <CardDescription>
+        <Card className="haven-card border-0">
+          <CardHeader className="space-y-3">
+            <CardTitle className="text-3xl font-heading font-bold text-foreground">Request Guest Day Pass</CardTitle>
+            <CardDescription className="text-base text-muted-foreground">
               Submit a request for your guest to visit the workspace
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="userName">Member Name</Label>
+              <div className="space-y-3">
+                <Label htmlFor="userName" className="text-sm font-semibold text-foreground">Member Name</Label>
                 <Input
                   id="userName"
                   value={userName}
                   disabled
-                  className="bg-muted"
+                  className="bg-muted h-12 rounded-xl border-2"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="guestName">Guest's Full Name</Label>
+              <div className="space-y-3">
+                <Label htmlFor="guestName" className="text-sm font-semibold text-foreground">Guest's Full Name</Label>
                 <Input
                   id="guestName"
                   value={guestName}
                   onChange={(e) => setGuestName(e.target.value)}
                   placeholder="Enter guest's full name"
                   required
+                  className="h-12 rounded-xl border-2 focus:ring-accent"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="guestEmail">Guest's Email</Label>
+              <div className="space-y-3">
+                <Label htmlFor="guestEmail" className="text-sm font-semibold text-foreground">Guest's Email</Label>
                 <Input
                   id="guestEmail"
                   type="email"
@@ -173,11 +180,12 @@ export default function GuestDayPass() {
                   onChange={(e) => setGuestEmail(e.target.value)}
                   placeholder="guest@example.com"
                   required
+                  className="h-12 rounded-xl border-2 focus:ring-accent"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="guestPhone">Guest's Phone Number</Label>
+              <div className="space-y-3">
+                <Label htmlFor="guestPhone" className="text-sm font-semibold text-foreground">Guest's Phone Number</Label>
                 <Input
                   id="guestPhone"
                   type="tel"
@@ -185,17 +193,18 @@ export default function GuestDayPass() {
                   onChange={(e) => setGuestPhone(e.target.value)}
                   placeholder="(555) 123-4567"
                   required
+                  className="h-12 rounded-xl border-2 focus:ring-accent"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label>Arrival Date</Label>
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold text-foreground">Arrival Date</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       className={cn(
-                        "w-full justify-start text-left font-normal",
+                        "w-full h-12 justify-start text-left font-normal rounded-xl border-2",
                         !arrivalDate && "text-muted-foreground"
                       )}
                     >
@@ -203,25 +212,26 @@ export default function GuestDayPass() {
                       {arrivalDate ? format(arrivalDate, "PPP") : "Select arrival date"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
+                  <PopoverContent className="w-auto p-0 rounded-xl">
                     <Calendar
                       mode="single"
                       selected={arrivalDate}
                       onSelect={setArrivalDate}
                       disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                       initialFocus
+                      className="rounded-xl"
                     />
                   </PopoverContent>
                 </Popover>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="arrivalTime">Arrival Time</Label>
+              <div className="space-y-3">
+                <Label htmlFor="arrivalTime" className="text-sm font-semibold text-foreground">Arrival Time</Label>
                 <Select value={arrivalTime} onValueChange={setArrivalTime}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-12 rounded-xl border-2">
                     <SelectValue placeholder="Select arrival time" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-xl">
                     {timeSlots.map((time) => (
                       <SelectItem key={time} value={time}>
                         {time}

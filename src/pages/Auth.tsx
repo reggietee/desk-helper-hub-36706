@@ -89,83 +89,90 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/10 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Welcome</CardTitle>
-          <CardDescription className="text-center">
-            Sign in to access your coworking dashboard
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-md haven-card border-0">
+        <CardHeader className="space-y-3">
+          <CardTitle className="text-3xl text-center font-heading font-bold text-foreground">
+            Welcome to Haven Workspace
+          </CardTitle>
+          <CardDescription className="text-center text-base text-muted-foreground">
+            Sign in to your account or create a new one
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs value={isLogin ? 'login' : 'signup'} onValueChange={(v) => setIsLogin(v === 'login')}>
-            <TabsList className="grid w-full grid-cols-2 mb-4">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 bg-muted rounded-xl p-1 mb-6">
+              <TabsTrigger value="login" className="rounded-lg data-[state=active]:bg-card">Login</TabsTrigger>
+              <TabsTrigger value="signup" className="rounded-lg data-[state=active]:bg-card">Sign Up</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
-              <form onSubmit={handleAuth} className="space-y-4">
+              <form onSubmit={handleAuth} className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="login-email">Email</Label>
+                  <Label htmlFor="login-email" className="text-sm font-semibold text-foreground">Email</Label>
                   <Input
                     id="login-email"
                     name="email"
                     type="email"
                     placeholder="you@example.com"
                     required
+                    className="h-11 rounded-xl border-2 focus:ring-accent"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="login-password">Password</Label>
+                  <Label htmlFor="login-password" className="text-sm font-semibold text-foreground">Password</Label>
                   <Input
                     id="login-password"
                     name="password"
                     type="password"
                     placeholder="••••••"
                     required
+                    className="h-11 rounded-xl border-2 focus:ring-accent"
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Loading...' : 'Sign In'}
+                  {loading ? 'Signing in...' : 'Sign In'}
                 </Button>
               </form>
             </TabsContent>
 
             <TabsContent value="signup">
-              <form onSubmit={handleAuth} className="space-y-4">
+              <form onSubmit={handleAuth} className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="signup-name">Full Name</Label>
+                  <Label htmlFor="signup-name" className="text-sm font-semibold text-foreground">Full Name</Label>
                   <Input
                     id="signup-name"
                     name="fullName"
                     type="text"
                     placeholder="John Doe"
                     required
+                    className="h-11 rounded-xl border-2 focus:ring-accent"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
+                  <Label htmlFor="signup-email" className="text-sm font-semibold text-foreground">Email</Label>
                   <Input
                     id="signup-email"
                     name="email"
                     type="email"
                     placeholder="you@example.com"
                     required
+                    className="h-11 rounded-xl border-2 focus:ring-accent"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
+                  <Label htmlFor="signup-password" className="text-sm font-semibold text-foreground">Password</Label>
                   <Input
                     id="signup-password"
                     name="password"
                     type="password"
                     placeholder="••••••"
                     required
+                    className="h-11 rounded-xl border-2 focus:ring-accent"
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Loading...' : 'Create Account'}
+                  {loading ? 'Creating account...' : 'Create Account'}
                 </Button>
               </form>
             </TabsContent>

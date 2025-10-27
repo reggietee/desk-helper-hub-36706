@@ -65,7 +65,8 @@ export default {
 				}
 			},
 			fontFamily: {
-				sans: ['Inter var', 'sans-serif'],
+				sans: ['Manrope', 'Inter', 'sans-serif'],
+				heading: ['Plus Jakarta Sans', 'sans-serif'],
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

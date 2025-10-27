@@ -101,39 +101,39 @@ export default function SubmitIssue() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" onClick={() => navigate('/dashboard')}>
+      <header className="bg-card border-b border-border shadow-sm">
+        <div className="container mx-auto px-6 py-5">
+          <Button variant="ghost" onClick={() => navigate('/dashboard')} className="rounded-xl">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Dashboard
           </Button>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-2xl">
-        <Card>
-          <CardHeader>
-            <CardTitle>Submit an Issue</CardTitle>
-            <CardDescription>
+      <main className="container mx-auto px-6 py-12 max-w-3xl">
+        <Card className="haven-card border-0">
+          <CardHeader className="space-y-3">
+            <CardTitle className="text-3xl font-heading font-bold text-foreground">Submit an Issue</CardTitle>
+            <CardDescription className="text-base text-muted-foreground">
               Report an issue or request maintenance
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label>Your Name</Label>
-                <div className="p-3 bg-muted rounded-md">
-                  <p className="text-sm">{userName}</p>
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold text-foreground">Your Name</Label>
+                <div className="p-4 bg-muted rounded-xl">
+                  <p className="text-base font-medium">{userName}</p>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="issue-type">Issue Type</Label>
+              <div className="space-y-3">
+                <Label htmlFor="issue-type" className="text-sm font-semibold text-foreground">Issue Type</Label>
                 <Select value={issueType} onValueChange={setIssueType}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-12 rounded-xl border-2">
                     <SelectValue placeholder="Select issue type" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-xl">
                     {issueTypes.map((type) => (
                       <SelectItem key={type} value={type}>
                         {type}
@@ -143,8 +143,8 @@ export default function SubmitIssue() {
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="details">Details</Label>
+              <div className="space-y-3">
+                <Label htmlFor="details" className="text-sm font-semibold text-foreground">Details</Label>
                 <Textarea
                   id="details"
                   placeholder="Please describe the issue in detail..."
@@ -153,13 +153,14 @@ export default function SubmitIssue() {
                   rows={6}
                   maxLength={1000}
                   required
+                  className="rounded-xl border-2 focus:ring-accent resize-none"
                 />
                 <p className="text-xs text-muted-foreground text-right">
                   {details.length}/1000 characters
                 </p>
               </div>
 
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" className="w-full" disabled={loading} size="lg">
                 {loading ? 'Submitting...' : 'Submit Issue'}
               </Button>
             </form>
