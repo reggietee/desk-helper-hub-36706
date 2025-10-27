@@ -80,7 +80,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const emailResponse = await resend.emails.send({
-      from: "Haven Workspace <onboarding@resend.dev>",
+      from: "Haven Workspace <notifications@havenworkspace.ca>",
       to: ["reggie@havenworkspace.ca"],
       subject: subject,
       html: html,
