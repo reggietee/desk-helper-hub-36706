@@ -81,12 +81,9 @@ export default function BookMeetingRoom() {
         },
       });
 
-      toast.success('Redirecting to payment...');
+      toast.success('Your meeting room booking request has been submitted for approval.');
       
-      // Redirect to Stripe payment (placeholder URL for now)
-      setTimeout(() => {
-        window.location.href = 'https://buy.stripe.com/test_placeholder_meeting_room';
-      }, 1000);
+      navigate('/dashboard');
     } catch (error: any) {
       toast.error(error.message || 'Failed to create booking');
       setLoading(false);
@@ -169,7 +166,7 @@ export default function BookMeetingRoom() {
               </div>
 
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Processing...' : 'Proceed to Payment'}
+                {loading ? 'Submitting...' : 'Submit Request'}
               </Button>
             </form>
           </CardContent>

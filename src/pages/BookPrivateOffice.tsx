@@ -84,12 +84,9 @@ export default function BookPrivateOffice() {
         },
       });
 
-      toast.success('Redirecting to payment...');
+      toast.success('Your private office booking request has been submitted for approval.');
       
-      // Redirect to Stripe payment (placeholder URL for now)
-      setTimeout(() => {
-        window.location.href = 'https://buy.stripe.com/test_placeholder_private_office';
-      }, 1000);
+      navigate('/dashboard');
     } catch (error: any) {
       toast.error(error.message || 'Failed to create booking');
       setLoading(false);
@@ -190,7 +187,7 @@ export default function BookPrivateOffice() {
               </div>
 
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Processing...' : 'Proceed to Payment'}
+                {loading ? 'Submitting...' : 'Submit Request'}
               </Button>
             </form>
           </CardContent>

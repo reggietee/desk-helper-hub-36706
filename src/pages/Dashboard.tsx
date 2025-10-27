@@ -74,10 +74,10 @@ export default function Dashboard() {
 
   const cards: DashboardCard[] = [
     {
-      title: 'Sign Product Out',
+      title: 'Equipment Checkout',
       description: 'Borrow shared items from the coworking space',
       icon: <Package className="h-6 w-6" />,
-      path: '/sign-product-out',
+      path: '/equipment-checkout',
     },
     {
       title: 'Book Call Room',
@@ -107,20 +107,18 @@ export default function Dashboard() {
       title: 'Guest Day Pass',
       description: 'Request a day pass for your guest',
       icon: <UserPlus className="h-6 w-6" />,
-      path: '/coming-soon',
-      comingSoon: true,
-    },
-    {
-      title: 'Refer a Friend',
-      description: 'Invite friends and earn rewards',
-      icon: <Gift className="h-6 w-6" />,
-      path: '/coming-soon',
-      comingSoon: true,
+      path: '/guest-day-pass',
     },
     {
       title: 'Special Offers',
       description: 'Exclusive deals for members',
       icon: <Tag className="h-6 w-6" />,
+      path: '/special-offers',
+    },
+    {
+      title: 'Refer a Friend',
+      description: 'Invite friends and earn rewards',
+      icon: <Gift className="h-6 w-6" />,
       path: '/coming-soon',
       comingSoon: true,
     },

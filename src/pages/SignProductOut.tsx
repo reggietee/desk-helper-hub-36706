@@ -87,7 +87,7 @@ export default function SignProductOut() {
         },
       });
 
-      toast.success('Product signed out successfully!');
+      toast.success('Your equipment checkout request has been submitted for approval.');
       navigate('/dashboard');
     } catch (error: any) {
       toast.error(error.message || 'Failed to sign out product');
@@ -110,9 +110,9 @@ export default function SignProductOut() {
       <main className="container mx-auto px-4 py-8 max-w-2xl">
         <Card>
           <CardHeader>
-            <CardTitle>Sign Product Out</CardTitle>
+            <CardTitle>Equipment Checkout</CardTitle>
             <CardDescription>
-              Borrow shared items from the coworking space for short-term use
+              Request to borrow shared equipment for your workspace
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -187,7 +187,7 @@ export default function SignProductOut() {
               </div>
 
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Submitting...' : 'Sign Out Product'}
+                {loading ? 'Submitting...' : 'Submit Request'}
               </Button>
             </form>
           </CardContent>

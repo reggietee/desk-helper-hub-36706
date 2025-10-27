@@ -9,7 +9,7 @@ const corsHeaders = {
 };
 
 interface NotificationRequest {
-  type: 'product_signout' | 'call_room' | 'meeting_room' | 'private_office' | 'issue';
+  type: 'product_signout' | 'call_room' | 'meeting_room' | 'private_office' | 'issue' | 'guest_day_pass';
   data: Record<string, any>;
 }
 
@@ -75,6 +75,19 @@ const handler = async (req: Request): Promise<Response> => {
           <p><strong>Issue Type:</strong> ${data.issue_type}</p>
           <p><strong>Details:</strong></p>
           <p>${data.details}</p>
+        `;
+        break;
+
+      case 'guest_day_pass':
+        subject = 'Guest Day Pass Request';
+        html = `
+          <h2>Guest Day Pass Request</h2>
+          <p><strong>Member:</strong> ${data.user_name}</p>
+          <p><strong>Guest Name:</strong> ${data.guest_name}</p>
+          <p><strong>Guest Email:</strong> ${data.guest_email}</p>
+          <p><strong>Guest Phone:</strong> ${data.guest_phone}</p>
+          <p><strong>Arrival Date:</strong> ${data.date}</p>
+          <p><strong>Arrival Time:</strong> ${data.time}</p>
         `;
         break;
     }

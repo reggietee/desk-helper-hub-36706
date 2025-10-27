@@ -38,6 +38,42 @@ export type Database = {
         }
         Relationships: []
       }
+      guest_day_pass_requests: {
+        Row: {
+          arrival_date: string
+          arrival_time: string
+          created_at: string
+          guest_email: string
+          guest_name: string
+          guest_phone: string
+          id: string
+          user_id: string
+          user_name: string
+        }
+        Insert: {
+          arrival_date: string
+          arrival_time: string
+          created_at?: string
+          guest_email: string
+          guest_name: string
+          guest_phone: string
+          id?: string
+          user_id: string
+          user_name: string
+        }
+        Update: {
+          arrival_date?: string
+          arrival_time?: string
+          created_at?: string
+          guest_email?: string
+          guest_name?: string
+          guest_phone?: string
+          id?: string
+          user_id?: string
+          user_name?: string
+        }
+        Relationships: []
+      }
       issues: {
         Row: {
           created_at: string | null
