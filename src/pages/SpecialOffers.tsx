@@ -51,7 +51,7 @@ export default function SpecialOffers() {
             </CardHeader>
             <CardContent className="space-y-6">
               <p className="text-muted-foreground text-base">
-                Get 25% off all business legal services including contracts, incorporation, and legal consultation.
+                Get 25% off legal fees for contracts, incorporation, and legal consultation.
               </p>
               <Button onClick={handleContactZannes} className="w-full sm:w-auto" size="lg">
                 <Mail className="mr-2 h-4 w-4" />
@@ -64,7 +64,7 @@ export default function SpecialOffers() {
             <CardHeader>
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <CardTitle className="text-2xl font-heading font-bold text-foreground">Apertivo</CardTitle>
+                  <CardTitle className="text-2xl font-heading font-bold text-foreground">Aperitivo by Revé</CardTitle>
                   <CardDescription className="text-base mt-2">
                     Fresh foods and specialty coffee
                   </CardDescription>
@@ -77,9 +77,6 @@ export default function SpecialOffers() {
             <CardContent className="space-y-4">
               <p className="text-muted-foreground text-base">
                 Enjoy 15% off all fresh foods and coffee. Just mention you're a member at Haven to receive your discount.
-              </p>
-              <p className="text-sm text-muted-foreground italic bg-muted/50 p-4 rounded-xl">
-                Simply show your Haven membership or mention you're a member when ordering
               </p>
             </CardContent>
           </Card>

@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import havenLogo from '@/assets/haven-logo.svg';
 import {
   Package,
   Phone,
@@ -26,6 +27,23 @@ interface DashboardCard {
   path: string;
   comingSoon?: boolean;
 }
+
+const greetings = [
+  (name: string) => `Welcome back, ${name} 👋`,
+  (name: string) => `Good to see you again, ${name}!`,
+  (name: string) => `Hey there, ${name} — ready to get things done?`,
+  (name: string) => `Howdy, ${name} 🤠`,
+  (name: string) => `Hi ${name}, your space is ready 🌿`,
+  (name: string) => `Welcome in, ${name} — make yourself at home.`,
+  (name: string) => `Hey ${name}, great to have you back at Haven.`,
+];
+
+const getDailyGreeting = (name: string) => {
+  const today = new Date().toDateString();
+  const seed = today.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const index = seed % greetings.length;
+  return greetings[index](name);
+};
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -151,8 +169,8 @@ export default function Dashboard() {
       <header className="bg-card border-b border-border shadow-sm">
         <div className="container mx-auto px-6 py-5 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-heading font-bold text-primary">Haven Workspace</h1>
-            <p className="text-sm text-muted-foreground mt-1">Welcome back, {userName}!</p>
+            <img src={havenLogo} alt="Haven" className="h-8 md:h-10 w-auto" />
+            <p className="text-sm text-muted-foreground mt-1">Haven Terminal</p>
           </div>
           <Button variant="ghost" onClick={handleLogout} className="rounded-xl">
             <LogOut className="mr-2 h-4 w-4" />
@@ -164,7 +182,7 @@ export default function Dashboard() {
       <main className="container mx-auto px-6 py-12">
         <div className="mb-12">
           <h2 className="text-4xl font-heading font-bold mb-3 text-foreground">
-            Hi {userName}, Welcome Back to Haven
+            {getDailyGreeting(userName)}
           </h2>
           <p className="text-lg text-muted-foreground">
             What would you like to do today?
