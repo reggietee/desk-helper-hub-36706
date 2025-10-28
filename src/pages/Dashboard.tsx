@@ -62,11 +62,15 @@ export default function Dashboard() {
       }
 
       // Get user profile
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('full_name, status')
         .eq('id', session.user.id)
-        .single();
+        .maybeSingle();
+
+      if (profileError) {
+        console.error('Profile fetch error:', profileError);
+      }
 
       if (profile) {
         setUserName(profile.full_name);
@@ -77,6 +81,11 @@ export default function Dashboard() {
           navigate('/auth');
           return;
         }
+      } else {
+        // No profile found
+        console.error('No profile found for user');
+        navigate('/auth');
+        return;
       }
       
       setLoading(false);

@@ -33,35 +33,54 @@ export default function Auth() {
       return;
     }
 
-    // Check if user is already logged in
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('status')
-          .eq('id', session.user.id)
-          .single();
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
         
-        if (profile?.status === 'approved') {
-          navigate('/dashboard');
-        } else {
-          setUserStatus(profile?.status || null);
+        if (session) {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('status')
+            .eq('id', session.user.id)
+            .maybeSingle();
+          
+          if (profileError) {
+            console.error('Profile fetch error:', profileError);
+          }
+          
+          if (profile?.status === 'approved') {
+            navigate('/dashboard');
+          } else {
+            setUserStatus(profile?.status || null);
+          }
         }
+      } catch (error) {
+        console.error('Session check error:', error);
       }
-    });
+    };
+
+    checkSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session && event === 'SIGNED_IN') {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('status')
-          .eq('id', session.user.id)
-          .single();
-        
-        if (profile?.status === 'approved') {
-          navigate('/dashboard');
-        } else {
-          setUserStatus(profile?.status || null);
+        try {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('status')
+            .eq('id', session.user.id)
+            .maybeSingle();
+          
+          if (profileError) {
+            console.error('Profile fetch error:', profileError);
+          }
+          
+          if (profile?.status === 'approved') {
+            navigate('/dashboard');
+          } else {
+            setUserStatus(profile?.status || null);
+          }
+        } catch (error) {
+          console.error('Auth state change error:', error);
         }
       }
     });
@@ -87,6 +106,7 @@ export default function Auth() {
 
       if (!validation.success) {
         toast.error(validation.error.errors[0].message);
+        setLoading(false);
         return;
       }
 
@@ -99,20 +119,26 @@ export default function Auth() {
         if (error) throw error;
 
         // Check user status
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('status')
           .eq('id', data.user.id)
-          .single();
+          .maybeSingle();
+
+        if (profileError) {
+          console.error('Profile fetch error:', profileError);
+        }
 
         if (profile?.status === 'declined') {
           await supabase.auth.signOut();
           setUserStatus('declined');
           toast.error('Your account request was not approved');
+          setLoading(false);
           return;
         } else if (profile?.status === 'pending') {
           setUserStatus('pending');
           toast.info('Your account is awaiting approval');
+          setLoading(false);
           return;
         }
 
@@ -131,9 +157,9 @@ export default function Auth() {
 
         if (error) throw error;
 
-        // Send approval notification
+        // Send approval notification (non-blocking)
         if (data.user) {
-          await supabase.functions.invoke('send-notification', {
+          supabase.functions.invoke('send-notification', {
             body: {
               type: 'new_signup',
               data: {
@@ -143,6 +169,8 @@ export default function Auth() {
                 signupTime: new Date().toISOString(),
               },
             },
+          }).catch(err => {
+            console.error('Failed to send approval notification:', err);
           });
         }
 
@@ -164,12 +192,19 @@ export default function Auth() {
     const email = formData.get('email') as string;
 
     try {
-      const { error } = await supabase.functions.invoke('request-password-reset', {
-        body: { email },
+      const validation = authSchema.pick({ email: true }).safeParse({ email });
+      if (!validation.success) {
+        toast.error(validation.error.errors[0].message);
+        setLoading(false);
+        return;
+      }
+
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth?reset=true`,
       });
 
       if (error) throw error;
-      toast.success('If an account exists, a reset link has been sent to your email');
+      toast.success('Password reset link sent to your email');
       setShowForgotPassword(false);
     } catch (error: any) {
       toast.error(error.message || 'An error occurred');
@@ -188,11 +223,19 @@ export default function Auth() {
 
     try {
       if (newPassword !== confirmPassword) {
-        throw new Error('Passwords do not match');
+        toast.error('Passwords do not match');
+        setLoading(false);
+        return;
       }
 
-      const { error } = await supabase.functions.invoke('reset-password', {
-        body: { token: resetToken, newPassword },
+      if (newPassword.length < 6) {
+        toast.error('Password must be at least 6 characters');
+        setLoading(false);
+        return;
+      }
+
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
       });
 
       if (error) throw error;
