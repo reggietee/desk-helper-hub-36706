@@ -157,25 +157,37 @@ export default function Auth() {
 
         if (error) throw error;
 
-        // Send approval notification (non-blocking)
+        // Send approval notification
         if (data.user) {
-          supabase.functions.invoke('send-notification', {
-            body: {
-              type: 'new_signup',
-              data: {
-                userId: data.user.id,
-                name: fullName,
-                email: email,
-                signupTime: new Date().toISOString(),
+          console.log('Attempting to send approval notification for user:', data.user.id);
+          
+          try {
+            const notificationResponse = await supabase.functions.invoke('send-notification', {
+              body: {
+                type: 'new_signup',
+                data: {
+                  userId: data.user.id,
+                  name: fullName,
+                  email: email,
+                  signupTime: new Date().toISOString(),
+                },
               },
-            },
-          }).catch(err => {
+            });
+
+            if (notificationResponse.error) {
+              console.error('Approval notification error:', notificationResponse.error);
+              toast.warning('Account created, but approval email may not have been sent. Please contact support.');
+            } else {
+              console.log('Approval notification sent successfully:', notificationResponse.data);
+              toast.success('Account created! An approval request has been sent to the admin.');
+            }
+          } catch (err) {
             console.error('Failed to send approval notification:', err);
-          });
+            toast.warning('Account created, but approval email failed. Please contact support at reggie@havenworkspace.ca');
+          }
         }
 
         setUserStatus('pending');
-        toast.success('Account created! Awaiting approval.');
       }
     } catch (error: any) {
       toast.error(error.message || 'An error occurred');

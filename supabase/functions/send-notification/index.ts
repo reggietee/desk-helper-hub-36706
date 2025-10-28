@@ -32,10 +32,23 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    console.log('=== Send Notification Function Called ===');
+    
     const { type, data }: NotificationRequest = await req.json();
+    console.log('Notification type:', type);
+    console.log('Notification data:', JSON.stringify(data, null, 2));
+
+    // Check if RESEND_API_KEY is configured
+    const resendKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendKey) {
+      console.error('CRITICAL: RESEND_API_KEY not configured!');
+      throw new Error('Email service not configured. Please configure RESEND_API_KEY.');
+    }
+    console.log('RESEND_API_KEY is configured');
 
     let subject = '';
     let html = '';
+    let to = ["reggie@havenworkspace.ca"];
 
     switch (type) {
       case 'new_signup':
@@ -171,16 +184,25 @@ const handler = async (req: Request): Promise<Response> => {
         break;
     }
 
+    console.log('Preparing to send email...');
+    console.log('To:', to);
+    console.log('Subject:', subject);
+    console.log('From: Haven Workspace <notifications@havenworkspace.ca>');
+
     const emailResponse = await resend.emails.send({
       from: "Haven Workspace <notifications@havenworkspace.ca>",
-      to: ["reggie@havenworkspace.ca"],
+      to: to,
       subject: subject,
       html: html,
     });
 
-    console.log("Email sent successfully:", emailResponse);
+    console.log("✅ Email sent successfully:", JSON.stringify(emailResponse, null, 2));
 
-    return new Response(JSON.stringify(emailResponse), {
+    return new Response(JSON.stringify({ 
+      success: true, 
+      emailId: emailResponse.id,
+      message: 'Email sent successfully' 
+    }), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
@@ -188,9 +210,17 @@ const handler = async (req: Request): Promise<Response> => {
       },
     });
   } catch (error: any) {
-    console.error("Error in send-notification function:", error);
+    console.error("❌ Error in send-notification function:");
+    console.error("Error message:", error.message);
+    console.error("Error stack:", error.stack);
+    console.error("Full error:", JSON.stringify(error, null, 2));
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: error.toString(),
+        type: 'send-notification-error'
+      }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
