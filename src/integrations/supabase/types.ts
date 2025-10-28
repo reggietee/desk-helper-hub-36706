@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      approval_events: {
+        Row: {
+          action: string
+          id: string
+          ip_address: string | null
+          performed_at: string
+          token_used: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          id?: string
+          ip_address?: string | null
+          performed_at?: string
+          token_used?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          id?: string
+          ip_address?: string | null
+          performed_at?: string
+          token_used?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       call_room_bookings: {
         Row: {
           booking_time: string
@@ -131,6 +169,33 @@ export type Database = {
         }
         Relationships: []
       }
+      password_reset_tokens: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          token: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          token: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          token?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       private_office_bookings: {
         Row: {
           booking_date: string
@@ -187,21 +252,33 @@ export type Database = {
       }
       profiles: {
         Row: {
+          approved_at: string | null
           created_at: string | null
+          declined_at: string | null
+          declined_reason: string | null
           full_name: string
           id: string
+          status: string
           updated_at: string | null
         }
         Insert: {
+          approved_at?: string | null
           created_at?: string | null
+          declined_at?: string | null
+          declined_reason?: string | null
           full_name: string
           id: string
+          status?: string
           updated_at?: string | null
         }
         Update: {
+          approved_at?: string | null
           created_at?: string | null
+          declined_at?: string | null
+          declined_reason?: string | null
           full_name?: string
           id?: string
+          status?: string
           updated_at?: string | null
         }
         Relationships: []

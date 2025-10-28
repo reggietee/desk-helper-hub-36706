@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import havenLogo from '@/assets/haven-logo.svg';
 import {
   Package,
@@ -48,6 +49,7 @@ const getDailyGreeting = (name: string) => {
 export default function Dashboard() {
   const navigate = useNavigate();
   const [userName, setUserName] = useState<string>('');
+  const [userStatus, setUserStatus] = useState<string>('approved');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -62,12 +64,19 @@ export default function Dashboard() {
       // Get user profile
       const { data: profile } = await supabase
         .from('profiles')
-        .select('full_name')
+        .select('full_name, status')
         .eq('id', session.user.id)
         .single();
 
       if (profile) {
         setUserName(profile.full_name);
+        setUserStatus(profile.status || 'approved');
+        
+        // Redirect if not approved
+        if (profile.status === 'pending' || profile.status === 'declined') {
+          navigate('/auth');
+          return;
+        }
       }
       
       setLoading(false);
@@ -169,8 +178,7 @@ export default function Dashboard() {
       <header className="bg-card border-b border-border shadow-sm">
         <div className="container mx-auto px-6 py-5 flex justify-between items-center">
           <div>
-            <img src={havenLogo} alt="Haven" className="h-8 md:h-10 w-auto" />
-            <p className="text-sm text-muted-foreground mt-1">Haven Terminal</p>
+            <img src={havenLogo} alt="Haven Workspace" className="h-10 md:h-14 w-auto" />
           </div>
           <Button variant="ghost" onClick={handleLogout} className="rounded-xl">
             <LogOut className="mr-2 h-4 w-4" />
