@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import havenLogo from '@/assets/haven-logo.svg';
 
 const authSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -91,10 +92,10 @@ export default function Auth() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md haven-card border-0">
-        <CardHeader className="space-y-3">
-          <CardTitle className="text-3xl text-center font-heading font-bold text-foreground">
-            Welcome to Haven Workspace
-          </CardTitle>
+        <CardHeader className="space-y-4">
+          <div className="flex justify-center">
+            <img src={havenLogo} alt="Haven Workspace" className="h-12 md:h-16 w-auto" />
+          </div>
           <CardDescription className="text-center text-base text-muted-foreground">
             Sign in to your account or create a new one
           </CardDescription>

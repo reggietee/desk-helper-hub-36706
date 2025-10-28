@@ -169,8 +169,7 @@ export default function Dashboard() {
       <header className="bg-card border-b border-border shadow-sm">
         <div className="container mx-auto px-6 py-5 flex justify-between items-center">
           <div>
-            <img src={havenLogo} alt="Haven" className="h-8 md:h-10 w-auto" />
-            <p className="text-sm text-muted-foreground mt-1">Haven Terminal</p>
+            <img src={havenLogo} alt="Haven Workspace" className="h-12 md:h-16 w-auto" />
           </div>
           <Button variant="ghost" onClick={handleLogout} className="rounded-xl">
             <LogOut className="mr-2 h-4 w-4" />
