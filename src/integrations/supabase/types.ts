@@ -14,6 +14,104 @@ export type Database = {
   }
   public: {
     Tables: {
+      approval_events: {
+        Row: {
+          action: string
+          id: string
+          ip_address: string | null
+          performed_at: string
+          token_used: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          id?: string
+          ip_address?: string | null
+          performed_at?: string
+          token_used?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          id?: string
+          ip_address?: string | null
+          performed_at?: string
+          token_used?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      auth_attempt_logs: {
+        Row: {
+          created_at: string | null
+          failure_reason: string | null
+          id: string
+          ip_address: string | null
+          success: boolean | null
+          user_agent: string | null
+          user_email: string
+        }
+        Insert: {
+          created_at?: string | null
+          failure_reason?: string | null
+          id?: string
+          ip_address?: string | null
+          success?: boolean | null
+          user_agent?: string | null
+          user_email: string
+        }
+        Update: {
+          created_at?: string | null
+          failure_reason?: string | null
+          id?: string
+          ip_address?: string | null
+          success?: boolean | null
+          user_agent?: string | null
+          user_email?: string
+        }
+        Relationships: []
+      }
+      auth_rate_limits: {
+        Row: {
+          attempt_count: number | null
+          created_at: string | null
+          endpoint: string
+          id: string
+          ip_address: string
+          locked_until: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          attempt_count?: number | null
+          created_at?: string | null
+          endpoint: string
+          id?: string
+          ip_address: string
+          locked_until?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          attempt_count?: number | null
+          created_at?: string | null
+          endpoint?: string
+          id?: string
+          ip_address?: string
+          locked_until?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       call_room_bookings: {
         Row: {
           booking_time: string
@@ -131,6 +229,66 @@ export type Database = {
         }
         Relationships: []
       }
+      otp_tokens: {
+        Row: {
+          attempts: number | null
+          created_at: string | null
+          expires_at: string
+          id: string
+          token: string
+          used: boolean | null
+          user_email: string
+          verified_at: string | null
+        }
+        Insert: {
+          attempts?: number | null
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          token: string
+          used?: boolean | null
+          user_email: string
+          verified_at?: string | null
+        }
+        Update: {
+          attempts?: number | null
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          token?: string
+          used?: boolean | null
+          user_email?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
+      password_reset_tokens: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          token: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          token: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          token?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       private_office_bookings: {
         Row: {
           booking_date: string
@@ -187,21 +345,33 @@ export type Database = {
       }
       profiles: {
         Row: {
+          approved_at: string | null
           created_at: string | null
+          declined_at: string | null
+          declined_reason: string | null
           full_name: string
           id: string
+          status: string
           updated_at: string | null
         }
         Insert: {
+          approved_at?: string | null
           created_at?: string | null
+          declined_at?: string | null
+          declined_reason?: string | null
           full_name: string
           id: string
+          status?: string
           updated_at?: string | null
         }
         Update: {
+          approved_at?: string | null
           created_at?: string | null
+          declined_at?: string | null
+          declined_reason?: string | null
           full_name?: string
           id?: string
+          status?: string
           updated_at?: string | null
         }
         Relationships: []
@@ -211,7 +381,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      cleanup_expired_otp_tokens: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
