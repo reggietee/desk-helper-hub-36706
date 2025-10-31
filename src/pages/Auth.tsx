@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
+import { HCaptchaComponent } from '@/components/auth/HCaptcha';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import havenLogo from '@/assets/haven-logo.svg';
@@ -24,6 +25,9 @@ export default function Auth() {
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [fullName, setFullName] = useState('');
+  const [requiresCaptcha, setRequiresCaptcha] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [retryAfter, setRetryAfter] = useState<number | null>(null);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -62,23 +66,62 @@ export default function Auth() {
         return;
       }
 
+      // Check if captcha is required but not provided
+      if (requiresCaptcha && !captchaToken) {
+        toast.error('Please complete the CAPTCHA verification');
+        setLoading(false);
+        return;
+      }
+
       setEmail(emailValue);
       setFullName(fullNameValue || '');
 
-      const { error } = await supabase.auth.signInWithOtp({
-        email: emailValue,
-        options: {
-          data: {
-            full_name: fullNameValue || 'User',
-          },
+      // Get user's IP and user agent
+      const ipResponse = await fetch('https://api.ipify.org?format=json');
+      const { ip } = await ipResponse.json();
+
+      // Call our custom send-otp edge function
+      const { data, error } = await supabase.functions.invoke('send-otp', {
+        body: {
+          email: emailValue,
+          fullName: fullNameValue || 'User',
+          ipAddress: ip,
+          userAgent: navigator.userAgent,
+          captchaToken: captchaToken,
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message?.includes('429') || data?.requiresCaptcha) {
+          setRequiresCaptcha(true);
+          if (data?.retryAfter) {
+            setRetryAfter(data.retryAfter);
+            toast.error(`Too many attempts. Please try again in ${data.retryAfter} minutes.`);
+          } else {
+            toast.error('Too many attempts. Please complete the CAPTCHA.');
+          }
+          setLoading(false);
+          return;
+        }
+        throw error;
+      }
+
+      if (data?.error) {
+        if (data.requiresCaptcha) {
+          setRequiresCaptcha(true);
+          toast.error(data.error);
+          setLoading(false);
+          return;
+        }
+        throw new Error(data.error);
+      }
       
       toast.success('Verification code sent to your email!');
       setStep('otp');
+      setRequiresCaptcha(false);
+      setCaptchaToken(null);
     } catch (error: any) {
+      console.error('Send code error:', error);
       toast.error(error.message || 'Failed to send verification code');
     } finally {
       setLoading(false);
@@ -94,16 +137,43 @@ export default function Auth() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.verifyOtp({
-        email,
-        token: otp,
-        type: 'email',
+      // Get user's IP and user agent
+      const ipResponse = await fetch('https://api.ipify.org?format=json');
+      const { ip } = await ipResponse.json();
+
+      // Call our custom verify-otp edge function
+      const { data, error } = await supabase.functions.invoke('verify-otp', {
+        body: {
+          email,
+          token: otp,
+          fullName: fullName || 'User',
+          ipAddress: ip,
+          userAgent: navigator.userAgent,
+        },
       });
 
       if (error) throw error;
-      
-      toast.success('Successfully verified!');
+      if (data?.error) throw new Error(data.error);
+
+      if (data?.success && data?.accessToken && data?.refreshToken) {
+        // Set the session using the tokens
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: data.accessToken,
+          refresh_token: data.refreshToken,
+        });
+
+        if (sessionError) {
+          console.error('Session error:', sessionError);
+          throw sessionError;
+        }
+
+        toast.success('Successfully verified!');
+        navigate('/dashboard');
+      } else {
+        throw new Error('Invalid response from server');
+      }
     } catch (error: any) {
+      console.error('Verify OTP error:', error);
       toast.error(error.message || 'Invalid verification code');
     } finally {
       setLoading(false);
@@ -113,19 +183,28 @@ export default function Auth() {
   const handleResendCode = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          data: {
-            full_name: fullName || 'User',
-          },
+      // Get user's IP and user agent
+      const ipResponse = await fetch('https://api.ipify.org?format=json');
+      const { ip } = await ipResponse.json();
+
+      // Call our custom send-otp edge function
+      const { data, error } = await supabase.functions.invoke('send-otp', {
+        body: {
+          email,
+          fullName: fullName || 'User',
+          ipAddress: ip,
+          userAgent: navigator.userAgent,
+          captchaToken: captchaToken,
         },
       });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
       toast.success('New verification code sent!');
       setOtp('');
     } catch (error: any) {
+      console.error('Resend code error:', error);
       toast.error(error.message || 'Failed to resend code');
     } finally {
       setLoading(false);
@@ -135,6 +214,24 @@ export default function Auth() {
   const handleBack = () => {
     setStep('email');
     setOtp('');
+    setRequiresCaptcha(false);
+    setCaptchaToken(null);
+    setRetryAfter(null);
+  };
+
+  const handleCaptchaVerify = (token: string) => {
+    setCaptchaToken(token);
+    toast.success('CAPTCHA verified');
+  };
+
+  const handleCaptchaError = () => {
+    toast.error('CAPTCHA verification failed');
+    setCaptchaToken(null);
+  };
+
+  const handleCaptchaExpire = () => {
+    toast.error('CAPTCHA expired. Please try again.');
+    setCaptchaToken(null);
   };
 
   return (
@@ -175,7 +272,28 @@ export default function Auth() {
                       className="h-11 rounded-xl border-2 focus:ring-accent"
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
+                  
+                  {requiresCaptcha && (
+                    <div className="space-y-2">
+                      <HCaptchaComponent
+                        onVerify={handleCaptchaVerify}
+                        onError={handleCaptchaError}
+                        onExpire={handleCaptchaExpire}
+                      />
+                    </div>
+                  )}
+                  
+                  {retryAfter && (
+                    <p className="text-sm text-destructive text-center">
+                      Too many attempts. Please try again in {retryAfter} minutes.
+                    </p>
+                  )}
+                  
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    disabled={loading || (retryAfter !== null && retryAfter > 0)}
+                  >
                     {loading ? 'Sending code...' : 'Send Verification Code'}
                   </Button>
                 </form>
@@ -205,7 +323,28 @@ export default function Auth() {
                       className="h-11 rounded-xl border-2 focus:ring-accent"
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
+                  
+                  {requiresCaptcha && (
+                    <div className="space-y-2">
+                      <HCaptchaComponent
+                        onVerify={handleCaptchaVerify}
+                        onError={handleCaptchaError}
+                        onExpire={handleCaptchaExpire}
+                      />
+                    </div>
+                  )}
+                  
+                  {retryAfter && (
+                    <p className="text-sm text-destructive text-center">
+                      Too many attempts. Please try again in {retryAfter} minutes.
+                    </p>
+                  )}
+                  
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    disabled={loading || (retryAfter !== null && retryAfter > 0)}
+                  >
                     {loading ? 'Sending code...' : 'Send Verification Code'}
                   </Button>
                 </form>
