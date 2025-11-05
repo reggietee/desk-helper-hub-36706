@@ -189,10 +189,10 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Magic link generated successfully");
 
     // Verify the OTP using the hashed token to create a proper session
+    // Note: Only token_hash and type should be provided, not email
     const { data: sessionData, error: sessionError } = await supabase.auth.verifyOtp({
       type: 'email',
       token_hash: linkData.properties.hashed_token,
-      email: email,
     });
 
     if (sessionError || !sessionData?.session) {
