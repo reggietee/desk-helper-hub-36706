@@ -175,18 +175,32 @@ const handler = async (req: Request): Promise<Response> => {
       console.log("Existing user found:", userId);
     }
 
-    // Generate session token
-    const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
+    // Generate session using admin API - create a magic link and extract the hashed token
+    const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
       type: 'magiclink',
       email: email,
     });
 
-    if (sessionError || !sessionData) {
-      console.error("Error generating session:", sessionError);
+    if (linkError || !linkData) {
+      console.error("Error generating link:", linkError);
       throw new Error("Failed to create session");
     }
 
-    console.log("Session generated successfully");
+    console.log("Magic link generated successfully");
+
+    // Verify the OTP using the hashed token to create a proper session
+    const { data: sessionData, error: sessionError } = await supabase.auth.verifyOtp({
+      type: 'email',
+      token_hash: linkData.properties.hashed_token,
+      email: email,
+    });
+
+    if (sessionError || !sessionData?.session) {
+      console.error("Error creating session:", sessionError);
+      throw new Error("Failed to create session");
+    }
+
+    console.log("Session created successfully");
 
     // Log successful attempt
     await supabase
@@ -204,9 +218,9 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({ 
         success: true,
-        accessToken: sessionData.properties.access_token,
-        refreshToken: sessionData.properties.refresh_token,
-        userId: userId
+        accessToken: sessionData.session.access_token,
+        refreshToken: sessionData.session.refresh_token,
+        userId: sessionData.user.id
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
