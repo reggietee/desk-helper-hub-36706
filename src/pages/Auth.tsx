@@ -91,17 +91,23 @@ export default function Auth() {
         },
       });
 
+      // Handle rate limiting (429 errors)
       if (error) {
-        if (error.message?.includes('429') || data?.requiresCaptcha) {
-          setRequiresCaptcha(true);
-          if (data?.retryAfter) {
-            setRetryAfter(data.retryAfter);
-            toast.error(`Too many attempts. Please try again in ${data.retryAfter} minutes.`);
-          } else {
-            toast.error('Too many attempts. Please complete the CAPTCHA.');
+        // Check if this is a FunctionsHttpError with rate limiting
+        if (error.message?.includes('non-2xx') || error.message?.includes('429')) {
+          // The actual response data might be in error context
+          const errorData = data || {};
+          if (errorData.requiresCaptcha) {
+            setRequiresCaptcha(true);
+            if (errorData.retryAfter) {
+              setRetryAfter(errorData.retryAfter);
+              toast.error(`Too many attempts. Please wait ${errorData.retryAfter} minutes or complete the CAPTCHA below.`);
+            } else {
+              toast.error('Too many attempts. Please complete the CAPTCHA below.');
+            }
+            setLoading(false);
+            return;
           }
-          setLoading(false);
-          return;
         }
         throw error;
       }
@@ -109,7 +115,12 @@ export default function Auth() {
       if (data?.error) {
         if (data.requiresCaptcha) {
           setRequiresCaptcha(true);
-          toast.error(data.error);
+          if (data.retryAfter) {
+            setRetryAfter(data.retryAfter);
+            toast.error(`Too many attempts. Please wait ${data.retryAfter} minutes or complete the CAPTCHA below.`);
+          } else {
+            toast.error(data.error);
+          }
           setLoading(false);
           return;
         }
