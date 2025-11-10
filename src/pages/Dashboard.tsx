@@ -17,9 +17,11 @@ import {
   Handshake,
   Calendar,
   LogOut,
+  Settings,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { WeeklyPresence } from '@/components/dashboard/WeeklyPresence';
+import { ProfileSettings } from '@/components/dashboard/ProfileSettings';
 
 interface DashboardCard {
   title: string;
@@ -49,8 +51,10 @@ const getDailyGreeting = (name: string) => {
 export default function Dashboard() {
   const navigate = useNavigate();
   const [userName, setUserName] = useState<string>('');
+  const [userEmail, setUserEmail] = useState<string>('');
   const [userId, setUserId] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const [profileSettingsOpen, setProfileSettingsOpen] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -60,6 +64,8 @@ export default function Dashboard() {
         navigate('/auth');
         return;
       }
+
+      setUserEmail(session.user.email || '');
 
       // Get user profile
       const { data: profile } = await supabase
@@ -174,10 +180,21 @@ export default function Dashboard() {
           <div>
             <img src={havenLogo} alt="Haven Workspace" className="h-12 md:h-16 w-auto" />
           </div>
-          <Button variant="ghost" onClick={handleLogout} className="rounded-xl">
-            <LogOut className="mr-2 h-4 w-4" />
-            Sign Out
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setProfileSettingsOpen(true)} 
+              className="rounded-xl"
+            >
+              <Settings className="mr-2 h-4 w-4" />
+              Profile
+            </Button>
+            <Button variant="ghost" onClick={handleLogout} className="rounded-xl">
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign Out
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -223,6 +240,14 @@ export default function Dashboard() {
           ))}
         </div>
       </main>
+
+      <ProfileSettings
+        open={profileSettingsOpen}
+        onOpenChange={setProfileSettingsOpen}
+        currentName={userName}
+        currentEmail={userEmail}
+        onNameUpdate={setUserName}
+      />
     </div>
   );
 }
