@@ -55,6 +55,7 @@ export function SchedulePlanModal({
   const [showName, setShowName] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -142,6 +143,15 @@ export function SchedulePlanModal({
   };
 
   const handleSave = async () => {
+    // Validation: Check if any selected day has no time windows
+    const invalidDays = days.filter((day) => day.selected && day.timeWindows.length === 0);
+    if (invalidDays.length > 0) {
+      setValidationError("Please select at least one time window for each day you plan to be in.");
+      return;
+    }
+
+    setValidationError(null);
+
     try {
       setSaving(true);
       const weekStartStr = format(weekStart, "yyyy-MM-dd");
@@ -227,57 +237,45 @@ export function SchedulePlanModal({
             </div>
 
             {/* Days Selection */}
-            <div className="space-y-3">
+            <div className="space-y-2">
               {days.map((day) => (
                 <div
                   key={day.dayIndex}
-                  className={`rounded-lg border p-4 transition-colors ${
+                  className={`rounded-lg border p-3 transition-colors ${
                     day.selected ? "bg-primary/5 border-primary" : "bg-background"
                   }`}
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 space-y-3">
-                      <div className="flex items-center gap-3">
-                        <Checkbox
-                          id={`day-${day.dayIndex}`}
-                          checked={day.selected}
-                          onCheckedChange={() => handleDayToggle(day.dayIndex)}
-                        />
-                        <Label
-                          htmlFor={`day-${day.dayIndex}`}
-                          className="text-base font-medium cursor-pointer"
-                        >
-                          {day.dayName}
-                        </Label>
-                      </div>
+                  <div className="flex items-center gap-3">
+                    <Checkbox
+                      id={`day-${day.dayIndex}`}
+                      checked={day.selected}
+                      onCheckedChange={() => handleDayToggle(day.dayIndex)}
+                    />
+                    <Label
+                      htmlFor={`day-${day.dayIndex}`}
+                      className="text-sm font-medium cursor-pointer min-w-[90px]"
+                    >
+                      {day.dayName}
+                    </Label>
 
-                      {day.selected && (
-                        <div className="ml-7 space-y-2">
-                          <p className="text-sm text-muted-foreground mb-2">
-                            Select time windows:
-                          </p>
-                          <div className="flex flex-wrap gap-3">
-                            {TIME_WINDOW_OPTIONS.map((option) => (
-                              <div key={option.value} className="flex items-center gap-2">
-                                <Checkbox
-                                  id={`${day.dayIndex}-${option.value}`}
-                                  checked={day.timeWindows.includes(option.value)}
-                                  onCheckedChange={() =>
-                                    handleTimeWindowToggle(day.dayIndex, option.value)
-                                  }
-                                />
-                                <Label
-                                  htmlFor={`${day.dayIndex}-${option.value}`}
-                                  className="text-sm cursor-pointer flex items-center gap-1"
-                                >
-                                  <span>{option.emoji}</span>
-                                  <span>{option.label}</span>
-                                </Label>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+                    {/* Time Window Toggles */}
+                    <div className="flex-1 flex items-center gap-4">
+                      {TIME_WINDOW_OPTIONS.map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => handleTimeWindowToggle(day.dayIndex, option.value)}
+                          disabled={!day.selected}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-colors ${
+                            day.timeWindows.includes(option.value)
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted text-muted-foreground hover:bg-muted/80"
+                          } ${!day.selected ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}
+                        >
+                          <span className="text-base leading-none">{option.emoji}</span>
+                          <span>{option.label}</span>
+                        </button>
+                      ))}
                     </div>
 
                     {day.selected && (
@@ -285,7 +283,7 @@ export function SchedulePlanModal({
                         variant="ghost"
                         size="icon"
                         onClick={() => handleRemoveDay(day.dayIndex)}
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -309,13 +307,20 @@ export function SchedulePlanModal({
           </div>
         )}
 
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={saving}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={saving || loading}>
-            {saving ? "Saving..." : "Save Schedule"}
-          </Button>
+        <DialogFooter className="flex-col gap-3">
+          {validationError && (
+            <div className="w-full text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2">
+              {validationError}
+            </div>
+          )}
+          <div className="flex gap-2 w-full justify-end">
+            <Button variant="outline" onClick={onClose} disabled={saving}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={saving || loading}>
+              {saving ? "Saving..." : "Save Schedule"}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
