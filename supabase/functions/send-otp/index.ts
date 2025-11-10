@@ -155,7 +155,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send email with OTP
     const emailResponse = await resend.emails.send({
-      from: "Haven Workspace <onboarding@resend.dev>",
+      from: "Haven Workspace <noreply@havenworkspace.ca>",
       to: [email],
       subject: "Your Haven Workspace Verification Code",
       html: `

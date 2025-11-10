@@ -112,7 +112,7 @@ const handler = async (req: Request): Promise<Response> => {
       if (newAttempts >= 3) {
         try {
           await resend.emails.send({
-            from: "Haven Workspace <onboarding@resend.dev>",
+            from: "Haven Workspace <security@havenworkspace.ca>",
             to: [email],
             subject: "Security Alert: Multiple Failed Login Attempts",
             html: `
