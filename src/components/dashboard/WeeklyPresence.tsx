@@ -10,8 +10,7 @@ interface WeeklySchedule {
   id: string;
   user_id: string;
   day_of_week: number;
-  start_time: string;
-  end_time: string;
+  time_windows: string[];
   show_name: boolean;
   profiles?: {
     full_name: string;
@@ -134,9 +133,12 @@ export function WeeklyPresence({ userId }: { userId: string }) {
               const daySchedules = getOccupancyForDay(index);
               const occupancyCount = daySchedules.length;
               const colorClass = getColorForOccupancy(occupancyCount);
-              const visibleNames = daySchedules
+              const visibleMembers = daySchedules
                 .filter((s) => s.show_name && s.profiles)
-                .map((s) => s.profiles!.full_name);
+                .map((s) => ({
+                  name: s.profiles!.full_name,
+                  timeWindows: s.time_windows
+                }));
 
               return (
                 <div
@@ -153,11 +155,13 @@ export function WeeklyPresence({ userId }: { userId: string }) {
                     <Users className="h-3 w-3" />
                     <span className="text-xs font-medium">{occupancyCount}</span>
                   </div>
-                  {visibleNames.length > 0 && (
+                  {visibleMembers.length > 0 && (
                     <div className="text-xs space-y-1 mt-2">
-                      {visibleNames.map((name, i) => (
+                      {visibleMembers.map((member, i) => (
                         <div key={i} className="truncate opacity-75">
-                          {name}
+                          {member.name} {member.timeWindows.includes('morning') && '☀️'}
+                          {member.timeWindows.includes('afternoon') && '🌤'}
+                          {member.timeWindows.includes('evening') && '🌙'}
                         </div>
                       ))}
                     </div>

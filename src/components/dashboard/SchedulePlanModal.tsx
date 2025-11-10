@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -10,17 +11,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { Loader2, Trash2 } from "lucide-react";
+import { X } from "lucide-react";
 
 interface DaySchedule {
   dayIndex: number;
   dayName: string;
   selected: boolean;
-  startTime: string;
-  endTime: string;
+  timeWindows: string[];
 }
 
 interface SchedulePlanModalProps {
@@ -31,6 +30,12 @@ interface SchedulePlanModalProps {
   onSaved: () => void;
 }
 
+const TIME_WINDOW_OPTIONS = [
+  { value: 'morning', label: 'Morning', emoji: '☀️' },
+  { value: 'afternoon', label: 'Afternoon', emoji: '🌤' },
+  { value: 'evening', label: 'Evening', emoji: '🌙' },
+];
+
 export function SchedulePlanModal({
   isOpen,
   onClose,
@@ -38,34 +43,31 @@ export function SchedulePlanModal({
   weekStart,
   onSaved,
 }: SchedulePlanModalProps) {
-  const [showName, setShowName] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [days, setDays] = useState<DaySchedule[]>([
+    { dayIndex: 0, dayName: "Monday", selected: false, timeWindows: [] },
+    { dayIndex: 1, dayName: "Tuesday", selected: false, timeWindows: [] },
+    { dayIndex: 2, dayName: "Wednesday", selected: false, timeWindows: [] },
+    { dayIndex: 3, dayName: "Thursday", selected: false, timeWindows: [] },
+    { dayIndex: 4, dayName: "Friday", selected: false, timeWindows: [] },
+    { dayIndex: 5, dayName: "Saturday", selected: false, timeWindows: [] },
+    { dayIndex: 6, dayName: "Sunday", selected: false, timeWindows: [] },
+  ]);
+  const [showName, setShowName] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const { toast } = useToast();
-
-  const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-  
-  const [days, setDays] = useState<DaySchedule[]>(
-    dayNames.map((name, index) => ({
-      dayIndex: index,
-      dayName: name,
-      selected: false,
-      startTime: "09:00",
-      endTime: "17:00",
-    }))
-  );
 
   useEffect(() => {
     if (isOpen) {
       loadExistingSchedule();
     }
-  }, [isOpen, userId]);
+  }, [isOpen, weekStart]);
 
   const loadExistingSchedule = async () => {
     try {
       setLoading(true);
       const weekStartStr = format(weekStart, "yyyy-MM-dd");
-      
+
       const { data, error } = await supabase
         .from("weekly_schedules")
         .select("*")
@@ -76,23 +78,18 @@ export function SchedulePlanModal({
 
       if (data && data.length > 0) {
         setShowName(data[0].show_name);
-        
-        setDays((prevDays) =>
-          prevDays.map((day) => {
-            const existingSchedule = data.find(
-              (s) => s.day_of_week === day.dayIndex
-            );
-            if (existingSchedule) {
-              return {
-                ...day,
-                selected: true,
-                startTime: existingSchedule.start_time,
-                endTime: existingSchedule.end_time,
-              };
-            }
-            return day;
-          })
-        );
+        const updatedDays = days.map((day) => {
+          const existing = data.find((d) => d.day_of_week === day.dayIndex);
+          if (existing) {
+            return {
+              ...day,
+              selected: true,
+              timeWindows: existing.time_windows || [],
+            };
+          }
+          return day;
+        });
+        setDays(updatedDays);
       }
     } catch (error: any) {
       toast({
@@ -108,19 +105,38 @@ export function SchedulePlanModal({
   const handleDayToggle = (dayIndex: number) => {
     setDays((prev) =>
       prev.map((day) =>
-        day.dayIndex === dayIndex ? { ...day, selected: !day.selected } : day
+        day.dayIndex === dayIndex
+          ? { ...day, selected: !day.selected, timeWindows: day.selected ? [] : day.timeWindows }
+          : day
       )
     );
   };
 
-  const handleTimeChange = (
-    dayIndex: number,
-    field: "startTime" | "endTime",
-    value: string
-  ) => {
+  const handleTimeWindowToggle = (dayIndex: number, timeWindow: string) => {
+    setDays((prev) =>
+      prev.map((day) => {
+        if (day.dayIndex === dayIndex) {
+          const hasWindow = day.timeWindows.includes(timeWindow);
+          const newTimeWindows = hasWindow
+            ? day.timeWindows.filter((tw) => tw !== timeWindow)
+            : [...day.timeWindows, timeWindow];
+          return {
+            ...day,
+            timeWindows: newTimeWindows,
+            selected: newTimeWindows.length > 0,
+          };
+        }
+        return day;
+      })
+    );
+  };
+
+  const handleRemoveDay = (dayIndex: number) => {
     setDays((prev) =>
       prev.map((day) =>
-        day.dayIndex === dayIndex ? { ...day, [field]: value } : day
+        day.dayIndex === dayIndex
+          ? { ...day, selected: false, timeWindows: [] }
+          : day
       )
     );
   };
@@ -130,7 +146,7 @@ export function SchedulePlanModal({
       setSaving(true);
       const weekStartStr = format(weekStart, "yyyy-MM-dd");
 
-      // Delete all existing schedules for this week
+      // Delete existing schedules for this week
       const { error: deleteError } = await supabase
         .from("weekly_schedules")
         .delete()
@@ -139,16 +155,14 @@ export function SchedulePlanModal({
 
       if (deleteError) throw deleteError;
 
-      // Insert new schedules for selected days
-      const selectedDays = days.filter((day) => day.selected);
-      
+      // Insert new schedules
+      const selectedDays = days.filter((day) => day.selected && day.timeWindows.length > 0);
       if (selectedDays.length > 0) {
         const schedules = selectedDays.map((day) => ({
           user_id: userId,
           week_start_date: weekStartStr,
           day_of_week: day.dayIndex,
-          start_time: day.startTime,
-          end_time: day.endTime,
+          time_windows: day.timeWindows,
           show_name: showName,
         }));
 
@@ -163,7 +177,7 @@ export function SchedulePlanModal({
         title: "Schedule saved",
         description: "Your weekly schedule has been updated.",
       });
-      
+
       onSaved();
       onClose();
     } catch (error: any) {
@@ -177,86 +191,118 @@ export function SchedulePlanModal({
     }
   };
 
-  const handleRemoveDay = (dayIndex: number) => {
-    setDays((prev) =>
-      prev.map((day) =>
-        day.dayIndex === dayIndex ? { ...day, selected: false } : day
-      )
-    );
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Plan My Week at Haven</DialogTitle>
+          <DialogDescription>
+            Select the days and time windows when you'll be at Haven this week.
+          </DialogDescription>
         </DialogHeader>
 
         {loading ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <div className="py-8 text-center text-muted-foreground">
+            Loading your schedule...
           </div>
         ) : (
           <div className="space-y-6">
-            <div className="space-y-4">
+            {/* Legend */}
+            <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+              <p className="text-sm font-medium">Time Windows:</p>
+              <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">☀️</span>
+                  <span>Morning = 6am–12pm</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🌤</span>
+                  <span>Afternoon = 12pm–6pm</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🌙</span>
+                  <span>Evening = 6pm–9pm</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Days Selection */}
+            <div className="space-y-3">
               {days.map((day) => (
                 <div
                   key={day.dayIndex}
-                  className="flex items-center gap-4 p-4 border rounded-lg"
+                  className={`rounded-lg border p-4 transition-colors ${
+                    day.selected ? "bg-primary/5 border-primary" : "bg-background"
+                  }`}
                 >
-                  <Checkbox
-                    id={`day-${day.dayIndex}`}
-                    checked={day.selected}
-                    onCheckedChange={() => handleDayToggle(day.dayIndex)}
-                  />
-                  <Label
-                    htmlFor={`day-${day.dayIndex}`}
-                    className="flex-1 font-medium cursor-pointer"
-                  >
-                    {day.dayName}
-                  </Label>
-
-                  {day.selected && (
-                    <>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="time"
-                          value={day.startTime}
-                          onChange={(e) =>
-                            handleTimeChange(day.dayIndex, "startTime", e.target.value)
-                          }
-                          className="w-32"
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 space-y-3">
+                      <div className="flex items-center gap-3">
+                        <Checkbox
+                          id={`day-${day.dayIndex}`}
+                          checked={day.selected}
+                          onCheckedChange={() => handleDayToggle(day.dayIndex)}
                         />
-                        <span className="text-muted-foreground">to</span>
-                        <Input
-                          type="time"
-                          value={day.endTime}
-                          onChange={(e) =>
-                            handleTimeChange(day.dayIndex, "endTime", e.target.value)
-                          }
-                          className="w-32"
-                        />
+                        <Label
+                          htmlFor={`day-${day.dayIndex}`}
+                          className="text-base font-medium cursor-pointer"
+                        >
+                          {day.dayName}
+                        </Label>
                       </div>
+
+                      {day.selected && (
+                        <div className="ml-7 space-y-2">
+                          <p className="text-sm text-muted-foreground mb-2">
+                            Select time windows:
+                          </p>
+                          <div className="flex flex-wrap gap-3">
+                            {TIME_WINDOW_OPTIONS.map((option) => (
+                              <div key={option.value} className="flex items-center gap-2">
+                                <Checkbox
+                                  id={`${day.dayIndex}-${option.value}`}
+                                  checked={day.timeWindows.includes(option.value)}
+                                  onCheckedChange={() =>
+                                    handleTimeWindowToggle(day.dayIndex, option.value)
+                                  }
+                                />
+                                <Label
+                                  htmlFor={`${day.dayIndex}-${option.value}`}
+                                  className="text-sm cursor-pointer flex items-center gap-1"
+                                >
+                                  <span>{option.emoji}</span>
+                                  <span>{option.label}</span>
+                                </Label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {day.selected && (
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => handleRemoveDay(day.dayIndex)}
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <X className="h-4 w-4" />
                       </Button>
-                    </>
-                  )}
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
 
-            <div className="flex items-center space-x-2 p-4 bg-muted/50 rounded-lg">
+            {/* Show Name Option */}
+            <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
               <Checkbox
                 id="show-name"
                 checked={showName}
-                onCheckedChange={(checked) => setShowName(checked === true)}
+                onCheckedChange={(checked) => setShowName(checked as boolean)}
               />
-              <Label htmlFor="show-name" className="cursor-pointer">
+              <Label htmlFor="show-name" className="text-sm cursor-pointer">
                 Show my name on this week's calendar
               </Label>
             </div>
@@ -268,8 +314,7 @@ export function SchedulePlanModal({
             Cancel
           </Button>
           <Button onClick={handleSave} disabled={saving || loading}>
-            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Save Schedule
+            {saving ? "Saving..." : "Save Schedule"}
           </Button>
         </DialogFooter>
       </DialogContent>

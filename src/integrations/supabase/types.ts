@@ -380,10 +380,9 @@ export type Database = {
         Row: {
           created_at: string
           day_of_week: number
-          end_time: string
           id: string
           show_name: boolean
-          start_time: string
+          time_windows: string[] | null
           updated_at: string
           user_id: string
           week_start_date: string
@@ -391,10 +390,9 @@ export type Database = {
         Insert: {
           created_at?: string
           day_of_week: number
-          end_time: string
           id?: string
           show_name?: boolean
-          start_time: string
+          time_windows?: string[] | null
           updated_at?: string
           user_id: string
           week_start_date: string
@@ -402,10 +400,9 @@ export type Database = {
         Update: {
           created_at?: string
           day_of_week?: number
-          end_time?: string
           id?: string
           show_name?: boolean
-          start_time?: string
+          time_windows?: string[] | null
           updated_at?: string
           user_id?: string
           week_start_date?: string
