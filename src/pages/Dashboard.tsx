@@ -19,6 +19,7 @@ import {
   LogOut,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { WeeklyPresence } from '@/components/dashboard/WeeklyPresence';
 
 interface DashboardCard {
   title: string;
@@ -48,6 +49,7 @@ const getDailyGreeting = (name: string) => {
 export default function Dashboard() {
   const navigate = useNavigate();
   const [userName, setUserName] = useState<string>('');
+  const [userId, setUserId] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -70,6 +72,7 @@ export default function Dashboard() {
         setUserName(profile.full_name);
       }
       
+      setUserId(session.user.id);
       setLoading(false);
     };
 
@@ -187,6 +190,12 @@ export default function Dashboard() {
             What would you like to do today?
           </p>
         </div>
+
+        {/* Weekly Presence Section */}
+        <div className="mb-12">
+          <WeeklyPresence userId={userId} />
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {cards.map((card) => (
             <Card
