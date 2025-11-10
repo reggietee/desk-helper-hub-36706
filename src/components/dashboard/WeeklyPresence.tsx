@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Calendar, Users } from "lucide-react";
-import { format, startOfWeek, addDays } from "date-fns";
+import { format, startOfWeek, addDays, addWeeks } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 import { SchedulePlanModal } from "./SchedulePlanModal";
 import { useToast } from "@/hooks/use-toast";
 
@@ -12,10 +13,13 @@ interface WeeklySchedule {
   day_of_week: number;
   time_windows: string[];
   show_name: boolean;
+  week_start_date: string;
   profiles?: {
     full_name: string;
   };
 }
+
+const TIMEZONE = "America/Toronto";
 
 export function WeeklyPresence({ userId }: { userId: string }) {
   const [schedules, setSchedules] = useState<WeeklySchedule[]>([]);
@@ -23,8 +27,13 @@ export function WeeklyPresence({ userId }: { userId: string }) {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 }); // Monday
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  // Get current date in Toronto timezone
+  const nowInToronto = toZonedTime(new Date(), TIMEZONE);
+  const currentWeekStart = startOfWeek(nowInToronto, { weekStartsOn: 1 });
+  const nextWeekStart = addWeeks(currentWeekStart, 1);
+  
+  const currentWeekDays = Array.from({ length: 7 }, (_, i) => addDays(currentWeekStart, i));
+  const nextWeekDays = Array.from({ length: 7 }, (_, i) => addDays(nextWeekStart, i));
 
   useEffect(() => {
     fetchSchedules();
@@ -52,12 +61,13 @@ export function WeeklyPresence({ userId }: { userId: string }) {
 
   const fetchSchedules = async () => {
     try {
-      const weekStartStr = format(weekStart, "yyyy-MM-dd");
+      const currentWeekStr = format(currentWeekStart, "yyyy-MM-dd");
+      const nextWeekStr = format(nextWeekStart, "yyyy-MM-dd");
       
       const { data, error } = await supabase
         .from("weekly_schedules")
         .select("*")
-        .eq("week_start_date", weekStartStr);
+        .in("week_start_date", [currentWeekStr, nextWeekStr]);
 
       if (error) throw error;
 
@@ -89,8 +99,8 @@ export function WeeklyPresence({ userId }: { userId: string }) {
     }
   };
 
-  const getOccupancyForDay = (dayIndex: number) => {
-    return schedules.filter((s) => s.day_of_week === dayIndex);
+  const getOccupancyForDay = (dayIndex: number, weekStartDate: string) => {
+    return schedules.filter((s) => s.day_of_week === dayIndex && s.week_start_date === weekStartDate);
   };
 
   const getColorForOccupancy = (count: number) => {
@@ -118,57 +128,134 @@ export function WeeklyPresence({ userId }: { userId: string }) {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-7 gap-3">
-          {weekDays.map((_, i) => (
-            <div
-              key={i}
-              className="h-32 rounded-lg border bg-muted animate-pulse"
-            />
-          ))}
+        <div className="space-y-6">
+          <div className="grid grid-cols-7 gap-3">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-32 rounded-lg border bg-muted animate-pulse"
+              />
+            ))}
+          </div>
+          <div className="grid grid-cols-7 gap-3">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-32 rounded-lg border bg-muted animate-pulse"
+              />
+            ))}
+          </div>
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-7 gap-3">
-            {weekDays.map((day, index) => {
-              const daySchedules = getOccupancyForDay(index);
-              const occupancyCount = daySchedules.length;
-              const colorClass = getColorForOccupancy(occupancyCount);
-              const visibleMembers = daySchedules
-                .filter((s) => s.show_name && s.profiles)
-                .map((s) => ({
-                  name: s.profiles!.full_name,
-                  timeWindows: s.time_windows
-                }));
+          {/* Current Week */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-medium text-muted-foreground">
+              Current Week ({format(currentWeekStart, "MMM d")} - {format(addDays(currentWeekStart, 6), "MMM d")})
+            </h3>
+            <div className="grid grid-cols-7 gap-3">
+              {currentWeekDays.map((day, index) => {
+                const weekStartStr = format(currentWeekStart, "yyyy-MM-dd");
+                const daySchedules = getOccupancyForDay(index, weekStartStr);
+                const occupancyCount = daySchedules.length;
+                const colorClass = getColorForOccupancy(occupancyCount);
+                const visibleMembers = daySchedules
+                  .filter((s) => s.show_name && s.profiles)
+                  .map((s) => ({
+                    name: s.profiles!.full_name,
+                    timeWindows: s.time_windows
+                  }));
 
-              return (
-                <div
-                  key={index}
-                  className={`rounded-lg border p-4 transition-all ${colorClass}`}
-                >
-                  <div className="font-medium text-sm">
-                    {format(day, "EEE")}
-                  </div>
-                  <div className="text-xs text-muted-foreground mb-3">
-                    {format(day, "MMM d")}
-                  </div>
-                  <div className="flex items-center gap-1 mb-2">
-                    <Users className="h-3 w-3" />
-                    <span className="text-xs font-medium">{occupancyCount}</span>
-                  </div>
-                  {visibleMembers.length > 0 && (
-                    <div className="text-xs space-y-1 mt-2">
-                      {visibleMembers.map((member, i) => (
-                        <div key={i} className="truncate opacity-75">
-                          {member.name} {member.timeWindows.includes('morning') && '☀️'}
-                          {member.timeWindows.includes('afternoon') && '🌤'}
-                          {member.timeWindows.includes('evening') && '🌙'}
-                        </div>
-                      ))}
+                return (
+                  <div
+                    key={index}
+                    className={`rounded-lg border p-4 transition-all ${colorClass}`}
+                  >
+                    <div className="font-medium text-sm">
+                      {format(day, "EEE")}
                     </div>
-                  )}
-                </div>
-              );
-            })}
+                    <div className="text-xs text-muted-foreground mb-3">
+                      {format(day, "MMM d")}
+                    </div>
+                    <div className="flex items-center gap-1 mb-2">
+                      <Users className="h-3 w-3" />
+                      <span className="text-xs font-medium">{occupancyCount}</span>
+                    </div>
+                    {visibleMembers.length > 0 && (
+                      <div className="text-xs space-y-1 mt-2">
+                        {visibleMembers.slice(0, 2).map((member, i) => (
+                          <div key={i} className="truncate opacity-75">
+                            {member.name} {member.timeWindows.includes('morning') && '☀️'}
+                            {member.timeWindows.includes('afternoon') && '🌤'}
+                            {member.timeWindows.includes('evening') && '🌙'}
+                          </div>
+                        ))}
+                        {visibleMembers.length > 2 && (
+                          <div className="text-xs text-muted-foreground">
+                            +{visibleMembers.length - 2} more
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Next Week */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-medium text-muted-foreground">
+              Next Week ({format(nextWeekStart, "MMM d")} - {format(addDays(nextWeekStart, 6), "MMM d")})
+            </h3>
+            <div className="grid grid-cols-7 gap-3">
+              {nextWeekDays.map((day, index) => {
+                const weekStartStr = format(nextWeekStart, "yyyy-MM-dd");
+                const daySchedules = getOccupancyForDay(index, weekStartStr);
+                const occupancyCount = daySchedules.length;
+                const colorClass = getColorForOccupancy(occupancyCount);
+                const visibleMembers = daySchedules
+                  .filter((s) => s.show_name && s.profiles)
+                  .map((s) => ({
+                    name: s.profiles!.full_name,
+                    timeWindows: s.time_windows
+                  }));
+
+                return (
+                  <div
+                    key={index}
+                    className={`rounded-lg border p-4 transition-all ${colorClass}`}
+                  >
+                    <div className="font-medium text-sm">
+                      {format(day, "EEE")}
+                    </div>
+                    <div className="text-xs text-muted-foreground mb-3">
+                      {format(day, "MMM d")}
+                    </div>
+                    <div className="flex items-center gap-1 mb-2">
+                      <Users className="h-3 w-3" />
+                      <span className="text-xs font-medium">{occupancyCount}</span>
+                    </div>
+                    {visibleMembers.length > 0 && (
+                      <div className="text-xs space-y-1 mt-2">
+                        {visibleMembers.slice(0, 2).map((member, i) => (
+                          <div key={i} className="truncate opacity-75">
+                            {member.name} {member.timeWindows.includes('morning') && '☀️'}
+                            {member.timeWindows.includes('afternoon') && '🌤'}
+                            {member.timeWindows.includes('evening') && '🌙'}
+                          </div>
+                        ))}
+                        {visibleMembers.length > 2 && (
+                          <div className="text-xs text-muted-foreground">
+                            +{visibleMembers.length - 2} more
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           <div className="bg-muted/50 rounded-lg p-4 space-y-2">
@@ -197,7 +284,8 @@ export function WeeklyPresence({ userId }: { userId: string }) {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         userId={userId}
-        weekStart={weekStart}
+        currentWeekStart={currentWeekStart}
+        nextWeekStart={nextWeekStart}
         onSaved={fetchSchedules}
       />
     </div>

@@ -18,6 +18,7 @@ import {
   Calendar,
   LogOut,
   Settings,
+  Shield,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { WeeklyPresence } from '@/components/dashboard/WeeklyPresence';
@@ -55,6 +56,7 @@ export default function Dashboard() {
   const [userId, setUserId] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [profileSettingsOpen, setProfileSettingsOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -76,6 +78,16 @@ export default function Dashboard() {
 
       if (profile) {
         setUserName(profile.full_name);
+      }
+      
+      // Check if user is admin
+      const { data: roles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id);
+      
+      if (roles && roles.some(r => r.role === 'admin')) {
+        setIsAdmin(true);
       }
       
       setUserId(session.user.id);
@@ -181,6 +193,17 @@ export default function Dashboard() {
             <img src={havenLogo} alt="Haven Workspace" className="h-12 md:h-16 w-auto" />
           </div>
           <div className="flex items-center gap-3">
+            {isAdmin && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate('/admin/schedule-history')}
+                className="rounded-xl"
+              >
+                <Shield className="mr-2 h-4 w-4" />
+                Admin
+              </Button>
+            )}
             <Button 
               variant="outline" 
               size="sm"
