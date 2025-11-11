@@ -107,7 +107,7 @@ const handler = async (req: Request): Promise<Response> => {
               <li>And much more!</li>
             </ul>
             <div style="margin: 30px 0; text-align: center;">
-              <a href="${Deno.env.get('SUPABASE_URL')?.replace('/v1', '')}/auth" style="background: #B9DC54; color: #183C35; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">Log In Now</a>
+              <a href="https://haventerminal.lovable.app/auth" style="background: #B9DC54; color: #183C35; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">Log In Now</a>
             </div>
             <p>We're excited to have you as part of our community!</p>
             <p style="color: #666; font-size: 12px; margin-top: 40px;">Haven Workspace Team</p>

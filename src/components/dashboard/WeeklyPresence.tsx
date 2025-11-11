@@ -150,9 +150,6 @@ export function WeeklyPresence({ userId }: { userId: string }) {
         <>
           {/* Current Week */}
           <div className="space-y-3">
-            <h3 className="text-sm font-medium text-muted-foreground">
-              Current Week ({format(currentWeekStart, "MMM d")} - {format(addDays(currentWeekStart, 6), "MMM d")})
-            </h3>
             <div className="grid grid-cols-7 gap-3">
               {currentWeekDays.map((day, index) => {
                 const weekStartStr = format(currentWeekStart, "yyyy-MM-dd");
@@ -205,9 +202,6 @@ export function WeeklyPresence({ userId }: { userId: string }) {
 
           {/* Next Week */}
           <div className="space-y-3">
-            <h3 className="text-sm font-medium text-muted-foreground">
-              Next Week ({format(nextWeekStart, "MMM d")} - {format(addDays(nextWeekStart, 6), "MMM d")})
-            </h3>
             <div className="grid grid-cols-7 gap-3">
               {nextWeekDays.map((day, index) => {
                 const weekStartStr = format(nextWeekStart, "yyyy-MM-dd");
