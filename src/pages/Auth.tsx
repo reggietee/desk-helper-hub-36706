@@ -163,7 +163,11 @@ export default function Auth() {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        const errorData = data || {};
+        if (errorData.error) throw new Error(errorData.error);
+        throw error;
+      }
       if (data?.error) throw new Error(data.error);
 
       if (data?.success && data?.accessToken && data?.refreshToken) {

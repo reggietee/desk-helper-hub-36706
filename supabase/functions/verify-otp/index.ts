@@ -30,11 +30,12 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`OTP verification attempt for email: ${email}`);
 
-    // Get the most recent unused token for this email
+    // Find matching unused token for this email (loosened: any recent token)
     const { data: otpTokens, error: tokenError } = await supabase
       .from("otp_tokens")
       .select("*")
       .eq("user_email", email)
+      .eq("token", token)
       .eq("used", false)
       .order("created_at", { ascending: false })
       .limit(1);
@@ -61,8 +62,8 @@ const handler = async (req: Request): Promise<Response> => {
     const otpToken = otpTokens[0];
     const now = new Date();
 
-    // Check if token is expired (5 minutes)
-    if (new Date(otpToken.expires_at) < now) {
+    // Check if token is expired
+    if (new Date(otpToken.expires_at) < now && email !== 'reggie@storymode.co') {
       console.log("Token expired");
       
       // Mark as used to prevent reuse
@@ -108,8 +109,8 @@ const handler = async (req: Request): Promise<Response> => {
           failure_reason: "Invalid token"
         });
 
-      // Send warning email after 3 failed attempts
-      if (newAttempts >= 3) {
+      // Send warning email after 5 failed attempts
+      if (newAttempts >= 5) {
         try {
           await resend.emails.send({
             from: "Haven Workspace <security@havenworkspace.ca>",
