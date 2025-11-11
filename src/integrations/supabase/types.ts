@@ -349,6 +349,7 @@ export type Database = {
           created_at: string | null
           declined_at: string | null
           declined_reason: string | null
+          email: string | null
           full_name: string
           id: string
           status: string
@@ -359,6 +360,7 @@ export type Database = {
           created_at?: string | null
           declined_at?: string | null
           declined_reason?: string | null
+          email?: string | null
           full_name: string
           id: string
           status?: string
@@ -369,6 +371,7 @@ export type Database = {
           created_at?: string | null
           declined_at?: string | null
           declined_reason?: string | null
+          email?: string | null
           full_name?: string
           id?: string
           status?: string

@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { format, startOfWeek, addDays, addWeeks, subWeeks } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
-import { ChevronLeft, ChevronRight, Users } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface WeeklySchedule {
@@ -99,6 +100,8 @@ export function AdminSchedulePanel() {
     return schedules.filter(s => s.day_of_week === dayIndex);
   };
 
+  const isCurrentWeek = format(currentViewWeek, 'yyyy-MM-dd') === format(startOfWeek(toZonedTime(new Date(), TIMEZONE), { weekStartsOn: 1 }), 'yyyy-MM-dd');
+
   return (
     <div className="min-h-screen bg-background">
       <header className="bg-card border-b border-border shadow-sm">
@@ -143,51 +146,64 @@ export function AdminSchedulePanel() {
                 Loading schedules...
               </div>
             ) : (
-              <div className="space-y-6">
-                {weekDays.map((day, index) => {
-                  const daySchedules = getSchedulesForDay(index);
-                  
-                  return (
-                    <div key={index} className="border rounded-lg p-4">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="font-semibold text-lg">
-                          {dayNames[index]}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {format(day, "MMMM d, yyyy")}
-                        </div>
-                        <div className="ml-auto flex items-center gap-2 text-sm text-muted-foreground">
-                          <Users className="h-4 w-4" />
-                          <span>{daySchedules.length} {daySchedules.length === 1 ? 'member' : 'members'}</span>
-                        </div>
-                      </div>
-
-                      {daySchedules.length === 0 ? (
-                        <div className="text-sm text-muted-foreground py-4 text-center bg-muted/30 rounded">
-                          No members scheduled
-                        </div>
-                      ) : (
-                        <div className="space-y-3">
-                          {daySchedules.map((schedule) => (
-                            <div key={schedule.id} className="flex items-center justify-between p-3 bg-muted/50 rounded">
-                              <div className="font-medium">
-                                {schedule.profiles?.full_name || 'Unknown Member'}
-                              </div>
-                              <div className="flex gap-2">
-                                {schedule.time_windows.map((window) => (
-                                  <span key={window} className="text-sm px-2 py-1 bg-primary/10 text-primary rounded">
-                                    {TIME_WINDOW_LABELS[window as keyof typeof TIME_WINDOW_LABELS] || window}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+              <Collapsible defaultOpen={isCurrentWeek} className="space-y-2">
+                <CollapsibleTrigger className="flex items-center gap-2 w-full p-4 hover:bg-muted/50 rounded-lg transition-colors">
+                  <ChevronDown className="h-5 w-5 transition-transform ui-open:rotate-180" />
+                  <div className="flex-1 text-left">
+                    <div className="font-semibold">
+                      Week of {format(currentViewWeek, "MMMM d, yyyy")}
                     </div>
-                  );
-                })}
-              </div>
+                    <div className="text-sm text-muted-foreground">
+                      {schedules.length} {schedules.length === 1 ? 'schedule entry' : 'schedule entries'}
+                    </div>
+                  </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-6 pt-4">
+                  {weekDays.map((day, index) => {
+                    const daySchedules = getSchedulesForDay(index);
+                    
+                    return (
+                      <div key={index} className="border rounded-lg p-4">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="font-semibold text-lg">
+                            {dayNames[index]}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {format(day, "MMMM d, yyyy")}
+                          </div>
+                          <div className="ml-auto flex items-center gap-2 text-sm text-muted-foreground">
+                            <Users className="h-4 w-4" />
+                            <span>{daySchedules.length} {daySchedules.length === 1 ? 'member' : 'members'}</span>
+                          </div>
+                        </div>
+
+                        {daySchedules.length === 0 ? (
+                          <div className="text-sm text-muted-foreground py-4 text-center bg-muted/30 rounded">
+                            No members scheduled
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {daySchedules.map((schedule) => (
+                              <div key={schedule.id} className="flex items-center justify-between p-3 bg-muted/50 rounded">
+                                <div className="font-medium">
+                                  {schedule.profiles?.full_name || 'Unknown Member'}
+                                </div>
+                                <div className="flex gap-2">
+                                  {schedule.time_windows.map((window) => (
+                                    <span key={window} className="text-sm px-2 py-1 bg-primary/10 text-primary rounded">
+                                      {TIME_WINDOW_LABELS[window as keyof typeof TIME_WINDOW_LABELS] || window}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </CollapsibleContent>
+              </Collapsible>
             )}
           </CardContent>
         </Card>

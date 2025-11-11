@@ -212,6 +212,33 @@ const handler = async (req: Request): Promise<Response> => {
         success: true
       });
 
+    // If this was a new user signup, send notification to admin
+    if (!userExists) {
+      try {
+        await resend.emails.send({
+          from: "Haven Workspace <notifications@havenworkspace.ca>",
+          to: ["reggie@storymode.co"],
+          subject: "New Member Account Request",
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h1 style="color: #333;">New Member Account Request</h1>
+              <p>A new member has signed up and is awaiting approval:</p>
+              <div style="background: #f4f4f4; padding: 20px; border-radius: 5px; margin: 20px 0;">
+                <p><strong>Name:</strong> ${fullName || 'User'}</p>
+                <p><strong>Email:</strong> ${email}</p>
+                <p><strong>Date:</strong> ${new Date().toLocaleString('en-US', { timeZone: 'America/Toronto' })}</p>
+              </div>
+              <p>Please log in to the admin panel to review and approve this request.</p>
+              <p style="color: #666; font-size: 12px; margin-top: 40px;">Haven Workspace Admin</p>
+            </div>
+          `,
+        });
+        console.log("Admin notification sent for new signup");
+      } catch (emailError) {
+        console.error("Failed to send admin notification:", emailError);
+      }
+    }
+
     // Clean up old tokens
     await supabase.rpc('cleanup_expired_otp_tokens');
 

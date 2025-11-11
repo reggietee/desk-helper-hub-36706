@@ -15,6 +15,7 @@ import GuestDayPass from "./pages/GuestDayPass";
 import SpecialOffers from "./pages/SpecialOffers";
 import ComingSoon from "./pages/ComingSoon";
 import AdminScheduleHistory from "./pages/AdminScheduleHistory";
+import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,7 +38,8 @@ const App = () => (
           <Route path="/submit-issue" element={<SubmitIssue />} />
           <Route path="/guest-day-pass" element={<GuestDayPass />} />
           <Route path="/special-offers" element={<SpecialOffers />} />
-          <Route path="/admin/schedule-history" element={<AdminScheduleHistory />} />
+        <Route path="/admin" element={<AdminPanel />} />
+        <Route path="/admin/schedule-history" element={<AdminScheduleHistory />} />
           <Route path="/coming-soon" element={<ComingSoon />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

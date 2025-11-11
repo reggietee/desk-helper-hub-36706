@@ -72,12 +72,28 @@ export default function Dashboard() {
       // Get user profile
       const { data: profile } = await supabase
         .from('profiles')
-        .select('full_name')
+        .select('full_name, status')
         .eq('id', session.user.id)
         .single();
 
       if (profile) {
         setUserName(profile.full_name);
+        
+        // Check if user is pending approval
+        if (profile.status === 'pending') {
+          toast.error('Your account is pending approval. You\'ll receive an email once approved.');
+          await supabase.auth.signOut();
+          navigate('/auth');
+          return;
+        }
+        
+        // Check if user is declined
+        if (profile.status === 'declined') {
+          toast.error('Your account request was not approved.');
+          await supabase.auth.signOut();
+          navigate('/auth');
+          return;
+        }
       }
       
       // Check if user is admin
@@ -197,7 +213,7 @@ export default function Dashboard() {
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={() => navigate('/admin/schedule-history')}
+                onClick={() => navigate('/admin')}
                 className="rounded-xl"
               >
                 <Shield className="mr-2 h-4 w-4" />

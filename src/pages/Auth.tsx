@@ -178,7 +178,12 @@ export default function Auth() {
           throw sessionError;
         }
 
-        toast.success('Successfully verified!');
+        // Show different messages for login vs signup
+        if (!isLogin) {
+          toast.success('Account created! Your request has been submitted for review. You\'ll receive an email once approved.');
+        } else {
+          toast.success('Successfully verified!');
+        }
         navigate('/dashboard');
       } else {
         throw new Error('Invalid response from server');

@@ -9,7 +9,7 @@ const corsHeaders = {
 };
 
 interface NotificationRequest {
-  type: 'product_signout' | 'call_room' | 'meeting_room' | 'private_office' | 'issue' | 'guest_day_pass';
+  type: 'product_signout' | 'call_room' | 'meeting_room' | 'private_office' | 'issue' | 'guest_day_pass' | 'member_approved';
   data: Record<string, any>;
 }
 
@@ -90,11 +90,38 @@ const handler = async (req: Request): Promise<Response> => {
           <p><strong>Arrival Time:</strong> ${data.time}</p>
         `;
         break;
+
+      case 'member_approved':
+        subject = 'Welcome to Haven Workspace!';
+        html = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h1 style="color: #183C35;">Welcome to Haven Workspace!</h1>
+            <p>Hi ${data.user_name},</p>
+            <p>Great news! Your Haven Workspace account has been approved.</p>
+            <p>You can now log in to access your member dashboard and all the features we offer:</p>
+            <ul>
+              <li>Book call rooms and meeting spaces</li>
+              <li>Request guest day passes</li>
+              <li>Submit maintenance issues</li>
+              <li>View special member offers</li>
+              <li>And much more!</li>
+            </ul>
+            <div style="margin: 30px 0; text-align: center;">
+              <a href="${Deno.env.get('SUPABASE_URL')?.replace('/v1', '')}/auth" style="background: #B9DC54; color: #183C35; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">Log In Now</a>
+            </div>
+            <p>We're excited to have you as part of our community!</p>
+            <p style="color: #666; font-size: 12px; margin-top: 40px;">Haven Workspace Team</p>
+          </div>
+        `;
+        break;
     }
+
+    // Determine recipient based on notification type
+    const recipient = type === 'member_approved' ? [data.email] : ["reggie@havenworkspace.ca"];
 
     const emailResponse = await resend.emails.send({
       from: "Haven Workspace <notifications@havenworkspace.ca>",
-      to: ["reggie@havenworkspace.ca"],
+      to: recipient,
       subject: subject,
       html: html,
     });
