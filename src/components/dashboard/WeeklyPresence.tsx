@@ -120,10 +120,10 @@ export function WeeklyPresence({ userId }: { userId: string }) {
         <div>
           <h2 className="text-2xl font-semibold text-foreground flex items-center gap-2">
             <Calendar className="h-6 w-6" />
-            This Week at Haven
+            Who's In?
           </h2>
           <p className="text-muted-foreground mt-1">
-            See when members are in and share your schedule
+            See who's in this week and share when you'll be at Haven
           </p>
         </div>
         <Button onClick={() => setIsModalOpen(true)} className="gap-2">
@@ -273,7 +273,7 @@ export function WeeklyPresence({ userId }: { userId: string }) {
               </div>
             </div>
             <p className="text-xs text-muted-foreground">
-              💡 Lighter days are better for productivity and focus. Darker days are better for networking and casual work.
+              💡 Days in white or light green are better for productivity and focus. Days in dark green are better for networking and casual work.
             </p>
           </div>
         </>
