@@ -71,15 +71,20 @@ export function WeeklyPresence({ userId }: { userId: string }) {
 
       if (error) throw error;
 
-      // Fetch profile names separately
+      // Fetch profile names and status separately, only include approved users
       if (data && data.length > 0) {
         const userIds = [...new Set(data.map(s => s.user_id))];
         const { data: profiles } = await supabase
           .from("profiles")
-          .select("id, full_name")
-          .in("id", userIds);
+          .select("id, full_name, status")
+          .in("id", userIds)
+          .eq("status", "approved");
 
-        const schedulesWithProfiles = data.map(schedule => ({
+        // Only include schedules for approved users
+        const approvedUserIds = new Set(profiles?.map(p => p.id) || []);
+        const filteredData = data.filter(schedule => approvedUserIds.has(schedule.user_id));
+
+        const schedulesWithProfiles = filteredData.map(schedule => ({
           ...schedule,
           profiles: profiles?.find(p => p.id === schedule.user_id)
         }));
