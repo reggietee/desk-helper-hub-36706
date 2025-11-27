@@ -112,6 +112,39 @@ export type Database = {
         }
         Relationships: []
       }
+      calendar_events: {
+        Row: {
+          created_at: string
+          event_uid: string
+          id: string
+          schedule_date: string
+          sequence_number: number
+          time_windows: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_uid: string
+          id?: string
+          schedule_date: string
+          sequence_number?: number
+          time_windows: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_uid?: string
+          id?: string
+          schedule_date?: string
+          sequence_number?: number
+          time_windows?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       call_room_bookings: {
         Row: {
           booking_time: string
