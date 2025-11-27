@@ -63,17 +63,12 @@ export function SchedulePlanModal({
   const [existingCalendarEvents, setExistingCalendarEvents] = useState<Record<string, string[]>>({});
   const { toast } = useToast();
 
-  // Fetch user email on mount
+  // Fetch user email from auth session on mount
   useEffect(() => {
     const fetchUserEmail = async () => {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('id', userId)
-        .single();
-      
-      if (profile?.email) {
-        setUserEmail(profile.email);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.email) {
+        setUserEmail(user.email);
       }
     };
     fetchUserEmail();
@@ -294,60 +289,70 @@ export function SchedulePlanModal({
       }
 
       // Handle calendar invites if checkbox is checked
-      if (addToCalendar && userEmail) {
-        const calendarEvents: CalendarEvent[] = [];
-        
-        // Build a map of new schedule dates and time windows
-        const newScheduleMap: Record<string, string[]> = {};
-        selectedDays.forEach(day => {
-          const dateStr = format(day.date, 'yyyy-MM-dd');
-          newScheduleMap[dateStr] = day.timeWindows;
-        });
+      let calendarInvitesSent = false;
+      if (addToCalendar) {
+        if (!userEmail) {
+          toast({
+            title: "Email not found",
+            description: "Unable to find your email address. Calendar invites could not be sent.",
+            variant: "destructive",
+          });
+        } else {
+          const calendarEvents: CalendarEvent[] = [];
+          
+          // Build a map of new schedule dates and time windows
+          const newScheduleMap: Record<string, string[]> = {};
+          selectedDays.forEach(day => {
+            const dateStr = format(day.date, 'yyyy-MM-dd');
+            newScheduleMap[dateStr] = day.timeWindows;
+          });
 
-        // Determine which events to create, update, or cancel
-        // Check all days in current and next week
-        days.forEach(day => {
-          const dateStr = format(day.date, 'yyyy-MM-dd');
-          const existingTimeWindows = existingCalendarEvents[dateStr];
-          const newTimeWindows = newScheduleMap[dateStr];
+          // Determine which events to create, update, or cancel
+          // Check all days in current and next week
+          days.forEach(day => {
+            const dateStr = format(day.date, 'yyyy-MM-dd');
+            const existingTimeWindows = existingCalendarEvents[dateStr];
+            const newTimeWindows = newScheduleMap[dateStr];
 
-          if (newTimeWindows && newTimeWindows.length > 0) {
-            if (existingTimeWindows) {
-              // Check if time windows changed
-              const changed = JSON.stringify(existingTimeWindows.sort()) !== JSON.stringify(newTimeWindows.sort());
-              if (changed) {
+            if (newTimeWindows && newTimeWindows.length > 0) {
+              if (existingTimeWindows) {
+                // Check if time windows changed
+                const changed = JSON.stringify(existingTimeWindows.sort()) !== JSON.stringify(newTimeWindows.sort());
+                if (changed) {
+                  calendarEvents.push({
+                    date: dateStr,
+                    timeWindows: newTimeWindows,
+                    action: 'update',
+                  });
+                }
+              } else {
+                // New event
                 calendarEvents.push({
                   date: dateStr,
                   timeWindows: newTimeWindows,
-                  action: 'update',
+                  action: 'create',
                 });
               }
-            } else {
-              // New event
+            } else if (existingTimeWindows) {
+              // Day was removed, send cancellation
               calendarEvents.push({
                 date: dateStr,
-                timeWindows: newTimeWindows,
-                action: 'create',
+                timeWindows: existingTimeWindows,
+                action: 'cancel',
               });
             }
-          } else if (existingTimeWindows) {
-            // Day was removed, send cancellation
-            calendarEvents.push({
-              date: dateStr,
-              timeWindows: existingTimeWindows,
-              action: 'cancel',
-            });
-          }
-        });
+          });
 
-        if (calendarEvents.length > 0) {
-          await sendCalendarInvites(calendarEvents);
+          if (calendarEvents.length > 0) {
+            await sendCalendarInvites(calendarEvents);
+            calendarInvitesSent = true;
+          }
         }
       }
 
       toast({
         title: "Schedule saved",
-        description: addToCalendar ? "Your weekly schedule has been updated and calendar invites sent." : "Your weekly schedule has been updated.",
+        description: calendarInvitesSent ? "Your weekly schedule has been updated and calendar invites sent." : "Your weekly schedule has been updated.",
       });
 
       onSaved();
