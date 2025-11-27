@@ -39,6 +39,12 @@ const TIME_WINDOW_OPTIONS = [
   { value: 'evening', label: 'Evening', emoji: '🌙' },
 ];
 
+interface CalendarEvent {
+  date: string;
+  timeWindows: string[];
+  action: 'create' | 'update' | 'cancel';
+}
+
 export function SchedulePlanModal({
   isOpen,
   onClose,
@@ -49,10 +55,29 @@ export function SchedulePlanModal({
 }: SchedulePlanModalProps) {
   const [days, setDays] = useState<DaySchedule[]>([]);
   const [showName, setShowName] = useState(true);
+  const [addToCalendar, setAddToCalendar] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [existingCalendarEvents, setExistingCalendarEvents] = useState<Record<string, string[]>>({});
   const { toast } = useToast();
+
+  // Fetch user email on mount
+  useEffect(() => {
+    const fetchUserEmail = async () => {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('id', userId)
+        .single();
+      
+      if (profile?.email) {
+        setUserEmail(profile.email);
+      }
+    };
+    fetchUserEmail();
+  }, [userId]);
 
   // Initialize 14 days (current week + next week)
   useEffect(() => {
@@ -89,8 +114,28 @@ export function SchedulePlanModal({
   useEffect(() => {
     if (isOpen && days.length > 0) {
       loadExistingSchedule();
+      loadExistingCalendarEvents();
     }
   }, [isOpen, days.length]);
+
+  const loadExistingCalendarEvents = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('calendar_events')
+        .select('schedule_date, time_windows')
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      const eventsMap: Record<string, string[]> = {};
+      data?.forEach(event => {
+        eventsMap[event.schedule_date] = event.time_windows || [];
+      });
+      setExistingCalendarEvents(eventsMap);
+    } catch (error) {
+      console.error('Error loading calendar events:', error);
+    }
+  };
 
   const loadExistingSchedule = async () => {
     try {
@@ -174,6 +219,38 @@ export function SchedulePlanModal({
     );
   };
 
+  const sendCalendarInvites = async (calendarEvents: CalendarEvent[]) => {
+    if (!userEmail || calendarEvents.length === 0) return;
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.error('No session for calendar invites');
+        return;
+      }
+
+      const response = await supabase.functions.invoke('send-calendar-invite', {
+        body: {
+          userEmail,
+          events: calendarEvents,
+        },
+      });
+
+      if (response.error) {
+        console.error('Calendar invite error:', response.error);
+        toast({
+          title: "Calendar invites",
+          description: "Schedule saved, but there was an issue sending calendar invites.",
+          variant: "destructive",
+        });
+      } else {
+        console.log('Calendar invites sent successfully:', response.data);
+      }
+    } catch (error) {
+      console.error('Error sending calendar invites:', error);
+    }
+  };
+
   const handleSave = async () => {
     // Validation: Check if any selected day has no time windows
     const invalidDays = days.filter((day) => day.selected && day.timeWindows.length === 0);
@@ -216,9 +293,61 @@ export function SchedulePlanModal({
         if (insertError) throw insertError;
       }
 
+      // Handle calendar invites if checkbox is checked
+      if (addToCalendar && userEmail) {
+        const calendarEvents: CalendarEvent[] = [];
+        
+        // Build a map of new schedule dates and time windows
+        const newScheduleMap: Record<string, string[]> = {};
+        selectedDays.forEach(day => {
+          const dateStr = format(day.date, 'yyyy-MM-dd');
+          newScheduleMap[dateStr] = day.timeWindows;
+        });
+
+        // Determine which events to create, update, or cancel
+        // Check all days in current and next week
+        days.forEach(day => {
+          const dateStr = format(day.date, 'yyyy-MM-dd');
+          const existingTimeWindows = existingCalendarEvents[dateStr];
+          const newTimeWindows = newScheduleMap[dateStr];
+
+          if (newTimeWindows && newTimeWindows.length > 0) {
+            if (existingTimeWindows) {
+              // Check if time windows changed
+              const changed = JSON.stringify(existingTimeWindows.sort()) !== JSON.stringify(newTimeWindows.sort());
+              if (changed) {
+                calendarEvents.push({
+                  date: dateStr,
+                  timeWindows: newTimeWindows,
+                  action: 'update',
+                });
+              }
+            } else {
+              // New event
+              calendarEvents.push({
+                date: dateStr,
+                timeWindows: newTimeWindows,
+                action: 'create',
+              });
+            }
+          } else if (existingTimeWindows) {
+            // Day was removed, send cancellation
+            calendarEvents.push({
+              date: dateStr,
+              timeWindows: existingTimeWindows,
+              action: 'cancel',
+            });
+          }
+        });
+
+        if (calendarEvents.length > 0) {
+          await sendCalendarInvites(calendarEvents);
+        }
+      }
+
       toast({
         title: "Schedule saved",
-        description: "Your weekly schedule has been updated.",
+        description: addToCalendar ? "Your weekly schedule has been updated and calendar invites sent." : "Your weekly schedule has been updated.",
       });
 
       onSaved();
@@ -399,16 +528,28 @@ export function SchedulePlanModal({
               </div>
             </div>
 
-            {/* Show Name Option */}
-            <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
-              <Checkbox
-                id="show-name"
-                checked={showName}
-                onCheckedChange={(checked) => setShowName(checked as boolean)}
-              />
-              <Label htmlFor="show-name" className="text-sm cursor-pointer">
-                Show my name on this week's calendar
-              </Label>
+            {/* Options */}
+            <div className="space-y-3 p-4 rounded-lg bg-muted/50">
+              <div className="flex items-center gap-3">
+                <Checkbox
+                  id="show-name"
+                  checked={showName}
+                  onCheckedChange={(checked) => setShowName(checked as boolean)}
+                />
+                <Label htmlFor="show-name" className="text-sm cursor-pointer">
+                  Show my name on this week's calendar
+                </Label>
+              </div>
+              <div className="flex items-center gap-3">
+                <Checkbox
+                  id="add-to-calendar"
+                  checked={addToCalendar}
+                  onCheckedChange={(checked) => setAddToCalendar(checked as boolean)}
+                />
+                <Label htmlFor="add-to-calendar" className="text-sm cursor-pointer">
+                  Add these days to my calendar
+                </Label>
+              </div>
             </div>
           </div>
         )}
