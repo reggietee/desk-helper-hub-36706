@@ -215,7 +215,7 @@ export function SchedulePlanModal({
   };
 
   const sendCalendarInvites = async (calendarEvents: CalendarEvent[]) => {
-    if (!userEmail || calendarEvents.length === 0) return;
+    if (!userEmail || !userId || calendarEvents.length === 0) return;
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -227,6 +227,7 @@ export function SchedulePlanModal({
       const response = await supabase.functions.invoke('send-calendar-invite', {
         body: {
           userEmail,
+          userId,
           events: calendarEvents,
         },
       });

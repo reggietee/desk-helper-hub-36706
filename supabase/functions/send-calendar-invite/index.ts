@@ -19,6 +19,7 @@ interface CalendarEvent {
 
 interface CalendarInviteRequest {
   userEmail: string;
+  userId: string;
   events: CalendarEvent[];
 }
 
@@ -130,32 +131,15 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { userEmail, events }: CalendarInviteRequest = await req.json();
-    console.log(`Processing ${events.length} calendar events for ${userEmail}`);
+    const { userEmail, userId, events }: CalendarInviteRequest = await req.json();
+    console.log(`Processing ${events.length} calendar events for ${userEmail} (user: ${userId})`);
 
-    if (!userEmail || !events || events.length === 0) {
+    if (!userEmail || !userId || !events || events.length === 0) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields" }),
+        JSON.stringify({ error: "Missing required fields: userEmail, userId, and events are required" }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
-
-    // Get user ID from email
-    const { data: userData, error: userError } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('email', userEmail)
-      .single();
-
-    if (userError || !userData) {
-      console.error("User not found:", userError);
-      return new Response(
-        JSON.stringify({ error: "User not found" }),
-        { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    const userId = userData.id;
     const results: { date: string; success: boolean; error?: string }[] = [];
 
     for (const event of events) {
