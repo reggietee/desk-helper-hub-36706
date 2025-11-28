@@ -62,6 +62,17 @@ function formatDateForICS(date: string, time: string): string {
   return `${year}${month}${day}T${hour}${minute}00`;
 }
 
+// Helper function to properly encode UTF-8 string to base64
+function encodeBase64(str: string): string {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(str);
+  let binary = '';
+  for (let i = 0; i < data.length; i++) {
+    binary += String.fromCharCode(data[i]);
+  }
+  return btoa(binary);
+}
+
 function generateICS(
   event: CalendarEvent,
   userEmail: string,
@@ -80,7 +91,7 @@ function generateICS(
   
   const description = event.action === 'cancel' 
     ? 'This coworking session has been cancelled.'
-    : `Planned coworking session at Haven – ${timeWindowsDesc}.`;
+    : `Planned coworking session at Haven - ${timeWindowsDesc}.`;
 
   return `BEGIN:VCALENDAR
 VERSION:2.0
@@ -109,11 +120,11 @@ DTSTAMP:${dtstamp}
 DTSTART;TZID=America/Toronto:${dtStart}
 DTEND;TZID=America/Toronto:${dtEnd}
 SUMMARY:Coworking at Haven
-LOCATION:242 Mary St\\, Unit 8\\, Niagara-on-the-Lake\\, ON Canada
+LOCATION:242 Mary St, Unit 8, Niagara-on-the-Lake, ON Canada
 DESCRIPTION:${description}
 STATUS:${status}
 SEQUENCE:${sequenceNumber}
-ORGANIZER:mailto:noreply@haventerminal.com
+ORGANIZER:mailto:onboarding@resend.dev
 ATTENDEE;PARTSTAT=ACCEPTED;RSVP=FALSE:mailto:${userEmail}
 END:VEVENT
 END:VCALENDAR`;
@@ -220,7 +231,7 @@ const handler = async (req: Request): Promise<Response> => {
 
         // Generate and send the ICS file
         const icsContent = generateICS(event, userEmail, eventUid!, sequenceNumber);
-        const icsBase64 = btoa(icsContent);
+        const icsBase64 = encodeBase64(icsContent);
 
         const subjectPrefix = event.action === 'cancel' ? 'Cancelled: ' : (event.action === 'update' ? 'Updated: ' : '');
         const emailSubject = `${subjectPrefix}Coworking at Haven - ${new Date(event.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}`;
@@ -248,11 +259,11 @@ const handler = async (req: Request): Promise<Response> => {
         }
 
         const emailResponse = await resend.emails.send({
-          from: "Haven Terminal <noreply@haventerminal.com>",
+          from: "Haven Terminal <onboarding@resend.dev>",
           to: [userEmail],
           subject: emailSubject,
           html: emailBody,
-attachments: [
+          attachments: [
             {
               filename: "invite.ics",
               content: icsBase64,
