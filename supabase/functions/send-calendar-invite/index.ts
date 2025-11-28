@@ -124,7 +124,7 @@ LOCATION:242 Mary St, Unit 8, Niagara-on-the-Lake, ON Canada
 DESCRIPTION:${description}
 STATUS:${status}
 SEQUENCE:${sequenceNumber}
-ORGANIZER:mailto:onboarding@resend.dev
+ORGANIZER:mailto:info@havenworkspace.ca
 ATTENDEE;PARTSTAT=ACCEPTED;RSVP=FALSE:mailto:${userEmail}
 END:VEVENT
 END:VCALENDAR`;
@@ -259,7 +259,7 @@ const handler = async (req: Request): Promise<Response> => {
         }
 
         const emailResponse = await resend.emails.send({
-          from: "Haven Terminal <onboarding@resend.dev>",
+          from: "Haven Workspace <info@havenworkspace.ca>",
           to: [userEmail],
           subject: emailSubject,
           html: emailBody,
