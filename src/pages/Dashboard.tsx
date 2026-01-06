@@ -210,11 +210,11 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background">
       <header className="bg-card border-b border-border shadow-sm">
         <div className="container mx-auto px-6 py-5 flex justify-between items-center">
-          <div>
+          <div className="h-12 md:h-16 flex items-center">
             <img 
               src={theme === 'dark' ? havenLogoWhite : havenLogo} 
               alt="Haven Workspace" 
-              className="h-12 md:h-16 w-auto" 
+              className="h-full w-auto max-h-12 md:max-h-16 object-contain" 
             />
           </div>
           <div className="flex items-center gap-2">
