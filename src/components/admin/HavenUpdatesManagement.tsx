@@ -2,11 +2,10 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Loader2, Trash2, Upload, ExternalLink, ImageIcon } from 'lucide-react';
+import { Loader2, Trash2, Upload, ImageIcon } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,6 +17,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 
 interface HavenUpdate {
   id: string;
@@ -100,8 +100,14 @@ export function HavenUpdatesManagement() {
     toast.success('Image uploaded');
   };
 
+  const isDescriptionEmpty = (html: string) => {
+    // Check if HTML content is empty (only contains empty tags)
+    const strippedText = html.replace(/<[^>]*>/g, '').trim();
+    return strippedText.length === 0;
+  };
+
   const handleSave = async () => {
-    if (!title.trim() || !description.trim()) {
+    if (!title.trim() || isDescriptionEmpty(description)) {
       toast.error('Title and description are required');
       return;
     }
@@ -202,14 +208,11 @@ export function HavenUpdatesManagement() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description">Description *</Label>
-        <Textarea
-          id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
+        <Label>Description *</Label>
+        <RichTextEditor
+          content={description}
+          onChange={setDescription}
           placeholder="Enter update description"
-          rows={4}
-          className="rounded-xl resize-none"
         />
       </div>
 
@@ -277,7 +280,7 @@ export function HavenUpdatesManagement() {
       <div className="flex gap-3 pt-4">
         <Button
           onClick={handleSave}
-          disabled={saving || !title.trim() || !description.trim()}
+          disabled={saving || !title.trim() || isDescriptionEmpty(description)}
           className="rounded-xl gap-2"
         >
           {saving ? (
