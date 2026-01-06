@@ -23,6 +23,7 @@ import {
 import { toast } from 'sonner';
 import { WeeklyPresence } from '@/components/dashboard/WeeklyPresence';
 import { ProfileSettings } from '@/components/dashboard/ProfileSettings';
+import { HavenUpdates } from '@/components/dashboard/HavenUpdates';
 
 interface DashboardCard {
   title: string;
@@ -246,6 +247,9 @@ export default function Dashboard() {
             What would you like to do today?
           </p>
         </div>
+
+        {/* Haven Updates Section */}
+        <HavenUpdates />
 
         {/* Weekly Presence Section */}
         <div className="mb-12">
