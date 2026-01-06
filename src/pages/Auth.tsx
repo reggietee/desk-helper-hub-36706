@@ -11,7 +11,9 @@ import { HCaptchaComponent } from '@/components/auth/HCaptcha';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import havenLogo from '@/assets/haven-logo.svg';
+import havenLogoWhite from '@/assets/haven-logo-white.png';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { useTheme } from '@/hooks/use-theme';
 
 const emailSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -20,6 +22,7 @@ const emailSchema = z.object({
 
 export default function Auth() {
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
   const [step, setStep] = useState<'email' | 'otp'>('email');
@@ -263,7 +266,11 @@ export default function Auth() {
       <Card className="w-full max-w-md haven-card border-0">
         <CardHeader className="space-y-4">
           <div className="flex justify-center">
-            <img src={havenLogo} alt="Haven Workspace" className="h-12 md:h-16 w-auto" />
+            <img 
+              src={theme === 'dark' ? havenLogoWhite : havenLogo} 
+              alt="Haven Workspace" 
+              className="h-12 md:h-16 w-auto" 
+            />
           </div>
           <CardDescription className="text-center text-base text-muted-foreground">
             {step === 'email' 
