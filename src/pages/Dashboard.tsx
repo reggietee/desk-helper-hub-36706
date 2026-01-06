@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import havenLogo from '@/assets/haven-logo.svg';
+import havenLogoWhite from '@/assets/haven-logo-white.png';
 import {
   Package,
   Phone,
@@ -25,6 +26,7 @@ import { WeeklyPresence } from '@/components/dashboard/WeeklyPresence';
 import { ProfileSettings } from '@/components/dashboard/ProfileSettings';
 import { HavenUpdates } from '@/components/dashboard/HavenUpdates';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { useTheme } from '@/hooks/use-theme';
 
 interface DashboardCard {
   title: string;
@@ -53,6 +55,7 @@ const getDailyGreeting = (name: string) => {
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const [userName, setUserName] = useState<string>('');
   const [userEmail, setUserEmail] = useState<string>('');
   const [userId, setUserId] = useState<string>('');
@@ -208,7 +211,11 @@ export default function Dashboard() {
       <header className="bg-card border-b border-border shadow-sm">
         <div className="container mx-auto px-6 py-5 flex justify-between items-center">
           <div>
-            <img src={havenLogo} alt="Haven Workspace" className="h-12 md:h-16 w-auto" />
+            <img 
+              src={theme === 'dark' ? havenLogoWhite : havenLogo} 
+              alt="Haven Workspace" 
+              className="h-12 md:h-16 w-auto" 
+            />
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
