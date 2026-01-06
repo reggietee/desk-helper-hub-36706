@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Users, Calendar, Megaphone } from 'lucide-react';
 import { MemberManagement } from '@/components/admin/MemberManagement';
 import { HavenUpdatesManagement } from '@/components/admin/HavenUpdatesManagement';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 export default function AdminPanel() {
   const navigate = useNavigate();
@@ -62,15 +63,18 @@ export default function AdminPanel() {
               <h1 className="text-2xl font-bold text-foreground">Admin Panel</h1>
               <p className="text-muted-foreground mt-1">Manage members and view schedules</p>
             </div>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => navigate('/dashboard')}
-              className="gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Dashboard
-            </Button>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate('/dashboard')}
+                className="gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Dashboard
+              </Button>
+            </div>
           </div>
         </div>
       </header>

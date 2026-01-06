@@ -11,6 +11,7 @@ import { HCaptchaComponent } from '@/components/auth/HCaptcha';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import havenLogo from '@/assets/haven-logo.svg';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 const emailSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -255,7 +256,10 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4 relative">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       <Card className="w-full max-w-md haven-card border-0">
         <CardHeader className="space-y-4">
           <div className="flex justify-center">

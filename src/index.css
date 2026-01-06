@@ -44,6 +44,45 @@
     --sidebar-border: 0 0% 92%;
     --sidebar-ring: 72 60% 60%;
   }
+
+  .dark {
+    --background: 200 15% 10%;
+    --foreground: 210 20% 95%;
+
+    --card: 200 15% 13%;
+    --card-foreground: 210 20% 95%;
+
+    --popover: 200 15% 13%;
+    --popover-foreground: 210 20% 95%;
+
+    --primary: 170 40% 40%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 72 50% 45%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 200 15% 18%;
+    --muted-foreground: 210 15% 65%;
+
+    --accent: 72 50% 45%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 200 15% 20%;
+    --input: 200 15% 20%;
+    --ring: 72 50% 45%;
+
+    --sidebar-background: 200 15% 12%;
+    --sidebar-foreground: 210 20% 95%;
+    --sidebar-primary: 170 40% 40%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 72 50% 45%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 200 15% 20%;
+    --sidebar-ring: 72 50% 45%;
+  }
 }
 
 @layer base {
@@ -81,7 +120,7 @@
   }
   
   .blurred-background {
-    @apply bg-white/80 backdrop-blur-lg border border-border;
+    @apply bg-card/80 backdrop-blur-lg border border-border;
   }
   
   .button-hover {
@@ -95,4 +134,12 @@
   .haven-card {
     @apply bg-card rounded-[20px] p-6 card-shadow transition-all duration-300 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)];
   }
+}
+
+/* Theme transition */
+.theme-transition,
+.theme-transition *,
+.theme-transition *::before,
+.theme-transition *::after {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.2s ease !important;
 }
