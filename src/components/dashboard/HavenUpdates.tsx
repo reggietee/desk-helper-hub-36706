@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ExternalLink } from 'lucide-react';
+import DOMPurify from 'dompurify';
 
 interface HavenUpdate {
   id: string;
@@ -35,6 +36,28 @@ export function HavenUpdates() {
     fetchUpdate();
   }, []);
 
+  // Sanitize HTML content for safe rendering
+  const sanitizedDescription = useMemo(() => {
+    if (!update?.description) return '';
+    
+    // Check if content looks like HTML
+    const isHtml = /<[a-z][\s\S]*>/i.test(update.description);
+    
+    if (isHtml) {
+      // Sanitize HTML content
+      return DOMPurify.sanitize(update.description, {
+        ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h2', 'h3', 'ul', 'ol', 'li', 'a'],
+        ALLOWED_ATTR: ['href', 'target', 'rel'],
+      });
+    } else {
+      // Plain text - convert newlines to <br> for backward compatibility
+      return update.description
+        .split('\n')
+        .map(line => DOMPurify.sanitize(line))
+        .join('<br>');
+    }
+  }, [update?.description]);
+
   // Don't render anything if no active update
   if (loading || !update) {
     return null;
@@ -60,9 +83,14 @@ export function HavenUpdates() {
         )}
         <div className="space-y-2">
           <h3 className="text-lg font-semibold text-foreground">{update.title}</h3>
-          <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
-            {update.description}
-          </p>
+          <div 
+            className="prose prose-sm max-w-none text-muted-foreground leading-relaxed
+              prose-headings:text-foreground prose-headings:font-semibold prose-headings:mt-4 prose-headings:mb-2
+              prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0
+              prose-a:text-primary prose-a:underline hover:prose-a:text-primary/80
+              prose-strong:text-foreground prose-em:text-muted-foreground"
+            dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
+          />
         </div>
         {update.learn_more_url && (
           <Button
