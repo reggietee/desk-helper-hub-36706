@@ -265,11 +265,11 @@ export default function Auth() {
       </div>
       <Card className="w-full max-w-md haven-card border-0">
         <CardHeader className="space-y-4">
-          <div className="flex justify-center">
+          <div className="flex justify-center h-12 md:h-16">
             <img 
               src={theme === 'dark' ? havenLogoWhite : havenLogo} 
               alt="Haven Workspace" 
-              className="h-12 md:h-16 w-auto" 
+              className="h-full w-auto max-h-12 md:max-h-16 object-contain" 
             />
           </div>
           <CardDescription className="text-center text-base text-muted-foreground">
