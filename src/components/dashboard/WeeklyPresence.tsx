@@ -8,6 +8,7 @@ import { SchedulePlanModal } from "./SchedulePlanModal";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface WeeklySchedule {
   id: string;
@@ -170,9 +171,24 @@ export function WeeklyPresence({ userId }: { userId: string }) {
               </div>
             ))}
             {visibleMembers.length > 2 && (
-              <div className="text-xs text-muted-foreground">
-                +{visibleMembers.length - 2} more
-              </div>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="text-xs text-muted-foreground cursor-pointer hover:underline">
+                      +{visibleMembers.length - 2} more
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div className="space-y-1">
+                      {visibleMembers.slice(2).map((member, i) => (
+                        <div key={i} className="text-sm">
+                          {member.name} {renderTimeWindowEmojis(member.timeWindows)}
+                        </div>
+                      ))}
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
           </div>
         )}
@@ -224,9 +240,24 @@ export function WeeklyPresence({ userId }: { userId: string }) {
                 </div>
               ))}
               {visibleMembers.length > 3 && (
-                <div className="text-sm text-muted-foreground">
-                  +{visibleMembers.length - 3} more
-                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="text-sm text-muted-foreground cursor-pointer hover:underline">
+                        +{visibleMembers.length - 3} more
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <div className="space-y-1">
+                        {visibleMembers.slice(3).map((member, i) => (
+                          <div key={i} className="text-sm">
+                            {member.name} {renderTimeWindowEmojis(member.timeWindows)}
+                          </div>
+                        ))}
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
             </div>
           )}
