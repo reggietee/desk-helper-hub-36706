@@ -145,6 +145,66 @@ export type Database = {
         }
         Relationships: []
       }
+      calendar_invite_logs: {
+        Row: {
+          action: string
+          created_at: string
+          end_time: string
+          error: string | null
+          event_uid: string
+          id: string
+          provider: string | null
+          provider_message_id: string | null
+          retry_count: number
+          schedule_date: string
+          sent_at: string | null
+          start_time: string
+          status: string
+          time_windows: string[]
+          updated_at: string
+          user_id: string
+          week_start_date: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          end_time: string
+          error?: string | null
+          event_uid: string
+          id?: string
+          provider?: string | null
+          provider_message_id?: string | null
+          retry_count?: number
+          schedule_date: string
+          sent_at?: string | null
+          start_time: string
+          status?: string
+          time_windows: string[]
+          updated_at?: string
+          user_id: string
+          week_start_date?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          end_time?: string
+          error?: string | null
+          event_uid?: string
+          id?: string
+          provider?: string | null
+          provider_message_id?: string | null
+          retry_count?: number
+          schedule_date?: string
+          sent_at?: string | null
+          start_time?: string
+          status?: string
+          time_windows?: string[]
+          updated_at?: string
+          user_id?: string
+          week_start_date?: string | null
+        }
+        Relationships: []
+      }
       call_room_bookings: {
         Row: {
           booking_time: string
