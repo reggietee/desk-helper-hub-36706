@@ -265,6 +265,30 @@ export type Database = {
         }
         Relationships: []
       }
+      haven_settings: {
+        Row: {
+          id: string
+          setting_key: string
+          setting_value: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          setting_key: string
+          setting_value?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: string
+          setting_key?: string
+          setting_value?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       haven_updates: {
         Row: {
           created_at: string
@@ -355,6 +379,30 @@ export type Database = {
           payment_status?: string | null
           user_id?: string
           user_name?: string
+        }
+        Relationships: []
+      }
+      member_visits: {
+        Row: {
+          checked_in_at: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          user_id: string
+        }
+        Insert: {
+          checked_in_at?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          user_id: string
+        }
+        Update: {
+          checked_in_at?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          user_id?: string
         }
         Relationships: []
       }

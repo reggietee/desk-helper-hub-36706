@@ -25,6 +25,7 @@ import { toast } from 'sonner';
 import { WeeklyPresence } from '@/components/dashboard/WeeklyPresence';
 import { ProfileSettings } from '@/components/dashboard/ProfileSettings';
 import { HavenUpdates } from '@/components/dashboard/HavenUpdates';
+import { CheckInBanner } from '@/components/dashboard/CheckInBanner';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -207,7 +208,10 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Check-in banner - appears above everything when on Haven Wi-Fi */}
+      <CheckInBanner userId={userId} />
+      
       <header className="bg-card border-b border-border shadow-sm">
         <div className="container mx-auto px-6 py-5 flex justify-between items-center">
           <div className="flex items-center">

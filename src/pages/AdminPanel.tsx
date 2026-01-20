@@ -4,10 +4,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Users, Calendar, Megaphone, Mail } from 'lucide-react';
+import { ArrowLeft, Users, Calendar, Megaphone, Mail, MapPin } from 'lucide-react';
 import { MemberManagement } from '@/components/admin/MemberManagement';
 import { HavenUpdatesManagement } from '@/components/admin/HavenUpdatesManagement';
 import { CalendarInviteManagement } from '@/components/admin/CalendarInviteManagement';
+import { CheckInSettings } from '@/components/admin/CheckInSettings';
+import { CheckInHistory } from '@/components/admin/CheckInHistory';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 export default function AdminPanel() {
   const navigate = useNavigate();
@@ -81,7 +83,7 @@ export default function AdminPanel() {
 
       <main className="container mx-auto px-6 py-12">
         <Tabs defaultValue="members" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 max-w-2xl">
+          <TabsList className="grid w-full grid-cols-5 max-w-3xl">
             <TabsTrigger value="members" className="gap-2">
               <Users className="h-4 w-4" />
               Members
@@ -97,6 +99,10 @@ export default function AdminPanel() {
             <TabsTrigger value="invites" className="gap-2">
               <Mail className="h-4 w-4" />
               Invites
+            </TabsTrigger>
+            <TabsTrigger value="checkin" className="gap-2">
+              <MapPin className="h-4 w-4" />
+              Check In
             </TabsTrigger>
           </TabsList>
 
@@ -146,6 +152,11 @@ export default function AdminPanel() {
 
           <TabsContent value="invites" className="mt-6">
             <CalendarInviteManagement />
+          </TabsContent>
+
+          <TabsContent value="checkin" className="mt-6 space-y-6">
+            <CheckInSettings />
+            <CheckInHistory />
           </TabsContent>
         </Tabs>
       </main>
