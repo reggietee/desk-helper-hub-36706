@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { VisitHistory } from "@/components/dashboard/VisitHistory";
 
 interface ProfileSettingsProps {
   open: boolean;
@@ -26,6 +27,18 @@ export const ProfileSettings = ({
   const [name, setName] = useState(currentName);
   const [email, setEmail] = useState(currentEmail);
   const [loading, setLoading] = useState(false);
+  const [userId, setUserId] = useState<string>("");
+  const [visitRefreshKey, setVisitRefreshKey] = useState(0);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+      }
+    };
+    getUser();
+  }, []);
 
   const handleNameUpdate = async () => {
     if (!name.trim()) {
@@ -85,9 +98,10 @@ export const ProfileSettings = ({
         </DialogHeader>
 
         <Tabs defaultValue="name" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="name">Name</TabsTrigger>
             <TabsTrigger value="email">Email</TabsTrigger>
+            <TabsTrigger value="visits">Visits</TabsTrigger>
           </TabsList>
 
           <TabsContent value="name" className="space-y-4">
@@ -132,6 +146,10 @@ export const ProfileSettings = ({
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Update Email
             </Button>
+          </TabsContent>
+
+          <TabsContent value="visits" className="space-y-4">
+            {userId && <VisitHistory userId={userId} refreshKey={visitRefreshKey} />}
           </TabsContent>
 
         </Tabs>

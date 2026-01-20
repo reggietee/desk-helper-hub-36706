@@ -2,3 +2,9 @@ project_id = "qzqucuiwgdilgramnizm"
 
 [functions.send-calendar-invite]
 verify_jwt = true
+
+[functions.check-ip]
+verify_jwt = false
+
+[functions.check-in]
+verify_jwt = false
