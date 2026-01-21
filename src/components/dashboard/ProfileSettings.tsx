@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { VisitHistory } from "@/components/dashboard/VisitHistory";
+import { CreditsHistory } from "@/components/dashboard/CreditsHistory";
 
 interface ProfileSettingsProps {
   open: boolean;
@@ -98,10 +99,11 @@ export const ProfileSettings = ({
         </DialogHeader>
 
         <Tabs defaultValue="name" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="name">Name</TabsTrigger>
             <TabsTrigger value="email">Email</TabsTrigger>
             <TabsTrigger value="visits">Visits</TabsTrigger>
+            <TabsTrigger value="credits">Credits</TabsTrigger>
           </TabsList>
 
           <TabsContent value="name" className="space-y-4">
@@ -150,6 +152,10 @@ export const ProfileSettings = ({
 
           <TabsContent value="visits" className="space-y-4">
             {userId && <VisitHistory userId={userId} refreshKey={visitRefreshKey} />}
+          </TabsContent>
+
+          <TabsContent value="credits" className="space-y-4">
+            {userId && <CreditsHistory userId={userId} refreshKey={visitRefreshKey} />}
           </TabsContent>
 
         </Tabs>

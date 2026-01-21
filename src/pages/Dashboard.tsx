@@ -26,6 +26,7 @@ import { WeeklyPresence } from '@/components/dashboard/WeeklyPresence';
 import { ProfileSettings } from '@/components/dashboard/ProfileSettings';
 import { HavenUpdates } from '@/components/dashboard/HavenUpdates';
 import { CheckInBanner } from '@/components/dashboard/CheckInBanner';
+import { CreditsDisplay } from '@/components/dashboard/CreditsDisplay';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -63,7 +64,12 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [profileSettingsOpen, setProfileSettingsOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [creditsRefreshKey, setCreditsRefreshKey] = useState(0);
 
+  const handleCheckInComplete = () => {
+    // Refresh credits display after check-in
+    setCreditsRefreshKey(prev => prev + 1);
+  };
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -210,7 +216,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Check-in banner - appears above everything when on Haven Wi-Fi */}
-      <CheckInBanner userId={userId} />
+      <CheckInBanner userId={userId} onCheckIn={handleCheckInComplete} />
       
       <header className="bg-card border-b border-border shadow-sm">
         <div className="container mx-auto px-6 py-5 flex justify-between items-center">
@@ -223,6 +229,7 @@ export default function Dashboard() {
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
+            <CreditsDisplay userId={userId} refreshKey={creditsRefreshKey} />
             {isAdmin && (
               <Button 
                 variant="outline" 
