@@ -24,7 +24,7 @@ interface WeeklySchedule {
 
 const TIMEZONE = "America/Toronto";
 
-export function WeeklyPresence({ userId }: { userId: string }) {
+export function WeeklyPresence({ userId, onCreditsEarned }: { userId: string; onCreditsEarned?: () => void }) {
   const [schedules, setSchedules] = useState<WeeklySchedule[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -457,6 +457,7 @@ export function WeeklyPresence({ userId }: { userId: string }) {
         currentWeekStart={currentWeekStart}
         nextWeekStart={nextWeekStart}
         onSaved={fetchSchedules}
+        onCreditsEarned={onCreditsEarned}
       />
     </div>
   );

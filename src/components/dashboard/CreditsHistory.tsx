@@ -64,6 +64,9 @@ export const CreditsHistory = ({ userId, refreshKey = 0 }: CreditsHistoryProps) 
     if (reason.toLowerCase().includes("streak")) {
       return <TrendingUp className="h-4 w-4 text-amber-500" />;
     }
+    if (reason === "weekly_planning") {
+      return <Calendar className="h-4 w-4 text-blue-500" />;
+    }
     return <Calendar className="h-4 w-4 text-primary" />;
   };
 
@@ -73,6 +76,8 @@ export const CreditsHistory = ({ userId, refreshKey = 0 }: CreditsHistoryProps) 
         return "Daily check-in";
       case "weekly_streak_bonus":
         return "5-day streak bonus";
+      case "weekly_planning":
+        return "Weekly planning";
       default:
         return reason;
     }

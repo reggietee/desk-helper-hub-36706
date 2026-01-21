@@ -31,6 +31,7 @@ interface SchedulePlanModalProps {
   currentWeekStart: Date;
   nextWeekStart: Date;
   onSaved: () => void;
+  onCreditsEarned?: () => void;
 }
 
 const TIME_WINDOW_OPTIONS = [
@@ -52,6 +53,7 @@ export function SchedulePlanModal({
   currentWeekStart,
   nextWeekStart,
   onSaved,
+  onCreditsEarned,
 }: SchedulePlanModalProps) {
   const [days, setDays] = useState<DaySchedule[]>([]);
   const [showName, setShowName] = useState(true);
@@ -351,9 +353,41 @@ export function SchedulePlanModal({
         }
       }
 
+      // Award planning credits for weeks with at least 1 planned day
+      let totalCreditsAwarded = 0;
+      const weeksWithPlannedDays = new Set<string>();
+      selectedDays.forEach(day => {
+        weeksWithPlannedDays.add(format(day.weekStart, "yyyy-MM-dd"));
+      });
+
+      for (const weekStartStr of weeksWithPlannedDays) {
+        try {
+          const { data, error } = await supabase.functions.invoke('award-planning-credits', {
+            body: { weekStartDate: weekStartStr },
+          });
+          
+          if (!error && data?.credits?.awarded > 0) {
+            totalCreditsAwarded += data.credits.awarded;
+          }
+        } catch (err) {
+          console.error('Error awarding planning credits:', err);
+        }
+      }
+
+      // Build toast message
+      let toastDescription = calendarInvitesSent 
+        ? "Your weekly schedule has been updated and calendar invites sent." 
+        : "Your weekly schedule has been updated.";
+      
+      if (totalCreditsAwarded > 0) {
+        toastDescription += ` +${totalCreditsAwarded} ©`;
+        // Trigger credits animation
+        onCreditsEarned?.();
+      }
+
       toast({
         title: "Schedule saved",
-        description: calendarInvitesSent ? "Your weekly schedule has been updated and calendar invites sent." : "Your weekly schedule has been updated.",
+        description: toastDescription,
       });
 
       onSaved();
