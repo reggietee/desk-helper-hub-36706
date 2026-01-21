@@ -14,6 +14,7 @@ export const CheckInBanner = ({ userId, onCheckIn }: CheckInBannerProps) => {
   const [checking, setChecking] = useState(true);
   const [checkingIn, setCheckingIn] = useState(false);
   const [checkedIn, setCheckedIn] = useState(false);
+  const [creditsEarned, setCreditsEarned] = useState<number>(0);
 
   useEffect(() => {
     checkIpMatch();
@@ -71,9 +72,21 @@ export const CheckInBanner = ({ userId, onCheckIn }: CheckInBannerProps) => {
       }
 
       setCheckedIn(true);
-      toast.success("Checked in ✅", {
-        description: "Welcome to Haven!"
-      });
+      
+      // Show credits earned
+      const credits = response.data.credits;
+      if (credits && credits.awarded > 0) {
+        setCreditsEarned(credits.awarded);
+        const streakMessage = credits.streakBonus ? " (includes 5-day streak bonus!)" : "";
+        toast.success(`Checked in ✅ +${credits.awarded}©`, {
+          description: `Welcome to Haven!${streakMessage}`
+        });
+      } else {
+        toast.success("Checked in ✅", {
+          description: "Welcome to Haven!"
+        });
+      }
+      
       onCheckIn?.();
 
       // Hide banner after 3 seconds
@@ -129,7 +142,7 @@ export const CheckInBanner = ({ userId, onCheckIn }: CheckInBannerProps) => {
           ) : (
             <div className="flex items-center gap-2 text-sm">
               <CheckCircle className="h-4 w-4" />
-              <span>Checked in ✅</span>
+              <span>Checked in ✅{creditsEarned > 0 && ` +${creditsEarned}©`}</span>
             </div>
           )}
         </div>
