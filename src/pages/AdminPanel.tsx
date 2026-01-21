@@ -58,7 +58,7 @@ export default function AdminPanel() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-card border-b border-border shadow-sm">
+      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border shadow-sm">
         <div className="container mx-auto px-6 py-5">
           <div className="flex items-center justify-between">
             <div>

@@ -51,18 +51,20 @@ export default function AdminScheduleHistory() {
   }
 
   return (
-    <div className="relative">
-      <div className="absolute top-4 left-4 z-10">
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={() => navigate('/dashboard')}
-          className="gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Dashboard
-        </Button>
-      </div>
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border shadow-sm">
+        <div className="container mx-auto px-6 py-5">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => navigate('/dashboard')}
+            className="gap-2 rounded-xl"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Dashboard
+          </Button>
+        </div>
+      </header>
       <AdminSchedulePanel />
     </div>
   );
