@@ -97,6 +97,43 @@ export default {
 				'slide-out': {
 					from: { transform: 'translateY(0)', opacity: '1' },
 					to: { transform: 'translateY(10px)', opacity: '0' }
+				},
+				'credits-pop': {
+					'0%': { transform: 'scale(1)' },
+					'30%': { transform: 'scale(1.3)' },
+					'50%': { transform: 'scale(0.95)' },
+					'70%': { transform: 'scale(1.1)' },
+					'100%': { transform: 'scale(1)' }
+				},
+				'float-up': {
+					'0%': { opacity: '0', transform: 'translate(-50%, 0) scale(0.5)' },
+					'20%': { opacity: '1', transform: 'translate(-50%, -4px) scale(1.1)' },
+					'80%': { opacity: '1', transform: 'translate(-50%, -16px) scale(1)' },
+					'100%': { opacity: '0', transform: 'translate(-50%, -24px) scale(0.9)' }
+				},
+				'particle-burst': {
+					'0%': { 
+						opacity: '1', 
+						transform: 'translate(-50%, -50%) rotate(var(--particle-angle)) translateY(0) scale(1)' 
+					},
+					'100%': { 
+						opacity: '0', 
+						transform: 'translate(-50%, -50%) rotate(var(--particle-angle)) translateY(24px) scale(0)' 
+					}
+				},
+				'sparkle': {
+					'0%': { 
+						opacity: '0', 
+						transform: 'translate(-50%, -50%) rotate(var(--sparkle-angle)) translateY(0) scale(0)' 
+					},
+					'30%': { 
+						opacity: '1', 
+						transform: 'translate(-50%, -50%) rotate(var(--sparkle-angle)) translateY(12px) scale(1.2)' 
+					},
+					'100%': { 
+						opacity: '0', 
+						transform: 'translate(-50%, -50%) rotate(var(--sparkle-angle)) translateY(20px) scale(0)' 
+					}
 				}
 			},
 			animation: {
@@ -105,7 +142,11 @@ export default {
 				'fade-in': 'fade-in 0.3s ease-out',
 				'fade-out': 'fade-out 0.2s ease-out',
 				'slide-in': 'slide-in 0.3s ease-out',
-				'slide-out': 'slide-out 0.2s ease-out'
+				'slide-out': 'slide-out 0.2s ease-out',
+				'credits-pop': 'credits-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+				'float-up': 'float-up 1.2s ease-out forwards',
+				'particle-burst': 'particle-burst 0.7s ease-out forwards',
+				'sparkle': 'sparkle 0.8s ease-out forwards'
 			}
 		}
 	},
