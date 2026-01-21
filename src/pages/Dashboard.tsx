@@ -230,7 +230,6 @@ export default function Dashboard() {
               />
             </div>
             <div className="flex items-center gap-2">
-              <ThemeToggle />
               <CreditsDisplay userId={userId} refreshKey={creditsRefreshKey} />
               {isAdmin && (
                 <Button 
@@ -256,6 +255,7 @@ export default function Dashboard() {
                 <LogOut className="mr-2 h-4 w-4" />
                 Sign Out
               </Button>
+              <ThemeToggle />
             </div>
           </div>
         </header>
