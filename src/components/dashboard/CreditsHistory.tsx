@@ -95,7 +95,7 @@ export const CreditsHistory = ({ userId, refreshKey = 0 }: CreditsHistoryProps) 
         </div>
         <div>
           <p className="text-sm text-muted-foreground">Current Balance</p>
-          <p className="text-2xl font-bold text-foreground">{balance}©</p>
+          <p className="text-2xl font-bold text-foreground">{balance} ©</p>
         </div>
       </div>
 
@@ -129,10 +129,10 @@ export const CreditsHistory = ({ userId, refreshKey = 0 }: CreditsHistoryProps) 
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-semibold text-green-600 dark:text-green-400">
-                    +{entry.amount}©
+                    +{entry.amount} ©
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Balance: {entry.balance_after}©
+                    Balance: {entry.balance_after} ©
                   </p>
                 </div>
               </div>
