@@ -215,50 +215,53 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Check-in banner - appears above everything when on Haven Wi-Fi */}
-      <CheckInBanner userId={userId} onCheckIn={handleCheckInComplete} />
-      
-      <header className="bg-card border-b border-border shadow-sm">
-        <div className="container mx-auto px-6 py-5 flex justify-between items-center">
-          <div className="flex items-center">
-            <img 
-              src={theme === 'dark' ? havenLogoWhite : havenLogo} 
-              alt="Haven Workspace" 
-              className="w-[113px] h-16 object-contain" 
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <CreditsDisplay userId={userId} refreshKey={creditsRefreshKey} />
-            {isAdmin && (
+      {/* Sticky navigation wrapper */}
+      <div className="sticky top-0 z-50">
+        {/* Check-in banner - appears above everything when on Haven Wi-Fi */}
+        <CheckInBanner userId={userId} onCheckIn={handleCheckInComplete} />
+        
+        <header className="bg-card/95 backdrop-blur-md border-b border-border shadow-sm">
+          <div className="container mx-auto px-6 py-5 flex justify-between items-center">
+            <div className="flex items-center">
+              <img 
+                src={theme === 'dark' ? havenLogoWhite : havenLogo} 
+                alt="Haven Workspace" 
+                className="w-[113px] h-16 object-contain" 
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <CreditsDisplay userId={userId} refreshKey={creditsRefreshKey} />
+              {isAdmin && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => navigate('/admin')}
+                  className="rounded-xl"
+                >
+                  <Shield className="mr-2 h-4 w-4" />
+                  Admin
+                </Button>
+              )}
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={() => navigate('/admin')}
+                onClick={() => setProfileSettingsOpen(true)} 
                 className="rounded-xl"
               >
-                <Shield className="mr-2 h-4 w-4" />
-                Admin
+                <Settings className="mr-2 h-4 w-4" />
+                Profile
               </Button>
-            )}
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => setProfileSettingsOpen(true)} 
-              className="rounded-xl"
-            >
-              <Settings className="mr-2 h-4 w-4" />
-              Profile
-            </Button>
-            <Button variant="ghost" onClick={handleLogout} className="rounded-xl">
-              <LogOut className="mr-2 h-4 w-4" />
-              Sign Out
-            </Button>
+              <Button variant="ghost" onClick={handleLogout} className="rounded-xl">
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign Out
+              </Button>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
+      </div>
 
-      <main className="container mx-auto px-6 py-12">
+      <main className="container mx-auto px-6 py-12 flex-1">
         <div className="mb-12">
           <h2 className="text-4xl font-heading font-bold mb-3 text-foreground">
             {getDailyGreeting(userName)}

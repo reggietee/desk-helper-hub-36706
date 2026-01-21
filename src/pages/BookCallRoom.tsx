@@ -118,9 +118,9 @@ export default function BookCallRoom() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" onClick={() => navigate('/dashboard')}>
+      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border shadow-sm">
+        <div className="container mx-auto px-6 py-5">
+          <Button variant="ghost" onClick={() => navigate('/dashboard')} className="rounded-xl">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Dashboard
           </Button>
