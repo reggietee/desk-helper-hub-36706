@@ -41,7 +41,7 @@ export const CreditsDisplay = ({ userId, refreshKey = 0 }: CreditsDisplayProps) 
   if (loading) {
     return (
       <div className="flex items-center gap-1 px-3 py-1.5 bg-accent/10 rounded-xl text-sm font-medium text-muted-foreground">
-        <span>--©</span>
+        <span>-- ©</span>
       </div>
     );
   }
@@ -51,7 +51,7 @@ export const CreditsDisplay = ({ userId, refreshKey = 0 }: CreditsDisplayProps) 
       <Tooltip>
         <TooltipTrigger asChild>
           <div className="flex items-center gap-1 px-3 py-1.5 bg-accent/10 rounded-xl text-sm font-medium text-foreground cursor-default hover:bg-accent/20 transition-colors">
-            <span>{balance}©</span>
+            <span>{balance} ©</span>
           </div>
         </TooltipTrigger>
         <TooltipContent>
