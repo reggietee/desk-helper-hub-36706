@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Check, X, Ban } from 'lucide-react';
+import { Check, X, Ban, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { MemberProfileModal } from './MemberProfileModal';
 
 interface Profile {
   id: string;
@@ -24,6 +25,8 @@ export function MemberManagement() {
   const [inactiveMembers, setInactiveMembers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [selectedMember, setSelectedMember] = useState<Profile | null>(null);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
 
   useEffect(() => {
     fetchMembers();
@@ -141,6 +144,11 @@ export function MemberManagement() {
     }
   };
 
+  const handleOpenProfile = (member: Profile) => {
+    setSelectedMember(member);
+    setProfileModalOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="py-12 text-center text-muted-foreground">
@@ -222,25 +230,35 @@ export function MemberManagement() {
           </Card>
         ) : (
           activeMembers.map((member) => (
-            <Card key={member.id}>
+            <Card 
+              key={member.id} 
+              className="cursor-pointer hover:bg-muted/50 transition-colors"
+              onClick={() => handleOpenProfile(member)}
+            >
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <div>
+                  <div className="flex-1">
                     <CardTitle>{member.full_name}</CardTitle>
                     <CardDescription>
                       {member.email}<br />
                       Approved {member.approved_at ? format(new Date(member.approved_at), 'MMM d, yyyy') : 'N/A'}
                     </CardDescription>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => handleDeactivate(member.id, member.full_name)}
-                    disabled={actionLoading === member.id}
-                  >
-                    <Ban className="mr-2 h-4 w-4" />
-                    Deactivate
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeactivate(member.id, member.full_name);
+                      }}
+                      disabled={actionLoading === member.id}
+                    >
+                      <Ban className="mr-2 h-4 w-4" />
+                      Deactivate
+                    </Button>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                  </div>
                 </div>
               </CardHeader>
             </Card>
@@ -257,23 +275,36 @@ export function MemberManagement() {
           </Card>
         ) : (
           inactiveMembers.map((member) => (
-            <Card key={member.id}>
+            <Card 
+              key={member.id}
+              className="cursor-pointer hover:bg-muted/50 transition-colors"
+              onClick={() => handleOpenProfile(member)}
+            >
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <div>
+                  <div className="flex-1">
                     <CardTitle className="text-muted-foreground">{member.full_name}</CardTitle>
                     <CardDescription>
                       {member.email}<br />
                       Deactivated {member.declined_at ? format(new Date(member.declined_at), 'MMM d, yyyy') : 'N/A'}
                     </CardDescription>
                   </div>
-                  <Badge variant="secondary">Inactive</Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">Inactive</Badge>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                  </div>
                 </div>
               </CardHeader>
             </Card>
           ))
         )}
       </TabsContent>
+
+      <MemberProfileModal
+        member={selectedMember}
+        open={profileModalOpen}
+        onOpenChange={setProfileModalOpen}
+      />
     </Tabs>
   );
 }
