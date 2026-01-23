@@ -52,12 +52,12 @@ Deno.serve(async (req) => {
     // Get user IDs from credits data
     const userIds = (creditsData || []).map((c: any) => c.user_id);
     
-    // Fetch profiles for those users (only active members)
+    // Fetch profiles for those users (only approved/active members)
     const { data: profilesData, error: profilesError } = await supabase
       .from("profiles")
       .select("id, full_name, status")
       .in("id", userIds.length > 0 ? userIds : ['00000000-0000-0000-0000-000000000000'])
-      .eq("status", "active");
+      .in("status", ["active", "approved"]);
 
     if (profilesError) {
       console.error("Profiles query error:", profilesError);
@@ -66,6 +66,9 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    
+    console.log("Credits data count:", creditsData?.length || 0);
+    console.log("Profiles data count:", profilesData?.length || 0);
 
     // Create a map of user_id -> profile
     const profilesMap = new Map((profilesData || []).map((p: any) => [p.id, p]));
@@ -90,7 +93,10 @@ Deno.serve(async (req) => {
       .from("profiles")
       .select("full_name")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
+    
+    console.log("Current user ID:", user.id);
+    console.log("Leaderboard entries:", leaderboardData.length);
 
     // Format the leaderboard
     const formattedLeaderboard = (leaderboardData || [])
