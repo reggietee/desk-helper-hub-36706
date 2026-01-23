@@ -16,6 +16,7 @@ interface ProfileSettingsProps {
   currentName: string;
   currentEmail: string;
   onNameUpdate: (newName: string) => void;
+  defaultTab?: string;
 }
 
 export const ProfileSettings = ({ 
@@ -23,13 +24,22 @@ export const ProfileSettings = ({
   onOpenChange, 
   currentName, 
   currentEmail,
-  onNameUpdate 
+  onNameUpdate,
+  defaultTab = "name"
 }: ProfileSettingsProps) => {
   const [name, setName] = useState(currentName);
   const [email, setEmail] = useState(currentEmail);
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState<string>("");
   const [visitRefreshKey, setVisitRefreshKey] = useState(0);
+  const [activeTab, setActiveTab] = useState(defaultTab);
+
+  // Update active tab when defaultTab changes or modal opens
+  useEffect(() => {
+    if (open) {
+      setActiveTab(defaultTab);
+    }
+  }, [open, defaultTab]);
 
   useEffect(() => {
     const getUser = async () => {
@@ -98,7 +108,7 @@ export const ProfileSettings = ({
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="name" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="name">Name</TabsTrigger>
             <TabsTrigger value="email">Email</TabsTrigger>
