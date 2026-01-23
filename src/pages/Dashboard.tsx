@@ -63,6 +63,7 @@ export default function Dashboard() {
   const [userId, setUserId] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [profileSettingsOpen, setProfileSettingsOpen] = useState(false);
+  const [profileDefaultTab, setProfileDefaultTab] = useState("name");
   const [isAdmin, setIsAdmin] = useState(false);
   const [creditsRefreshKey, setCreditsRefreshKey] = useState(0);
 
@@ -230,7 +231,14 @@ export default function Dashboard() {
               />
             </div>
             <div className="flex items-center gap-2">
-              <CreditsDisplay userId={userId} refreshKey={creditsRefreshKey} />
+              <CreditsDisplay 
+                userId={userId} 
+                refreshKey={creditsRefreshKey} 
+                onClick={() => {
+                  setProfileDefaultTab("credits");
+                  setProfileSettingsOpen(true);
+                }}
+              />
               {isAdmin && (
                 <Button 
                   variant="outline" 
@@ -245,7 +253,10 @@ export default function Dashboard() {
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={() => setProfileSettingsOpen(true)} 
+                onClick={() => {
+                  setProfileDefaultTab("name");
+                  setProfileSettingsOpen(true);
+                }} 
                 className="rounded-xl"
               >
                 <Settings className="mr-2 h-4 w-4" />
@@ -313,6 +324,7 @@ export default function Dashboard() {
         currentName={userName}
         currentEmail={userEmail}
         onNameUpdate={setUserName}
+        defaultTab={profileDefaultTab}
       />
     </div>
   );

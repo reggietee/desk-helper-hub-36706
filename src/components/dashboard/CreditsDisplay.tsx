@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 interface CreditsDisplayProps {
   userId: string;
   refreshKey?: number;
+  onClick?: () => void;
 }
 
 // Particle burst component
@@ -61,7 +62,7 @@ const FloatingBadge = ({ amount, isVisible }: { amount: number; isVisible: boole
   );
 };
 
-export const CreditsDisplay = ({ userId, refreshKey = 0 }: CreditsDisplayProps) => {
+export const CreditsDisplay = ({ userId, refreshKey = 0, onClick }: CreditsDisplayProps) => {
   const [balance, setBalance] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -131,7 +132,11 @@ export const CreditsDisplay = ({ userId, refreshKey = 0 }: CreditsDisplayProps) 
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="relative flex items-center gap-1 px-3 py-1.5 bg-accent/10 rounded-xl text-sm font-medium text-foreground cursor-default hover:bg-accent/20 transition-colors">
+          <button 
+            type="button"
+            onClick={onClick}
+            className="relative flex items-center gap-1 px-3 py-1.5 bg-accent/10 rounded-xl text-sm font-medium text-foreground cursor-pointer hover:bg-accent/20 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          >
             {/* Particle burst effect */}
             <ParticleBurst isActive={isAnimating} />
             
@@ -141,7 +146,7 @@ export const CreditsDisplay = ({ userId, refreshKey = 0 }: CreditsDisplayProps) 
             {/* Glow effect for reduced motion */}
             <span 
               className={cn(
-                "absolute inset-0 rounded-xl transition-all duration-500 motion-reduce:transition-none",
+                "absolute inset-0 rounded-xl transition-all duration-500 motion-reduce:transition-none pointer-events-none",
                 isAnimating && "motion-reduce:ring-2 motion-reduce:ring-primary/50 motion-reduce:bg-primary/10"
               )}
             />
@@ -155,10 +160,10 @@ export const CreditsDisplay = ({ userId, refreshKey = 0 }: CreditsDisplayProps) 
             >
               {balance} ©
             </span>
-          </div>
+          </button>
         </TooltipTrigger>
         <TooltipContent>
-          <p>Haven Credits</p>
+          <p>Haven Credits — Click to view history</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
