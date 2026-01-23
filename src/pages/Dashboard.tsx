@@ -20,6 +20,7 @@ import {
   LogOut,
   Settings,
   Shield,
+  Trophy,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { WeeklyPresence } from '@/components/dashboard/WeeklyPresence';
@@ -29,6 +30,7 @@ import { CheckInBanner } from '@/components/dashboard/CheckInBanner';
 import { CreditsDisplay } from '@/components/dashboard/CreditsDisplay';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useTheme } from '@/hooks/use-theme';
+import { LeaderboardModal } from '@/components/dashboard/LeaderboardModal';
 
 interface DashboardCard {
   title: string;
@@ -64,6 +66,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [profileSettingsOpen, setProfileSettingsOpen] = useState(false);
   const [profileDefaultTab, setProfileDefaultTab] = useState("name");
+  const [leaderboardOpen, setLeaderboardOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [creditsRefreshKey, setCreditsRefreshKey] = useState(0);
 
@@ -239,6 +242,15 @@ export default function Dashboard() {
                   setProfileSettingsOpen(true);
                 }}
               />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setLeaderboardOpen(true)}
+                className="rounded-xl"
+              >
+                <Trophy className="mr-2 h-4 w-4" />
+                Leaderboard
+              </Button>
               {isAdmin && (
                 <Button 
                   variant="outline" 
@@ -325,6 +337,12 @@ export default function Dashboard() {
         currentEmail={userEmail}
         onNameUpdate={setUserName}
         defaultTab={profileDefaultTab}
+      />
+
+      <LeaderboardModal
+        open={leaderboardOpen}
+        onOpenChange={setLeaderboardOpen}
+        refreshKey={creditsRefreshKey}
       />
     </div>
   );
