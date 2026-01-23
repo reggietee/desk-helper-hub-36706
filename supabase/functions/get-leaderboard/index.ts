@@ -34,28 +34,50 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Fetch all credits with balance > 0, joined with profiles for active members
-    const { data: leaderboardData, error: leaderboardError } = await supabase
+    // Fetch all credits with balance > 0
+    const { data: creditsData, error: creditsError } = await supabase
       .from("haven_credits")
-      .select(`
-        user_id,
-        balance,
-        profiles!inner (
-          full_name,
-          status
-        )
-      `)
+      .select("user_id, balance")
       .gt("balance", 0)
-      .eq("profiles.status", "active")
       .order("balance", { ascending: false });
 
-    if (leaderboardError) {
-      console.error("Leaderboard query error:", leaderboardError);
+    if (creditsError) {
+      console.error("Credits query error:", creditsError);
       return new Response(JSON.stringify({ error: "Failed to fetch leaderboard" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Get user IDs from credits data
+    const userIds = (creditsData || []).map((c: any) => c.user_id);
+    
+    // Fetch profiles for those users (only active members)
+    const { data: profilesData, error: profilesError } = await supabase
+      .from("profiles")
+      .select("id, full_name, status")
+      .in("id", userIds.length > 0 ? userIds : ['00000000-0000-0000-0000-000000000000'])
+      .eq("status", "active");
+
+    if (profilesError) {
+      console.error("Profiles query error:", profilesError);
+      return new Response(JSON.stringify({ error: "Failed to fetch leaderboard" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Create a map of user_id -> profile
+    const profilesMap = new Map((profilesData || []).map((p: any) => [p.id, p]));
+
+    // Merge credits with profiles, filtering out inactive users
+    const leaderboardData = (creditsData || [])
+      .filter((c: any) => profilesMap.has(c.user_id))
+      .map((c: any) => ({
+        user_id: c.user_id,
+        balance: c.balance,
+        full_name: profilesMap.get(c.user_id)?.full_name || "Unknown",
+      }));
 
     // Get the current user's credits (even if 0)
     const { data: currentUserCredits } = await supabase
@@ -75,7 +97,7 @@ Deno.serve(async (req) => {
       .map((entry: any, index: number) => ({
         rank: index + 1,
         userId: entry.user_id,
-        name: entry.profiles?.full_name || "Unknown",
+        name: entry.full_name,
         balance: entry.balance,
         isCurrentUser: entry.user_id === user.id,
       }))
