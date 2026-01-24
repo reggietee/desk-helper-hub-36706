@@ -5,6 +5,45 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Helper to send credit notification email
+async function sendCreditEmail(
+  supabaseUrl: string,
+  ledgerId: string,
+  userId: string,
+  userEmail: string,
+  firstName: string,
+  creditsAdded: number,
+  actionName: string,
+  newBalance: number
+): Promise<void> {
+  try {
+    const response = await fetch(`${supabaseUrl}/functions/v1/send-credit-email`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+      },
+      body: JSON.stringify({
+        ledgerId,
+        userId,
+        userEmail,
+        firstName,
+        creditsAdded,
+        actionName,
+        newBalance,
+      }),
+    });
+    
+    if (!response.ok) {
+      console.error("[admin-adjust-credits] Failed to send credit email:", await response.text());
+    } else {
+      console.log("[admin-adjust-credits] Credit email sent successfully");
+    }
+  } catch (error) {
+    console.error("[admin-adjust-credits] Error sending credit email:", error);
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -128,19 +167,31 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Fetch target user profile for email notifications
+    const { data: targetProfile } = await supabaseClient
+      .from("profiles")
+      .select("full_name, email")
+      .eq("id", targetUserId)
+      .single();
+
+    const targetUserEmail = targetProfile?.email || "";
+    const targetFirstName = targetProfile?.full_name?.split(" ")[0] || "Member";
+
     // Create ledger entry
     const reason = note 
       ? `admin_adjustment: ${note}` 
       : "admin_adjustment";
 
-    const { error: ledgerError } = await supabaseClient
+    const { data: ledgerEntry, error: ledgerError } = await supabaseClient
       .from("haven_credits_ledger")
       .insert({
         user_id: targetUserId,
         amount: adjustmentAmount,
         reason: reason,
         balance_after: newBalance,
-      });
+      })
+      .select("id")
+      .single();
 
     if (ledgerError) {
       console.error("[admin-adjust-credits] Error creating ledger entry:", ledgerError);
@@ -148,6 +199,20 @@ Deno.serve(async (req) => {
     }
 
     console.log(`[admin-adjust-credits] Successfully adjusted credits. New balance: ${newBalance}`);
+
+    // Send credit email notification for positive adjustments (async, don't block response)
+    if (ledgerEntry && targetUserEmail && adjustmentAmount > 0) {
+      sendCreditEmail(
+        supabaseUrl,
+        ledgerEntry.id,
+        targetUserId,
+        targetUserEmail,
+        targetFirstName,
+        adjustmentAmount,
+        reason,
+        newBalance
+      );
+    }
 
     return new Response(
       JSON.stringify({

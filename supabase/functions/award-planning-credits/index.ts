@@ -7,6 +7,45 @@ const corsHeaders = {
 
 const WEEKLY_PLANNING_CREDITS = 10;
 
+// Helper to send credit notification email
+async function sendCreditEmail(
+  supabaseUrl: string,
+  ledgerId: string,
+  userId: string,
+  userEmail: string,
+  firstName: string,
+  creditsAdded: number,
+  actionName: string,
+  newBalance: number
+): Promise<void> {
+  try {
+    const response = await fetch(`${supabaseUrl}/functions/v1/send-credit-email`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+      },
+      body: JSON.stringify({
+        ledgerId,
+        userId,
+        userEmail,
+        firstName,
+        creditsAdded,
+        actionName,
+        newBalance,
+      }),
+    });
+    
+    if (!response.ok) {
+      console.error("[award-planning-credits] Failed to send credit email:", await response.text());
+    } else {
+      console.log("[award-planning-credits] Credit email sent successfully");
+    }
+  } catch (error) {
+    console.error("[award-planning-credits] Error sending credit email:", error);
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -144,6 +183,16 @@ Deno.serve(async (req) => {
       creditsRecord = newRecord;
     }
 
+    // Fetch user profile for email notifications
+    const { data: profile } = await supabaseClient
+      .from("profiles")
+      .select("full_name, email")
+      .eq("id", user.id)
+      .single();
+
+    const userEmail = profile?.email || user.email || "";
+    const firstName = profile?.full_name?.split(" ")[0] || "Member";
+
     // Award credits
     const newBalance = creditsRecord.balance + WEEKLY_PLANNING_CREDITS;
 
@@ -153,7 +202,7 @@ Deno.serve(async (req) => {
       .eq("user_id", user.id);
 
     // Add ledger entry
-    await supabaseClient
+    const { data: ledgerEntry } = await supabaseClient
       .from("haven_credits_ledger")
       .insert({
         user_id: user.id,
@@ -161,9 +210,25 @@ Deno.serve(async (req) => {
         reason: "weekly_planning",
         balance_after: newBalance,
         reference_id: null
-      });
+      })
+      .select("id")
+      .single();
 
     console.log(`[award-planning-credits] Awarded ${WEEKLY_PLANNING_CREDITS} credits to user ${user.id}`);
+
+    // Send credit email notification (async, don't block response)
+    if (ledgerEntry && userEmail) {
+      sendCreditEmail(
+        supabaseUrl,
+        ledgerEntry.id,
+        user.id,
+        userEmail,
+        firstName,
+        WEEKLY_PLANNING_CREDITS,
+        "weekly_planning",
+        newBalance
+      );
+    }
 
     return new Response(
       JSON.stringify({ 
