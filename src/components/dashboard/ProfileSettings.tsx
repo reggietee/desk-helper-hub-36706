@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -33,6 +34,8 @@ export const ProfileSettings = ({
   const [userId, setUserId] = useState<string>("");
   const [visitRefreshKey, setVisitRefreshKey] = useState(0);
   const [activeTab, setActiveTab] = useState(defaultTab);
+  const [creditEmailNotifications, setCreditEmailNotifications] = useState(true);
+  const [notificationLoading, setNotificationLoading] = useState(false);
 
   // Update active tab when defaultTab changes or modal opens
   useEffect(() => {
@@ -46,10 +49,38 @@ export const ProfileSettings = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setUserId(user.id);
+        // Fetch notification preference
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("credit_email_notifications")
+          .eq("id", user.id)
+          .single();
+        if (profile) {
+          setCreditEmailNotifications(profile.credit_email_notifications ?? true);
+        }
       }
     };
     getUser();
   }, []);
+
+  const handleNotificationToggle = async (enabled: boolean) => {
+    setNotificationLoading(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ credit_email_notifications: enabled })
+        .eq("id", userId);
+
+      if (error) throw error;
+
+      setCreditEmailNotifications(enabled);
+      toast.success(enabled ? "Credit email notifications enabled" : "Credit email notifications disabled");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update notification preference");
+    } finally {
+      setNotificationLoading(false);
+    }
+  };
 
   const handleNameUpdate = async () => {
     if (!name.trim()) {
@@ -109,9 +140,10 @@ export const ProfileSettings = ({
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="name">Name</TabsTrigger>
             <TabsTrigger value="email">Email</TabsTrigger>
+            <TabsTrigger value="notifications">Alerts</TabsTrigger>
             <TabsTrigger value="visits">Visits</TabsTrigger>
             <TabsTrigger value="credits">Credits</TabsTrigger>
           </TabsList>
@@ -158,6 +190,25 @@ export const ProfileSettings = ({
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Update Email
             </Button>
+          </TabsContent>
+
+          <TabsContent value="notifications" className="space-y-4">
+            <div className="flex items-center justify-between p-4 rounded-lg border">
+              <div className="space-y-0.5">
+                <Label htmlFor="credit-notifications" className="text-base font-medium">
+                  Credit email notifications
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Receive an email when you earn Haven Credits
+                </p>
+              </div>
+              <Switch
+                id="credit-notifications"
+                checked={creditEmailNotifications}
+                onCheckedChange={handleNotificationToggle}
+                disabled={notificationLoading}
+              />
+            </div>
           </TabsContent>
 
           <TabsContent value="visits" className="space-y-4">

@@ -9,6 +9,45 @@ const DAILY_CHECKIN_CREDITS = 5;
 const WEEKLY_STREAK_BONUS = 10;
 const STREAK_THRESHOLD = 5;
 
+// Helper to send credit notification email
+async function sendCreditEmail(
+  supabaseUrl: string,
+  ledgerId: string,
+  userId: string,
+  userEmail: string,
+  firstName: string,
+  creditsAdded: number,
+  actionName: string,
+  newBalance: number
+): Promise<void> {
+  try {
+    const response = await fetch(`${supabaseUrl}/functions/v1/send-credit-email`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+      },
+      body: JSON.stringify({
+        ledgerId,
+        userId,
+        userEmail,
+        firstName,
+        creditsAdded,
+        actionName,
+        newBalance,
+      }),
+    });
+    
+    if (!response.ok) {
+      console.error("[check-in] Failed to send credit email:", await response.text());
+    } else {
+      console.log("[check-in] Credit email sent successfully");
+    }
+  } catch (error) {
+    console.error("[check-in] Error sending credit email:", error);
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -133,6 +172,16 @@ Deno.serve(async (req) => {
     let streakBonusAwarded = false;
 
     if (!alreadyCheckedInToday) {
+      // Fetch user profile for email notifications
+      const { data: profile } = await supabaseClient
+        .from("profiles")
+        .select("full_name, email")
+        .eq("id", user.id)
+        .single();
+
+      const userEmail = profile?.email || user.email || "";
+      const firstName = profile?.full_name?.split(" ")[0] || "Member";
+
       // Get or create credits record
       let { data: creditsRecord } = await supabaseClient
         .from("haven_credits")
@@ -166,7 +215,7 @@ Deno.serve(async (req) => {
           .eq("user_id", user.id);
 
         // Add ledger entry for daily check-in
-        await supabaseClient
+        const { data: ledgerEntry } = await supabaseClient
           .from("haven_credits_ledger")
           .insert({
             user_id: user.id,
@@ -174,10 +223,26 @@ Deno.serve(async (req) => {
             reason: "daily_checkin",
             balance_after: newBalance,
             reference_id: visit.id
-          });
+          })
+          .select("id")
+          .single();
 
         creditsAwarded = DAILY_CHECKIN_CREDITS;
         console.log(`[check-in] Awarded ${DAILY_CHECKIN_CREDITS} credits to user ${user.id}`);
+
+        // Send credit email notification (async, don't block response)
+        if (ledgerEntry && userEmail) {
+          sendCreditEmail(
+            supabaseUrl,
+            ledgerEntry.id,
+            user.id,
+            userEmail,
+            firstName,
+            DAILY_CHECKIN_CREDITS,
+            "daily_checkin",
+            newBalance
+          );
+        }
 
         // Check for weekly streak bonus
         // Get the start and end of the current week (Mon-Sun)
@@ -231,7 +296,7 @@ Deno.serve(async (req) => {
                 .update({ balance: bonusBalance, updated_at: new Date().toISOString() })
                 .eq("user_id", user.id);
 
-              await supabaseClient
+              const { data: streakLedgerEntry } = await supabaseClient
                 .from("haven_credits_ledger")
                 .insert({
                   user_id: user.id,
@@ -239,11 +304,27 @@ Deno.serve(async (req) => {
                   reason: "weekly_streak_bonus",
                   balance_after: bonusBalance,
                   reference_id: visit.id
-                });
+                })
+                .select("id")
+                .single();
 
               creditsAwarded += WEEKLY_STREAK_BONUS;
               streakBonusAwarded = true;
               console.log(`[check-in] Awarded ${WEEKLY_STREAK_BONUS} streak bonus to user ${user.id}`);
+
+              // Send streak bonus email notification (async, don't block response)
+              if (streakLedgerEntry && userEmail) {
+                sendCreditEmail(
+                  supabaseUrl,
+                  streakLedgerEntry.id,
+                  user.id,
+                  userEmail,
+                  firstName,
+                  WEEKLY_STREAK_BONUS,
+                  "weekly_streak_bonus",
+                  bonusBalance
+                );
+              }
             }
           }
         }

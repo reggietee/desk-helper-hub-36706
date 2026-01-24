@@ -294,6 +294,7 @@ export type Database = {
           amount: number
           balance_after: number
           created_at: string
+          email_sent_at: string | null
           id: string
           reason: string
           reference_id: string | null
@@ -303,6 +304,7 @@ export type Database = {
           amount: number
           balance_after: number
           created_at?: string
+          email_sent_at?: string | null
           id?: string
           reason: string
           reference_id?: string | null
@@ -312,6 +314,7 @@ export type Database = {
           amount?: number
           balance_after?: number
           created_at?: string
+          email_sent_at?: string | null
           id?: string
           reason?: string
           reference_id?: string | null
@@ -578,6 +581,7 @@ export type Database = {
         Row: {
           approved_at: string | null
           created_at: string | null
+          credit_email_notifications: boolean
           declined_at: string | null
           declined_reason: string | null
           email: string | null
@@ -589,6 +593,7 @@ export type Database = {
         Insert: {
           approved_at?: string | null
           created_at?: string | null
+          credit_email_notifications?: boolean
           declined_at?: string | null
           declined_reason?: string | null
           email?: string | null
@@ -600,6 +605,7 @@ export type Database = {
         Update: {
           approved_at?: string | null
           created_at?: string | null
+          credit_email_notifications?: boolean
           declined_at?: string | null
           declined_reason?: string | null
           email?: string | null
