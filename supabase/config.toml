@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.check-in]
 verify_jwt = false
+
+[functions.send-daily-credits-report]
+verify_jwt = false
