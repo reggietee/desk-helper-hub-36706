@@ -229,6 +229,45 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_credits_report_logs: {
+        Row: {
+          created_at: string
+          error: string | null
+          generated_at: string
+          id: string
+          members_included: number
+          report_date: string
+          resend_message_id: string | null
+          sent_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          generated_at?: string
+          id?: string
+          members_included?: number
+          report_date: string
+          resend_message_id?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          generated_at?: string
+          id?: string
+          members_included?: number
+          report_date?: string
+          resend_message_id?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       guest_day_pass_requests: {
         Row: {
           arrival_date: string
