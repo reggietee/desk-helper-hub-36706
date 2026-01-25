@@ -10,7 +10,9 @@ import { HavenUpdatesManagement } from '@/components/admin/HavenUpdatesManagemen
 import { CalendarInviteManagement } from '@/components/admin/CalendarInviteManagement';
 import { CheckInSettings } from '@/components/admin/CheckInSettings';
 import { CheckInHistory } from '@/components/admin/CheckInHistory';
+import { EmailTools } from '@/components/admin/EmailTools';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+
 export default function AdminPanel() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -157,6 +159,7 @@ export default function AdminPanel() {
           <TabsContent value="checkin" className="mt-6 space-y-6">
             <CheckInSettings />
             <CheckInHistory />
+            <EmailTools />
           </TabsContent>
         </Tabs>
       </main>

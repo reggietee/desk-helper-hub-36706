@@ -333,7 +333,10 @@ export type Database = {
           amount: number
           balance_after: number
           created_at: string
+          email_error: string | null
+          email_message_id: string | null
           email_sent_at: string | null
+          email_status: string | null
           id: string
           reason: string
           reference_id: string | null
@@ -343,7 +346,10 @@ export type Database = {
           amount: number
           balance_after: number
           created_at?: string
+          email_error?: string | null
+          email_message_id?: string | null
           email_sent_at?: string | null
+          email_status?: string | null
           id?: string
           reason: string
           reference_id?: string | null
@@ -353,7 +359,10 @@ export type Database = {
           amount?: number
           balance_after?: number
           created_at?: string
+          email_error?: string | null
+          email_message_id?: string | null
           email_sent_at?: string | null
+          email_status?: string | null
           id?: string
           reason?: string
           reference_id?: string | null

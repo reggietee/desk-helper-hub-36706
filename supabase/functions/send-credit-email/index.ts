@@ -2,8 +2,6 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@4.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -40,37 +38,55 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Create Supabase client with service role at the start
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+  let ledgerId: string | undefined;
+
   try {
+    const requestBody: CreditEmailRequest = await req.json();
+    ledgerId = requestBody.ledgerId;
+    
     const { 
-      ledgerId, 
       userId, 
       userEmail, 
       firstName, 
       creditsAdded, 
       actionName, 
       newBalance 
-    }: CreditEmailRequest = await req.json();
+    } = requestBody;
 
+    console.log(`[send-credit-email] === START ===`);
     console.log(`[send-credit-email] Processing for ledger ${ledgerId}, user ${userId}`);
+    console.log(`[send-credit-email] Recipient: ${userEmail}`);
+    console.log(`[send-credit-email] Action: ${actionName}, Credits: +${creditsAdded}, New Balance: ${newBalance}`);
 
     // Validate required fields
     if (!ledgerId || !userId || !userEmail || !firstName || creditsAdded === undefined || !actionName || newBalance === undefined) {
-      console.error("[send-credit-email] Missing required fields");
+      console.error("[send-credit-email] Missing required fields:", { ledgerId, userId, userEmail, firstName, creditsAdded, actionName, newBalance });
+      
+      if (ledgerId) {
+        await supabase
+          .from("haven_credits_ledger")
+          .update({ 
+            email_status: "failed",
+            email_error: "Missing required fields"
+          })
+          .eq("id", ledgerId);
+      }
+      
       return new Response(
         JSON.stringify({ error: "Missing required fields" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Create Supabase client with service role
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
     // Check idempotency: has email already been sent for this ledger entry?
     const { data: ledgerEntry, error: ledgerError } = await supabase
       .from("haven_credits_ledger")
-      .select("id, email_sent_at")
+      .select("id, email_sent_at, email_status, email_message_id")
       .eq("id", ledgerId)
       .single();
 
@@ -82,10 +98,10 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    if (ledgerEntry?.email_sent_at) {
-      console.log(`[send-credit-email] Email already sent for ledger ${ledgerId} at ${ledgerEntry.email_sent_at}`);
+    if (ledgerEntry?.email_sent_at || ledgerEntry?.email_status === "sent") {
+      console.log(`[send-credit-email] Email already sent for ledger ${ledgerId} at ${ledgerEntry.email_sent_at}, message_id: ${ledgerEntry.email_message_id}`);
       return new Response(
-        JSON.stringify({ success: true, alreadySent: true }),
+        JSON.stringify({ success: true, alreadySent: true, messageId: ledgerEntry.email_message_id }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -104,10 +120,13 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (profile && profile.credit_email_notifications === false) {
       console.log(`[send-credit-email] User ${userId} has disabled credit email notifications`);
-      // Mark as sent (opted out) to prevent future attempts
+      // Mark as opted out to prevent future attempts
       await supabase
         .from("haven_credits_ledger")
-        .update({ email_sent_at: new Date().toISOString() })
+        .update({ 
+          email_sent_at: new Date().toISOString(),
+          email_status: "opted_out"
+        })
         .eq("id", ledgerId);
 
       return new Response(
@@ -115,6 +134,29 @@ const handler = async (req: Request): Promise<Response> => {
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // Check Resend API key
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendApiKey) {
+      console.error("[send-credit-email] RESEND_API_KEY is not configured!");
+      await supabase
+        .from("haven_credits_ledger")
+        .update({ 
+          email_status: "failed",
+          email_error: "RESEND_API_KEY not configured"
+        })
+        .eq("id", ledgerId);
+      
+      return new Response(
+        JSON.stringify({ error: "Email service not configured" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log(`[send-credit-email] RESEND_API_KEY is configured (length: ${resendApiKey.length})`);
+
+    // Initialize Resend
+    const resend = new Resend(resendApiKey);
 
     // Build email content
     const displayActionName = getActionDisplayName(actionName);
@@ -155,11 +197,14 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `;
 
+    const senderAddress = "notifications@havenworkspace.ca";
+    console.log(`[send-credit-email] Sending email from: Haven <${senderAddress}>`);
+    console.log(`[send-credit-email] Sending email to: ${userEmail}`);
+    console.log(`[send-credit-email] Subject: ${subject}`);
+
     // Send email via Resend
-    console.log(`[send-credit-email] Sending email to ${userEmail}`);
-    
     const emailResponse = await resend.emails.send({
-      from: "Haven <notifications@havenworkspace.ca>",
+      from: `Haven <${senderAddress}>`,
       to: [userEmail],
       subject: subject,
       html: html,
@@ -170,12 +215,41 @@ const handler = async (req: Request): Promise<Response> => {
       ],
     });
 
-    console.log("[send-credit-email] Email sent successfully:", emailResponse);
+    console.log("[send-credit-email] Resend API response:", JSON.stringify(emailResponse));
 
-    // Mark email as sent in ledger (idempotency)
+    // Check if Resend returned an error
+    if (emailResponse.error) {
+      console.error("[send-credit-email] Resend returned error:", emailResponse.error);
+      
+      await supabase
+        .from("haven_credits_ledger")
+        .update({ 
+          email_status: "failed",
+          email_error: emailResponse.error.message || JSON.stringify(emailResponse.error)
+        })
+        .eq("id", ledgerId);
+      
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: emailResponse.error.message || "Email sending failed"
+        }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const messageId = emailResponse.data?.id;
+    console.log(`[send-credit-email] ✅ Email sent successfully! Message ID: ${messageId}`);
+
+    // Mark email as sent in ledger (idempotency) - only AFTER successful send
     const { error: updateError } = await supabase
       .from("haven_credits_ledger")
-      .update({ email_sent_at: new Date().toISOString() })
+      .update({ 
+        email_sent_at: new Date().toISOString(),
+        email_message_id: messageId,
+        email_status: "sent",
+        email_error: null
+      })
       .eq("id", ledgerId);
 
     if (updateError) {
@@ -183,13 +257,39 @@ const handler = async (req: Request): Promise<Response> => {
       // Don't fail - email was already sent
     }
 
+    console.log(`[send-credit-email] === END SUCCESS ===`);
+
     return new Response(
-      JSON.stringify({ success: true, emailId: emailResponse.data?.id }),
+      JSON.stringify({ 
+        success: true, 
+        messageId: messageId,
+        recipient: userEmail,
+        subject: subject
+      }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
   } catch (error: any) {
+    console.error("[send-credit-email] === ERROR ===");
     console.error("[send-credit-email] Error:", error);
+    console.error("[send-credit-email] Error message:", error.message);
+    console.error("[send-credit-email] Error stack:", error.stack);
+
+    // Try to update ledger with error if we have ledgerId
+    if (ledgerId) {
+      try {
+        await supabase
+          .from("haven_credits_ledger")
+          .update({ 
+            email_status: "failed",
+            email_error: error.message || "Unknown error"
+          })
+          .eq("id", ledgerId);
+      } catch (updateErr) {
+        console.error("[send-credit-email] Failed to update ledger with error:", updateErr);
+      }
+    }
+
     return new Response(
       JSON.stringify({ error: error.message || "Internal server error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
