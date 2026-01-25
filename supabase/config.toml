@@ -11,3 +11,9 @@ verify_jwt = false
 
 [functions.send-daily-credits-report]
 verify_jwt = false
+
+[functions.send-credit-email]
+verify_jwt = false
+
+[functions.send-test-email]
+verify_jwt = false

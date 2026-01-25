@@ -3,12 +3,12 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@4.0.0";
 import * as XLSX from "https://esm.sh/xlsx@0.18.5";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+const ADMIN_EMAIL = "reggie@storymode.co";
 
 // Map reason codes to friendly action names
 const REASON_DISPLAY_NAMES: Record<string, string> = {
@@ -47,12 +47,88 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  console.log("[daily-credits-report] === START ===");
+
+  // Parse request body for options
+  let forceResend = false;
+  let isManualTrigger = false;
+  let triggeringUserId: string | undefined;
+
+  try {
+    const body = await req.json();
+    forceResend = body.forceResend === true;
+    isManualTrigger = body.isManualTrigger === true;
+    triggeringUserId = body.userId;
+  } catch {
+    // No body or invalid JSON - that's fine for scheduled calls
+  }
+
+  console.log(`[daily-credits-report] Manual trigger: ${isManualTrigger}, Force resend: ${forceResend}`);
+
+  // If manual trigger, verify admin authorization
+  if (isManualTrigger) {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Missing authorization header" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+    
+    const { data: { user }, error: authError } = await userClient.auth.getUser();
+    if (authError || !user) {
+      console.error("[daily-credits-report] Auth error:", authError);
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+    const { data: isAdmin } = await supabaseAdmin.rpc('has_role', {
+      _user_id: user.id,
+      _role: 'admin'
+    });
+
+    if (!isAdmin) {
+      console.error("[daily-credits-report] User is not admin:", user.id);
+      return new Response(
+        JSON.stringify({ error: "Admin access required" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log("[daily-credits-report] Admin verified:", user.email);
+  }
+
+  // Check Resend API key
+  const resendApiKey = Deno.env.get("RESEND_API_KEY");
+  if (!resendApiKey) {
+    console.error("[daily-credits-report] RESEND_API_KEY is not configured!");
+    return new Response(
+      JSON.stringify({ success: false, error: "RESEND_API_KEY is not configured" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  console.log(`[daily-credits-report] RESEND_API_KEY configured (length: ${resendApiKey.length})`);
+
+  const resend = new Resend(resendApiKey);
+
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   const reportDate = getReportDateString();
-  console.log(`[daily-credits-report] Starting report for ${reportDate}`);
+  console.log(`[daily-credits-report] Report date: ${reportDate}`);
 
   try {
     // Check idempotency - has report already been sent today?
@@ -67,12 +143,17 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Failed to check existing report");
     }
 
-    if (existingReport?.status === "sent") {
+    if (!forceResend && existingReport?.status === "sent") {
       console.log(`[daily-credits-report] Report already sent for ${reportDate}`);
       return new Response(
         JSON.stringify({ success: true, alreadySent: true, reportDate }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // If forcing resend, skip the normal report - just reset it
+    if (forceResend && existingReport) {
+      console.log(`[daily-credits-report] Force resending report for ${reportDate}`);
     }
 
     // Create or update report log entry
@@ -238,10 +319,14 @@ const handler = async (req: Request): Promise<Response> => {
 
     const generatedAtET = formatDateET(new Date());
 
+    console.log(`[daily-credits-report] Sending email from: Haven <notifications@havenworkspace.ca>`);
+    console.log(`[daily-credits-report] Sending email to: ${ADMIN_EMAIL}`);
+    console.log(`[daily-credits-report] Attachment: ${filename}`);
+
     // Send email with attachment
     const emailResponse = await resend.emails.send({
       from: "Haven <notifications@havenworkspace.ca>",
-      to: ["reggie@storymode.co"],
+      to: [ADMIN_EMAIL],
       subject: `Haven Credits Daily Report — ${reportDate}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -255,6 +340,7 @@ const handler = async (req: Request): Promise<Response> => {
             <p style="margin: 5px 0;"><strong>Report Date:</strong> ${reportDate}</p>
             <p style="margin: 5px 0;"><strong>Members Included:</strong> ${memberData.length}</p>
             <p style="margin: 5px 0;"><strong>Generated:</strong> ${generatedAtET} ET</p>
+            <p style="margin: 5px 0;"><strong>Triggered by:</strong> ${isManualTrigger ? "Admin (manual)" : "Scheduled"}</p>
           </div>
           
           <p style="color: #666; font-size: 14px;">
@@ -280,7 +366,33 @@ const handler = async (req: Request): Promise<Response> => {
       ],
     });
 
-    console.log("[daily-credits-report] Email sent successfully:", emailResponse);
+    console.log("[daily-credits-report] Resend API response:", JSON.stringify(emailResponse));
+
+    // Check if Resend returned an error
+    if (emailResponse.error) {
+      console.error("[daily-credits-report] Resend returned error:", emailResponse.error);
+      
+      await supabase
+        .from("daily_credits_report_logs")
+        .update({
+          status: "failed",
+          error: emailResponse.error.message || JSON.stringify(emailResponse.error),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", reportLogId);
+      
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: emailResponse.error.message || "Email sending failed",
+          details: emailResponse.error
+        }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const messageId = emailResponse.data?.id;
+    console.log(`[daily-credits-report] ✅ Report sent successfully! Message ID: ${messageId}`);
 
     // Update report log with success
     await supabase
@@ -289,17 +401,20 @@ const handler = async (req: Request): Promise<Response> => {
         status: "sent",
         sent_at: new Date().toISOString(),
         members_included: memberData.length,
-        resend_message_id: emailResponse.data?.id || null,
+        resend_message_id: messageId || null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", reportLogId);
+
+    console.log("[daily-credits-report] === END SUCCESS ===");
 
     return new Response(
       JSON.stringify({
         success: true,
         reportDate,
         membersIncluded: memberData.length,
-        emailId: emailResponse.data?.id,
+        messageId: messageId,
+        filename: filename,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
