@@ -9,6 +9,67 @@ const DAILY_CHECKIN_CREDITS = 5;
 const WEEKLY_STREAK_BONUS = 10;
 const STREAK_THRESHOLD = 5;
 
+const ACTION_LABELS: Record<string, string> = {
+  daily_checkin: "Daily check-in",
+  weekly_streak_bonus: "5-day streak bonus",
+  weekly_planning: "Weekly planning",
+  admin_adjustment: "Admin adjustment",
+};
+
+// Helper to create feed activity post
+// deno-lint-ignore no-explicit-any
+async function createFeedActivityPost(
+  supabaseClient: any,
+  userId: string,
+  userName: string,
+  creditsAmount: number,
+  actionName: string,
+  ledgerId: string
+): Promise<void> {
+  const actionLabel = ACTION_LABELS[actionName] || actionName;
+  const body = `${userName} earned +${creditsAmount} © — ${actionLabel}`;
+
+  try {
+    // First check if post already exists for this ledger entry
+    const { data: existing } = await supabaseClient
+      .from("feed_items")
+      .select("id")
+      .eq("ledger_id", ledgerId)
+      .limit(1);
+
+    if (existing && existing.length > 0) {
+      console.log("[check-in] Activity post already exists for ledger:", ledgerId);
+      return;
+    }
+
+    // Insert new activity post using raw query to bypass type issues
+    // deno-lint-ignore no-explicit-any
+    const { error } = await (supabaseClient as any)
+      .from("feed_items")
+      .insert({
+        type: "activity",
+        author_id: userId,
+        body,
+        credits_amount: creditsAmount,
+        action_name: actionName,
+        ledger_id: ledgerId,
+      });
+
+    if (error) {
+      // Check if it's a duplicate key error (race condition)
+      if (error.code === "23505") {
+        console.log("[check-in] Activity post already exists (race condition):", ledgerId);
+      } else {
+        console.error("[check-in] Error creating activity post:", error);
+      }
+    } else {
+      console.log("[check-in] Activity post created for ledger:", ledgerId);
+    }
+  } catch (error) {
+    console.error("[check-in] Exception creating activity post:", error);
+  }
+}
+
 // Helper to send credit notification email
 async function sendCreditEmail(
   supabaseUrl: string,
@@ -180,7 +241,8 @@ Deno.serve(async (req) => {
         .single();
 
       const userEmail = profile?.email || user.email || "";
-      const firstName = profile?.full_name?.split(" ")[0] || "Member";
+      const userName = profile?.full_name || "Member";
+      const firstName = userName.split(" ")[0];
 
       // Get or create credits record
       let { data: creditsRecord } = await supabaseClient
@@ -229,6 +291,18 @@ Deno.serve(async (req) => {
 
         creditsAwarded = DAILY_CHECKIN_CREDITS;
         console.log(`[check-in] Awarded ${DAILY_CHECKIN_CREDITS} credits to user ${user.id}`);
+
+        // Create feed activity post (async, don't block response)
+        if (ledgerEntry) {
+          createFeedActivityPost(
+            supabaseClient,
+            user.id,
+            userName,
+            DAILY_CHECKIN_CREDITS,
+            "daily_checkin",
+            ledgerEntry.id
+          );
+        }
 
         // Send credit email notification (async, don't block response)
         if (ledgerEntry && userEmail) {
@@ -311,6 +385,18 @@ Deno.serve(async (req) => {
               creditsAwarded += WEEKLY_STREAK_BONUS;
               streakBonusAwarded = true;
               console.log(`[check-in] Awarded ${WEEKLY_STREAK_BONUS} streak bonus to user ${user.id}`);
+
+              // Create feed activity post for streak bonus
+              if (streakLedgerEntry) {
+                createFeedActivityPost(
+                  supabaseClient,
+                  user.id,
+                  userName,
+                  WEEKLY_STREAK_BONUS,
+                  "weekly_streak_bonus",
+                  streakLedgerEntry.id
+                );
+              }
 
               // Send streak bonus email notification (async, don't block response)
               if (streakLedgerEntry && userEmail) {
