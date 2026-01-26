@@ -268,6 +268,47 @@ export type Database = {
         }
         Relationships: []
       }
+      feed_items: {
+        Row: {
+          action_name: string | null
+          author_id: string | null
+          body: string
+          created_at: string
+          credits_amount: number | null
+          id: string
+          ledger_id: string | null
+          type: string
+        }
+        Insert: {
+          action_name?: string | null
+          author_id?: string | null
+          body: string
+          created_at?: string
+          credits_amount?: number | null
+          id?: string
+          ledger_id?: string | null
+          type: string
+        }
+        Update: {
+          action_name?: string | null
+          author_id?: string | null
+          body?: string
+          created_at?: string
+          credits_amount?: number | null
+          id?: string
+          ledger_id?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feed_items_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       guest_day_pass_requests: {
         Row: {
           arrival_date: string

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -31,6 +31,8 @@ import { CreditsDisplay } from '@/components/dashboard/CreditsDisplay';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useTheme } from '@/hooks/use-theme';
 import { LeaderboardModal } from '@/components/dashboard/LeaderboardModal';
+import { Feed } from '@/components/dashboard/Feed';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface DashboardCard {
   title: string;
@@ -60,6 +62,7 @@ const getDailyGreeting = (name: string) => {
 export default function Dashboard() {
   const navigate = useNavigate();
   const { theme } = useTheme();
+  const isMobile = useIsMobile();
   const [userName, setUserName] = useState<string>('');
   const [userEmail, setUserEmail] = useState<string>('');
   const [userId, setUserId] = useState<string>('');
@@ -69,6 +72,11 @@ export default function Dashboard() {
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [creditsRefreshKey, setCreditsRefreshKey] = useState(0);
+  const [hasHavenUpdate, setHasHavenUpdate] = useState(false);
+
+  const handleHavenUpdateVisibilityChange = useCallback((hasUpdate: boolean) => {
+    setHasHavenUpdate(hasUpdate);
+  }, []);
 
   const handleCheckInComplete = () => {
     // Refresh credits display after check-in
@@ -294,8 +302,34 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {/* Haven Updates Section */}
-        <HavenUpdates />
+        {/* Haven Updates + Feed Section */}
+        <div className="mb-8">
+          {isMobile ? (
+            // Mobile: Stack vertically
+            <div className="space-y-6">
+              {hasHavenUpdate && (
+                <HavenUpdates onVisibilityChange={handleHavenUpdateVisibilityChange} />
+              )}
+              <Feed userId={userId} userName={userName} isCompact={hasHavenUpdate} />
+            </div>
+          ) : hasHavenUpdate ? (
+            // Desktop with Haven Update: 75% / 25% split
+            <div className="grid grid-cols-4 gap-6">
+              <div className="col-span-3">
+                <HavenUpdates onVisibilityChange={handleHavenUpdateVisibilityChange} />
+              </div>
+              <div className="col-span-1">
+                <Feed userId={userId} userName={userName} isCompact />
+              </div>
+            </div>
+          ) : (
+            // Desktop without Haven Update: Full-width Feed
+            <div>
+              <HavenUpdates onVisibilityChange={handleHavenUpdateVisibilityChange} />
+              <Feed userId={userId} userName={userName} />
+            </div>
+          )}
+        </div>
 
         {/* Weekly Presence Section */}
         <div className="mb-12">

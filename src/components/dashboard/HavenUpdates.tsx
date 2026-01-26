@@ -13,7 +13,11 @@ interface HavenUpdate {
   learn_more_url: string | null;
 }
 
-export function HavenUpdates() {
+interface HavenUpdatesProps {
+  onVisibilityChange?: (hasUpdate: boolean) => void;
+}
+
+export function HavenUpdates({ onVisibilityChange }: HavenUpdatesProps) {
   const [update, setUpdate] = useState<HavenUpdate | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -35,6 +39,13 @@ export function HavenUpdates() {
 
     fetchUpdate();
   }, []);
+
+  // Notify parent about visibility changes
+  useEffect(() => {
+    if (!loading) {
+      onVisibilityChange?.(!!update);
+    }
+  }, [loading, update, onVisibilityChange]);
 
   // Sanitize HTML content for safe rendering
   const sanitizedDescription = useMemo(() => {
@@ -64,7 +75,7 @@ export function HavenUpdates() {
   }
 
   return (
-    <Card className="haven-card border-0 mb-8 overflow-hidden">
+    <Card className="haven-card border-0 overflow-hidden h-full">
       <CardHeader className="pb-3">
         <CardTitle className="text-xl font-heading font-bold text-foreground flex items-center gap-2">
           <span className="inline-block w-2 h-2 rounded-full bg-accent animate-pulse" />

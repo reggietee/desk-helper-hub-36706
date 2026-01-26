@@ -5,6 +5,65 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const ACTION_LABELS: Record<string, string> = {
+  daily_checkin: "Daily check-in",
+  weekly_streak_bonus: "5-day streak bonus",
+  weekly_planning: "Weekly planning",
+  admin_adjustment: "Admin adjustment",
+};
+
+// Helper to create feed activity post
+// deno-lint-ignore no-explicit-any
+async function createFeedActivityPost(
+  supabaseClient: any,
+  userId: string,
+  userName: string,
+  creditsAmount: number,
+  actionName: string,
+  ledgerId: string
+): Promise<void> {
+  const actionLabel = ACTION_LABELS[actionName] || actionName;
+  const body = `${userName} earned +${creditsAmount} © — ${actionLabel}`;
+
+  try {
+    // First check if post already exists for this ledger entry
+    const { data: existing } = await supabaseClient
+      .from("feed_items")
+      .select("id")
+      .eq("ledger_id", ledgerId)
+      .limit(1);
+
+    if (existing && existing.length > 0) {
+      console.log("[admin-adjust-credits] Activity post already exists for ledger:", ledgerId);
+      return;
+    }
+
+    // Insert new activity post
+    const { error } = await supabaseClient
+      .from("feed_items")
+      .insert({
+        type: "activity",
+        author_id: userId,
+        body,
+        credits_amount: creditsAmount,
+        action_name: actionName,
+        ledger_id: ledgerId,
+      });
+
+    if (error) {
+      if (error.code === "23505") {
+        console.log("[admin-adjust-credits] Activity post already exists (race condition):", ledgerId);
+      } else {
+        console.error("[admin-adjust-credits] Error creating activity post:", error);
+      }
+    } else {
+      console.log("[admin-adjust-credits] Activity post created for ledger:", ledgerId);
+    }
+  } catch (error) {
+    console.error("[admin-adjust-credits] Exception creating activity post:", error);
+  }
+}
+
 // Helper to send credit notification email
 async function sendCreditEmail(
   supabaseUrl: string,
@@ -144,6 +203,17 @@ Deno.serve(async (req) => {
       creditsRecord = newRecord;
     }
 
+    // Fetch target user profile for email notifications and feed
+    const { data: targetProfile } = await supabaseClient
+      .from("profiles")
+      .select("full_name, email")
+      .eq("id", targetUserId)
+      .single();
+
+    const targetUserEmail = targetProfile?.email || "";
+    const targetUserName = targetProfile?.full_name || "Member";
+    const targetFirstName = targetUserName.split(" ")[0];
+
     // Calculate new balance
     const adjustmentAmount = action === "add" ? amount : -amount;
     let newBalance = creditsRecord.balance + adjustmentAmount;
@@ -167,16 +237,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Fetch target user profile for email notifications
-    const { data: targetProfile } = await supabaseClient
-      .from("profiles")
-      .select("full_name, email")
-      .eq("id", targetUserId)
-      .single();
-
-    const targetUserEmail = targetProfile?.email || "";
-    const targetFirstName = targetProfile?.full_name?.split(" ")[0] || "Member";
-
     // Create ledger entry
     const reason = note 
       ? `admin_adjustment: ${note}` 
@@ -199,6 +259,18 @@ Deno.serve(async (req) => {
     }
 
     console.log(`[admin-adjust-credits] Successfully adjusted credits. New balance: ${newBalance}`);
+
+    // Create feed activity post for positive adjustments (async, don't block response)
+    if (ledgerEntry && adjustmentAmount > 0) {
+      createFeedActivityPost(
+        supabaseClient,
+        targetUserId,
+        targetUserName,
+        adjustmentAmount,
+        "admin_adjustment",
+        ledgerEntry.id
+      );
+    }
 
     // Send credit email notification for positive adjustments (async, don't block response)
     if (ledgerEntry && targetUserEmail && adjustmentAmount > 0) {
