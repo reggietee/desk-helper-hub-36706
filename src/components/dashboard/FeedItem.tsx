@@ -49,10 +49,10 @@ export function FeedItem({ item, currentUserId }: FeedItemProps) {
   }, [item.created_at]);
 
   const authorName = useMemo(() => {
-    if (isActivity) return 'System';
+    // For activity items, show the member who earned credits (not "System")
     if (item.author?.full_name) return item.author.full_name;
     return 'Member';
-  }, [isActivity, item.author?.full_name]);
+  }, [item.author?.full_name]);
 
   const sanitizedBody = useMemo(() => {
     const isHtml = /<[a-z][\s\S]*>/i.test(item.body);
@@ -71,15 +71,17 @@ export function FeedItem({ item, currentUserId }: FeedItemProps) {
   }, [item.body]);
 
   if (isActivity) {
-    const actionLabel = item.action_name ? ACTION_LABELS[item.action_name] || item.action_name : 'Credits';
+    // Parse action_name - handle week-specific format like "weekly_planning:2026-01-27"
+    const baseActionName = item.action_name?.split(':')[0] || item.action_name;
+    const actionLabel = baseActionName ? ACTION_LABELS[baseActionName] || baseActionName : 'Credits';
     
     return (
       <div className="flex justify-center py-1.5">
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent/10 text-[11px] text-muted-foreground">
-          <Activity className="h-3 w-3 text-accent" />
+        <div className="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-0.5 px-2.5 py-1 rounded-full bg-accent/10 text-[11px] text-muted-foreground">
+          <Activity className="h-3 w-3 text-accent flex-shrink-0" />
           <span className="font-medium text-foreground">{authorName}</span>
           <span>earned</span>
-          <span className="font-semibold text-accent">+{item.credits_amount} ©</span>
+          <span className="font-semibold text-accent whitespace-nowrap">+{item.credits_amount} ©</span>
           <span>—</span>
           <span>{actionLabel}</span>
         </div>
