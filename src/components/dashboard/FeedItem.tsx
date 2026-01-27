@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Activity, User } from 'lucide-react';
+import { Activity } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import DOMPurify from 'dompurify';
@@ -18,7 +18,6 @@ interface FeedItemProps {
     } | null;
   };
   currentUserId: string;
-  isCompact?: boolean;
 }
 
 const ACTION_LABELS: Record<string, string> = {
@@ -28,7 +27,7 @@ const ACTION_LABELS: Record<string, string> = {
   admin_adjustment: 'Admin adjustment',
 };
 
-export function FeedItem({ item, currentUserId, isCompact = false }: FeedItemProps) {
+export function FeedItem({ item, currentUserId }: FeedItemProps) {
   const isOwnMessage = item.author_id === currentUserId;
   const isActivity = item.type === 'activity';
   
@@ -56,7 +55,6 @@ export function FeedItem({ item, currentUserId, isCompact = false }: FeedItemPro
   }, [isActivity, item.author?.full_name]);
 
   const sanitizedBody = useMemo(() => {
-    // Check if content looks like HTML
     const isHtml = /<[a-z][\s\S]*>/i.test(item.body);
     
     if (isHtml) {
@@ -73,12 +71,11 @@ export function FeedItem({ item, currentUserId, isCompact = false }: FeedItemPro
   }, [item.body]);
 
   if (isActivity) {
-    // Activity post styling - centered, subtle
     const actionLabel = item.action_name ? ACTION_LABELS[item.action_name] || item.action_name : 'Credits';
     
     return (
-      <div className="flex justify-center py-2">
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent/10 text-xs text-muted-foreground">
+      <div className="flex justify-center py-1.5">
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent/10 text-[11px] text-muted-foreground">
           <Activity className="h-3 w-3 text-accent" />
           <span className="font-medium text-foreground">{authorName}</span>
           <span>earned</span>
@@ -90,48 +87,46 @@ export function FeedItem({ item, currentUserId, isCompact = false }: FeedItemPro
     );
   }
 
-  // Chat message styling
+  // Chat message styling - inspired by reference
   return (
     <div className={cn(
-      "flex gap-2",
-      isOwnMessage ? "justify-end" : "justify-start"
+      "flex flex-col gap-0.5",
+      isOwnMessage ? "items-end" : "items-start"
     )}>
+      {/* Sender name + timestamp header (only for other users' messages) */}
+      {!isOwnMessage && (
+        <div className="flex items-center gap-1.5 px-1 mb-0.5">
+          <span className="text-[11px] font-medium text-foreground">
+            {authorName}
+          </span>
+          <span className="text-[10px] text-muted-foreground">
+            · {timestamp}
+          </span>
+        </div>
+      )}
+      
+      {/* Message bubble */}
       <div className={cn(
-        "max-w-[85%] rounded-2xl px-3 py-2",
+        "max-w-[85%] rounded-2xl px-3 py-1.5",
         isOwnMessage 
-          ? "bg-primary text-primary-foreground rounded-br-md" 
-          : "bg-muted rounded-bl-md"
+          ? "bg-primary text-primary-foreground rounded-br-sm" 
+          : "bg-muted rounded-bl-sm"
       )}>
-        {!isOwnMessage && (
-          <div className="flex items-center gap-1.5 mb-1">
-            <User className="h-3 w-3 text-muted-foreground" />
-            <span className={cn(
-              "text-xs font-medium",
-              isCompact ? "text-[10px]" : "text-xs"
-            )}>
-              {authorName}
-            </span>
-          </div>
-        )}
         <div 
           className={cn(
-            "prose prose-sm max-w-none break-words",
-            isOwnMessage ? "prose-invert" : "",
-            isCompact ? "text-sm" : "text-sm"
+            "text-[13px] leading-relaxed break-words",
+            isOwnMessage ? "[&_a]:text-primary-foreground [&_a]:underline" : "[&_a]:text-primary [&_a]:underline"
           )}
           dangerouslySetInnerHTML={{ __html: sanitizedBody }}
         />
-        <div className={cn(
-          "text-right mt-1",
-          isOwnMessage ? "text-primary-foreground/70" : "text-muted-foreground"
-        )}>
-          <span className={cn(
-            isCompact ? "text-[9px]" : "text-[10px]"
-          )}>
-            {timestamp}
-          </span>
-        </div>
       </div>
+      
+      {/* Timestamp for own messages (below bubble, right-aligned) */}
+      {isOwnMessage && (
+        <span className="text-[10px] text-muted-foreground px-1 mt-0.5">
+          {timestamp}
+        </span>
+      )}
     </div>
   );
 }

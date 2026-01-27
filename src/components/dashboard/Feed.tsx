@@ -23,7 +23,6 @@ interface FeedItemData {
 interface FeedProps {
   userId: string;
   userName: string;
-  isCompact?: boolean;
 }
 
 const PAGE_SIZE = 20;
@@ -47,7 +46,7 @@ async function fetchAuthorNames(items: { author_id: string | null }[]): Promise<
   return authorMap;
 }
 
-export function Feed({ userId, userName, isCompact = false }: FeedProps) {
+export function Feed({ userId, userName }: FeedProps) {
   const [items, setItems] = useState<FeedItemData[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -220,20 +219,17 @@ export function Feed({ userId, userName, isCompact = false }: FeedProps) {
   };
 
   return (
-    <Card className={cn(
-      "haven-card border-0 flex flex-col",
-      isCompact ? "h-[500px]" : "h-[600px]"
-    )}>
-      <CardHeader className="pb-3 flex-shrink-0">
-        <CardTitle className="text-xl font-heading font-bold text-foreground flex items-center gap-2">
-          <MessageSquare className="h-5 w-5 text-primary" />
+    <Card className="haven-card border-0 flex flex-col h-full">
+      <CardHeader className="px-4 py-3 flex-shrink-0 border-b border-border/50">
+        <CardTitle className="text-lg font-heading font-bold text-foreground flex items-center gap-2">
+          <MessageSquare className="h-4 w-4 text-primary" />
           Feed
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col min-h-0 pt-0">
+      <CardContent className="flex-1 flex flex-col min-h-0 p-0">
         {loading ? (
           <div className="flex-1 flex items-center justify-center">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
         ) : (
           <>
@@ -241,22 +237,22 @@ export function Feed({ userId, userName, isCompact = false }: FeedProps) {
             <div 
               ref={scrollRef}
               onScroll={handleScroll}
-              className="flex-1 overflow-y-auto space-y-3 pr-2 min-h-0"
+              className="flex-1 overflow-y-auto px-3 py-2 min-h-0 space-y-1"
             >
               {/* Load more indicator */}
               {loadingMore && (
-                <div className="flex justify-center py-2">
+                <div className="flex justify-center py-1">
                   <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                 </div>
               )}
               
               {hasMore && !loadingMore && items.length > 0 && (
-                <div className="flex justify-center py-2">
+                <div className="flex justify-center py-1">
                   <Button 
                     variant="ghost" 
                     size="sm" 
                     onClick={fetchOlderItems}
-                    className="text-xs text-muted-foreground"
+                    className="text-xs text-muted-foreground h-7"
                   >
                     Load older messages
                   </Button>
@@ -264,9 +260,9 @@ export function Feed({ userId, userName, isCompact = false }: FeedProps) {
               )}
 
               {items.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-                  <MessageSquare className="h-8 w-8 mb-2 opacity-50" />
-                  <p className="text-sm">No messages yet. Start the conversation!</p>
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground py-8">
+                  <MessageSquare className="h-6 w-6 mb-2 opacity-50" />
+                  <p className="text-xs">No messages yet. Start the conversation!</p>
                 </div>
               ) : (
                 items.map((item) => (
@@ -274,14 +270,13 @@ export function Feed({ userId, userName, isCompact = false }: FeedProps) {
                     key={item.id} 
                     item={item} 
                     currentUserId={userId}
-                    isCompact={isCompact}
                   />
                 ))
               )}
             </div>
 
             {/* Chat input */}
-            <div className="flex-shrink-0 pt-3 border-t border-border mt-3">
+            <div className="flex-shrink-0 px-3 py-2 border-t border-border/50">
               <FeedInput onSubmit={handleSubmit} userName={userName} />
             </div>
           </>

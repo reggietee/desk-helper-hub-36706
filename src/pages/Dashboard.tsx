@@ -310,21 +310,23 @@ export default function Dashboard() {
               {hasHavenUpdate && (
                 <HavenUpdates onVisibilityChange={handleHavenUpdateVisibilityChange} />
               )}
-              <Feed userId={userId} userName={userName} isCompact={hasHavenUpdate} />
+              <div className="h-[400px]">
+                <Feed userId={userId} userName={userName} />
+              </div>
             </div>
           ) : hasHavenUpdate ? (
-            // Desktop with Haven Update: 75% / 25% split
-            <div className="grid grid-cols-4 gap-6">
-              <div className="col-span-3">
+            // Desktop with Haven Update: 75% / 25% split with matched heights
+            <div className="grid grid-cols-4 gap-6 items-stretch">
+              <div className="col-span-3 min-h-[500px]">
                 <HavenUpdates onVisibilityChange={handleHavenUpdateVisibilityChange} />
               </div>
-              <div className="col-span-1">
-                <Feed userId={userId} userName={userName} isCompact />
+              <div className="col-span-1 min-h-[500px]">
+                <Feed userId={userId} userName={userName} />
               </div>
             </div>
           ) : (
             // Desktop without Haven Update: Full-width Feed
-            <div>
+            <div className="h-[500px]">
               <HavenUpdates onVisibilityChange={handleHavenUpdateVisibilityChange} />
               <Feed userId={userId} userName={userName} />
             </div>
