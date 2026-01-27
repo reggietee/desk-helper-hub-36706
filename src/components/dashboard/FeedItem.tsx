@@ -93,17 +93,18 @@ export function FeedItem({ item, currentUserId }: FeedItemProps) {
       "flex flex-col gap-0.5",
       isOwnMessage ? "items-end" : "items-start"
     )}>
-      {/* Sender name + timestamp header (only for other users' messages) */}
-      {!isOwnMessage && (
-        <div className="flex items-center gap-1.5 px-1 mb-0.5">
-          <span className="text-[11px] font-medium text-foreground">
-            {authorName}
-          </span>
-          <span className="text-[10px] text-muted-foreground">
-            · {timestamp}
-          </span>
-        </div>
-      )}
+      {/* Sender name + timestamp header */}
+      <div className={cn(
+        "flex items-center gap-1.5 px-1 mb-0.5",
+        isOwnMessage ? "flex-row-reverse" : "flex-row"
+      )}>
+        <span className="text-[11px] font-medium text-foreground">
+          {authorName}
+        </span>
+        <span className="text-[10px] text-muted-foreground">
+          {isOwnMessage ? timestamp : `· ${timestamp}`}
+        </span>
+      </div>
       
       {/* Message bubble */}
       <div className={cn(
@@ -120,13 +121,6 @@ export function FeedItem({ item, currentUserId }: FeedItemProps) {
           dangerouslySetInnerHTML={{ __html: sanitizedBody }}
         />
       </div>
-      
-      {/* Timestamp for own messages (below bubble, right-aligned) */}
-      {isOwnMessage && (
-        <span className="text-[10px] text-muted-foreground px-1 mt-0.5">
-          {timestamp}
-        </span>
-      )}
     </div>
   );
 }
