@@ -57,8 +57,8 @@ export function FeedInput({ onSubmit, userName }: FeedInputProps) {
         value={message}
         onChange={handleInput}
         onKeyDown={handleKeyDown}
-        placeholder="Write a message..."
-        className="min-h-[40px] max-h-[100px] resize-none rounded-xl text-sm"
+        placeholder="Type a new message"
+        className="min-h-[36px] max-h-[80px] resize-none rounded-xl text-sm py-2 px-3 border-border/50"
         rows={1}
         disabled={sending}
       />
@@ -66,7 +66,7 @@ export function FeedInput({ onSubmit, userName }: FeedInputProps) {
         onClick={handleSubmit}
         disabled={!message.trim() || sending}
         size="icon"
-        className="rounded-xl h-10 w-10 flex-shrink-0"
+        className="rounded-xl h-9 w-9 flex-shrink-0"
       >
         {sending ? (
           <Loader2 className="h-4 w-4 animate-spin" />
