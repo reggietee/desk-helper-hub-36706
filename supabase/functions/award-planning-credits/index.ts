@@ -159,14 +159,15 @@ Deno.serve(async (req) => {
 
     console.log(`[award-planning-credits] Checking for user ${user.id}, week: ${weekStartDate}`);
 
-    // Check if credits already awarded for this week
+    // Use a deterministic reason that includes the week to ensure idempotency
+    const weekSpecificReason = `weekly_planning:${weekStartDate}`;
+
+    // Check if credits already awarded for this specific week using the week-specific reason
     const { data: existingAward } = await supabaseClient
       .from("haven_credits_ledger")
       .select("id")
       .eq("user_id", user.id)
-      .eq("reason", "weekly_planning")
-      .gte("created_at", weekStart.toISOString())
-      .lte("created_at", weekEnd.toISOString())
+      .eq("reason", weekSpecificReason)
       .limit(1);
 
     if (existingAward && existingAward.length > 0) {
@@ -262,13 +263,13 @@ Deno.serve(async (req) => {
       .update({ balance: newBalance, updated_at: new Date().toISOString() })
       .eq("user_id", user.id);
 
-    // Add ledger entry
+    // Add ledger entry with week-specific reason for idempotency
     const { data: ledgerEntry } = await supabaseClient
       .from("haven_credits_ledger")
       .insert({
         user_id: user.id,
         amount: WEEKLY_PLANNING_CREDITS,
-        reason: "weekly_planning",
+        reason: weekSpecificReason,
         balance_after: newBalance,
         reference_id: null
       })
