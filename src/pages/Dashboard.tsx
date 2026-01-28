@@ -21,6 +21,9 @@ import {
   Settings,
   Shield,
   Trophy,
+  Menu,
+  X,
+  Coins,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { WeeklyPresence } from '@/components/dashboard/WeeklyPresence';
@@ -29,6 +32,7 @@ import { HavenUpdates } from '@/components/dashboard/HavenUpdates';
 import { CheckInBanner } from '@/components/dashboard/CheckInBanner';
 import { CreditsDisplay } from '@/components/dashboard/CreditsDisplay';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useTheme } from '@/hooks/use-theme';
 import { LeaderboardModal } from '@/components/dashboard/LeaderboardModal';
 import { Feed } from '@/components/dashboard/Feed';
@@ -73,6 +77,7 @@ export default function Dashboard() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [creditsRefreshKey, setCreditsRefreshKey] = useState(0);
   const [hasHavenUpdate, setHasHavenUpdate] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleHavenUpdateVisibilityChange = useCallback((hasUpdate: boolean) => {
     setHasHavenUpdate(hasUpdate);
@@ -233,7 +238,7 @@ export default function Dashboard() {
         <CheckInBanner userId={userId} onCheckIn={handleCheckInComplete} />
         
         <header className="bg-card/95 backdrop-blur-md border-b border-border shadow-sm">
-          <div className="container mx-auto px-6 py-5 flex justify-between items-center">
+          <div className="container mx-auto px-4 md:px-6 py-4 md:py-5 flex justify-between items-center">
             <div className="flex items-center">
               <img 
                 src={theme === 'dark' ? havenLogoWhite : havenLogo} 
@@ -241,7 +246,9 @@ export default function Dashboard() {
                 className="w-[113px] h-16 object-contain" 
               />
             </div>
-            <div className="flex items-center gap-2">
+            
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center gap-2">
               <CreditsDisplay 
                 userId={userId} 
                 refreshKey={creditsRefreshKey} 
@@ -287,6 +294,101 @@ export default function Dashboard() {
                 Sign Out
               </Button>
               <ThemeToggle />
+            </div>
+
+            {/* Mobile Hamburger Menu */}
+            <div className="md:hidden">
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-xl">
+                    <Menu className="h-6 w-6" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[280px] p-0">
+                  <SheetHeader className="p-4 border-b border-border">
+                    <SheetTitle className="text-left">Menu</SheetTitle>
+                  </SheetHeader>
+                  <div className="flex flex-col py-2">
+                    {/* Credits */}
+                    <button
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        setProfileDefaultTab("credits");
+                        setProfileSettingsOpen(true);
+                      }}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-muted transition-colors text-left"
+                    >
+                      <Coins className="h-5 w-5 text-primary" />
+                      <span className="font-medium">Credits</span>
+                      <CreditsDisplay 
+                        userId={userId} 
+                        refreshKey={creditsRefreshKey} 
+                        onClick={() => {}}
+                        className="ml-auto"
+                      />
+                    </button>
+
+                    {/* Leaderboard */}
+                    <button
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        setLeaderboardOpen(true);
+                      }}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-muted transition-colors text-left"
+                    >
+                      <Trophy className="h-5 w-5 text-muted-foreground" />
+                      <span>Leaderboard</span>
+                    </button>
+
+                    {/* Admin (conditional) */}
+                    {isAdmin && (
+                      <button
+                        onClick={() => {
+                          setMobileMenuOpen(false);
+                          navigate('/admin');
+                        }}
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-muted transition-colors text-left"
+                      >
+                        <Shield className="h-5 w-5 text-muted-foreground" />
+                        <span>Admin</span>
+                      </button>
+                    )}
+
+                    {/* Profile */}
+                    <button
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        setProfileDefaultTab("name");
+                        setProfileSettingsOpen(true);
+                      }}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-muted transition-colors text-left"
+                    >
+                      <Settings className="h-5 w-5 text-muted-foreground" />
+                      <span>Profile</span>
+                    </button>
+
+                    {/* Sign Out */}
+                    <button
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        handleLogout();
+                      }}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-muted transition-colors text-left"
+                    >
+                      <LogOut className="h-5 w-5 text-muted-foreground" />
+                      <span>Sign Out</span>
+                    </button>
+
+                    {/* Theme Toggle */}
+                    <div className="flex items-center gap-3 px-4 py-3 border-t border-border mt-2">
+                      <span className="text-sm text-muted-foreground">Theme</span>
+                      <div className="ml-auto">
+                        <ThemeToggle />
+                      </div>
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
         </header>
