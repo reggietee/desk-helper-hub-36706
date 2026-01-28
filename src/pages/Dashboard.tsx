@@ -305,7 +305,7 @@ export default function Dashboard() {
         {/* Haven Updates + Feed Section */}
         <div className="mb-8">
           {isMobile ? (
-            // Mobile: Stack vertically
+            // Mobile: Stack vertically with fixed height Feed
             <div className="space-y-6">
               {hasHavenUpdate && (
                 <HavenUpdates onVisibilityChange={handleHavenUpdateVisibilityChange} />
@@ -315,17 +315,17 @@ export default function Dashboard() {
               </div>
             </div>
           ) : hasHavenUpdate ? (
-            // Desktop with Haven Update: 75% / 25% split with matched heights
-            <div className="grid grid-cols-4 gap-6 items-stretch">
-              <div className="col-span-3 min-h-[500px]">
+            // Desktop with Haven Update: 75% / 25% split with FIXED height (not stretch)
+            <div className="grid grid-cols-4 gap-6 h-[500px]">
+              <div className="col-span-3 h-full overflow-hidden">
                 <HavenUpdates onVisibilityChange={handleHavenUpdateVisibilityChange} />
               </div>
-              <div className="col-span-1 min-h-[500px]">
+              <div className="col-span-1 h-full overflow-hidden">
                 <Feed userId={userId} userName={userName} />
               </div>
             </div>
           ) : (
-            // Desktop without Haven Update: Full-width Feed
+            // Desktop without Haven Update: Full-width Feed with fixed height
             <div className="h-[500px]">
               <HavenUpdates onVisibilityChange={handleHavenUpdateVisibilityChange} />
               <Feed userId={userId} userName={userName} />
