@@ -75,16 +75,16 @@ export function HavenUpdates({ onVisibilityChange }: HavenUpdatesProps) {
   }
 
   return (
-    <Card className="haven-card border-0 overflow-hidden h-full">
-      <CardHeader className="pb-3">
+    <Card className="haven-card border-0 h-full flex flex-col overflow-hidden">
+      <CardHeader className="pb-3 flex-shrink-0">
         <CardTitle className="text-xl font-heading font-bold text-foreground flex items-center gap-2">
           <span className="inline-block w-2 h-2 rounded-full bg-accent animate-pulse" />
           Haven Updates
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="flex-1 overflow-y-auto space-y-4 pb-6">
         {update.image_url && (
-          <div className="w-full rounded-xl overflow-hidden">
+          <div className="w-full rounded-xl overflow-hidden flex-shrink-0">
             <img
               src={update.image_url}
               alt={update.title}
