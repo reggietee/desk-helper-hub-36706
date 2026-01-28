@@ -417,14 +417,17 @@ export default function Dashboard() {
               </div>
             </div>
           ) : hasHavenUpdate ? (
-            // Desktop with Haven Update: Use flex with items-stretch so Feed matches Haven Updates height
-            <div className="flex gap-6 items-stretch">
-              <div className="flex-[3]">
+            // Desktop with Haven Update: CSS Grid with subgrid-like behavior
+            // Haven Updates defines the implicit row height, Feed container is constrained to match
+            <div className="grid grid-cols-[3fr_1fr] gap-6" style={{ gridTemplateRows: 'auto' }}>
+              <div className="row-start-1">
                 <HavenUpdates onVisibilityChange={handleHavenUpdateVisibilityChange} />
               </div>
-              {/* Feed container: fixed to row height, overflow-hidden prevents content from escaping */}
-              <div className="flex-1 min-h-0 overflow-hidden">
-                <Feed userId={userId} userName={userName} />
+              {/* Feed container: absolute positioning trick to constrain height to grid row */}
+              <div className="row-start-1 relative">
+                <div className="absolute inset-0">
+                  <Feed userId={userId} userName={userName} />
+                </div>
               </div>
             </div>
           ) : (
