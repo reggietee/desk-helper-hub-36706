@@ -220,24 +220,27 @@ export function Feed({ userId, userName }: FeedProps) {
 
   return (
     <Card className="haven-card border-0 flex flex-col h-full overflow-hidden">
+      {/* Header - fixed height, never shrinks */}
       <CardHeader className="px-4 py-3 flex-shrink-0 border-b border-border/50">
         <CardTitle className="text-lg font-heading font-bold text-foreground flex items-center gap-2">
           <MessageSquare className="h-4 w-4 text-primary" />
           Feed
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col overflow-hidden p-0">
+      
+      {/* Content area - flex child that fills remaining space, min-h-0 is CRITICAL to allow shrinking */}
+      <CardContent className="flex-1 min-h-0 flex flex-col overflow-hidden p-0">
         {loading ? (
           <div className="flex-1 flex items-center justify-center">
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
         ) : (
           <>
-            {/* Scrollable feed area - this is the ONLY scrollable region */}
+            {/* Message list - ONLY scrollable region, min-h-0 allows flex shrinking */}
             <div 
               ref={scrollRef}
               onScroll={handleScroll}
-              className="flex-1 overflow-y-auto px-3 py-2 space-y-1"
+              className="flex-1 min-h-0 overflow-y-auto px-3 py-2 space-y-1"
             >
               {/* Load more indicator */}
               {loadingMore && (
@@ -275,7 +278,7 @@ export function Feed({ userId, userName }: FeedProps) {
               )}
             </div>
 
-            {/* Chat input - fixed at bottom */}
+            {/* Composer - fixed at bottom, never shrinks */}
             <div className="flex-shrink-0 px-3 py-2 border-t border-border/50">
               <FeedInput onSubmit={handleSubmit} userName={userName} />
             </div>
