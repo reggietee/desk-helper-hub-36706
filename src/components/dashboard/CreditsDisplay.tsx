@@ -7,6 +7,7 @@ interface CreditsDisplayProps {
   userId: string;
   refreshKey?: number;
   onClick?: () => void;
+  className?: string;
 }
 
 // Particle burst component
@@ -62,7 +63,7 @@ const FloatingBadge = ({ amount, isVisible }: { amount: number; isVisible: boole
   );
 };
 
-export const CreditsDisplay = ({ userId, refreshKey = 0, onClick }: CreditsDisplayProps) => {
+export const CreditsDisplay = ({ userId, refreshKey = 0, onClick, className }: CreditsDisplayProps) => {
   const [balance, setBalance] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -122,7 +123,7 @@ export const CreditsDisplay = ({ userId, refreshKey = 0, onClick }: CreditsDispl
 
   if (loading) {
     return (
-      <div className="flex items-center gap-1 px-3 py-1.5 bg-accent/10 rounded-xl text-sm font-medium text-muted-foreground">
+      <div className={cn("flex items-center gap-1 px-3 py-1.5 bg-accent/10 rounded-xl text-sm font-medium text-muted-foreground", className)}>
         <span>-- ©</span>
       </div>
     );
@@ -135,7 +136,7 @@ export const CreditsDisplay = ({ userId, refreshKey = 0, onClick }: CreditsDispl
           <button 
             type="button"
             onClick={onClick}
-            className="relative flex items-center gap-1 px-3 py-1.5 bg-accent/10 rounded-xl text-sm font-medium text-foreground cursor-pointer hover:bg-accent/20 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            className={cn("relative flex items-center gap-1 px-3 py-1.5 bg-accent/10 rounded-xl text-sm font-medium text-foreground cursor-pointer hover:bg-accent/20 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2", className)}
           >
             {/* Particle burst effect */}
             <ParticleBurst isActive={isAnimating} />
