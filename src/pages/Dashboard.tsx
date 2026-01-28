@@ -315,12 +315,12 @@ export default function Dashboard() {
               </div>
             </div>
           ) : hasHavenUpdate ? (
-            // Desktop with Haven Update: 75% / 25% split with FIXED height (not stretch)
-            <div className="grid grid-cols-4 gap-6 h-[500px]">
-              <div className="col-span-3 h-full overflow-hidden">
+            // Desktop with Haven Update: Haven Updates defines height, Feed stretches to match
+            <div className="grid grid-cols-4 gap-6">
+              <div className="col-span-3">
                 <HavenUpdates onVisibilityChange={handleHavenUpdateVisibilityChange} />
               </div>
-              <div className="col-span-1 h-full overflow-hidden">
+              <div className="col-span-1 [&>*]:h-full" style={{ alignSelf: 'stretch' }}>
                 <Feed userId={userId} userName={userName} />
               </div>
             </div>
