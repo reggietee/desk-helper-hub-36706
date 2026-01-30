@@ -162,16 +162,31 @@ Deno.serve(async (req) => {
     // Use a deterministic reason that includes the week to ensure idempotency
     const weekSpecificReason = `weekly_planning:${weekStartDate}`;
 
-    // Check if credits already awarded for this specific week using the week-specific reason
+    // Check if credits already awarded for this specific week
+    // Check BOTH new format (weekly_planning:YYYY-MM-DD) and old format (weekly_planning) for legacy entries
     const { data: existingAward } = await supabaseClient
       .from("haven_credits_ledger")
-      .select("id")
+      .select("id, reason, created_at")
       .eq("user_id", user.id)
-      .eq("reason", weekSpecificReason)
-      .limit(1);
+      .or(`reason.eq.${weekSpecificReason},reason.eq.weekly_planning`)
+      .order("created_at", { ascending: false })
+      .limit(10);
 
-    if (existingAward && existingAward.length > 0) {
-      console.log(`[award-planning-credits] Credits already awarded for week ${weekStartDate}`);
+    // Check for exact match on new format
+    const hasNewFormatMatch = existingAward?.some(entry => entry.reason === weekSpecificReason);
+    
+    // For old format entries (without week suffix), we need to check if the entry's created_at
+    // falls within the week being requested - this prevents duplicate awards for historical weeks
+    const hasOldFormatMatch = existingAward?.some(entry => {
+      if (entry.reason !== 'weekly_planning') return false;
+      const entryDate = new Date(entry.created_at);
+      // Check if the entry was created during the week being requested
+      return entryDate >= weekStart && entryDate <= weekEnd;
+    });
+
+    if (hasNewFormatMatch || hasOldFormatMatch) {
+      const matchType = hasNewFormatMatch ? 'new format' : 'old format (legacy)';
+      console.log(`[award-planning-credits] Credits already awarded for week ${weekStartDate} (${matchType})`);
       
       // Get current balance
       const { data: currentCredits } = await supabaseClient
@@ -192,6 +207,8 @@ Deno.serve(async (req) => {
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    console.log(`[award-planning-credits] No existing award found for week ${weekStartDate}, proceeding with credit award`);
 
     // Verify user has at least 1 planned day for this week
     const { data: schedules, error: scheduleError } = await supabaseClient
