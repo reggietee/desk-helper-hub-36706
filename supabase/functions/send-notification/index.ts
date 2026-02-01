@@ -9,7 +9,7 @@ const corsHeaders = {
 };
 
 interface NotificationRequest {
-  type: 'product_signout' | 'call_room' | 'meeting_room' | 'private_office' | 'issue' | 'guest_day_pass' | 'member_approved';
+  type: 'product_signout' | 'call_room' | 'meeting_room' | 'private_office' | 'issue' | 'guest_day_pass' | 'member_approved' | 'sprint_join';
   data: Record<string, any>;
 }
 
@@ -111,6 +111,43 @@ const handler = async (req: Request): Promise<Response> => {
             </div>
             <p>We're excited to have you as part of our community!</p>
             <p style="color: #666; font-size: 12px; margin-top: 40px;">Haven Workspace Team</p>
+          </div>
+        `;
+        break;
+
+      case 'sprint_join':
+        subject = `Co-Working Sprint: ${data.user_name} joined!`;
+        html = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h1 style="color: #183C35;">New Sprint Participant</h1>
+            <p>A member has joined the co-working sprint:</p>
+            <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+              <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Member:</strong></td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${data.user_name}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Email:</strong></td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${data.user_email}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Sprint:</strong></td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${data.sprint_title}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Date:</strong></td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${data.sprint_date}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee;"><strong>Time:</strong></td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${data.sprint_time}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0;"><strong>Capacity:</strong></td>
+                <td style="padding: 8px 0;">${data.current_count}/${data.max_count} spots filled</td>
+              </tr>
+            </table>
+            <p style="color: #666; font-size: 12px; margin-top: 40px;">Haven Workspace</p>
           </div>
         `;
         break;

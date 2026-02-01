@@ -36,6 +36,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { useTheme } from '@/hooks/use-theme';
 import { LeaderboardModal } from '@/components/dashboard/LeaderboardModal';
 import { Feed } from '@/components/dashboard/Feed';
+import { CoworkingSprintCard } from '@/components/dashboard/CoworkingSprintCard';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface DashboardCard {
@@ -440,8 +441,13 @@ export default function Dashboard() {
         </div>
 
         {/* Weekly Presence Section */}
-        <div className="mb-12">
+        <div className="mb-8">
           <WeeklyPresence userId={userId} onCreditsEarned={handleCheckInComplete} />
+        </div>
+
+        {/* Co-Working Sprint Section - only shows if active sprint exists */}
+        <div className="mb-12">
+          <CoworkingSprintCard userId={userId} userName={userName} />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

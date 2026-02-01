@@ -4,13 +4,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Users, Calendar, Megaphone, Mail, MapPin } from 'lucide-react';
+import { ArrowLeft, Users, Calendar, Megaphone, Mail, MapPin, Zap } from 'lucide-react';
 import { MemberManagement } from '@/components/admin/MemberManagement';
 import { HavenUpdatesManagement } from '@/components/admin/HavenUpdatesManagement';
 import { CalendarInviteManagement } from '@/components/admin/CalendarInviteManagement';
 import { CheckInSettings } from '@/components/admin/CheckInSettings';
 import { CheckInHistory } from '@/components/admin/CheckInHistory';
 import { EmailTools } from '@/components/admin/EmailTools';
+import { SprintManagement } from '@/components/admin/SprintManagement';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 export default function AdminPanel() {
@@ -85,7 +86,7 @@ export default function AdminPanel() {
 
       <main className="container mx-auto px-6 py-12">
         <Tabs defaultValue="members" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 max-w-3xl">
+          <TabsList className="grid w-full grid-cols-6 max-w-4xl">
             <TabsTrigger value="members" className="gap-2">
               <Users className="h-4 w-4" />
               Members
@@ -93,6 +94,10 @@ export default function AdminPanel() {
             <TabsTrigger value="updates" className="gap-2">
               <Megaphone className="h-4 w-4" />
               Updates
+            </TabsTrigger>
+            <TabsTrigger value="sprint" className="gap-2">
+              <Zap className="h-4 w-4" />
+              Sprint
             </TabsTrigger>
             <TabsTrigger value="schedules" className="gap-2">
               <Calendar className="h-4 w-4" />
@@ -134,6 +139,10 @@ export default function AdminPanel() {
                 <HavenUpdatesManagement />
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="sprint" className="mt-6">
+            <SprintManagement />
           </TabsContent>
 
           <TabsContent value="schedules" className="mt-6">

@@ -229,6 +229,80 @@ export type Database = {
         }
         Relationships: []
       }
+      coworking_sprint_participants: {
+        Row: {
+          id: string
+          joined_at: string
+          notification_sent: boolean
+          sprint_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          notification_sent?: boolean
+          sprint_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          notification_sent?: boolean
+          sprint_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coworking_sprint_participants_sprint_id_fkey"
+            columns: ["sprint_id"]
+            isOneToOne: false
+            referencedRelation: "coworking_sprints"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coworking_sprints: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          end_time: string
+          id: string
+          is_active: boolean
+          max_participants: number
+          sprint_date: string
+          start_time: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_time: string
+          id?: string
+          is_active?: boolean
+          max_participants?: number
+          sprint_date: string
+          start_time: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_time?: string
+          id?: string
+          is_active?: boolean
+          max_participants?: number
+          sprint_date?: string
+          start_time?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       daily_credits_report_logs: {
         Row: {
           created_at: string
