@@ -11,7 +11,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Check, X, Ban, ChevronRight, Shield, User, UserMinus } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Check, X, Ban, ChevronRight, Shield, User, UserMinus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { MemberProfileModal } from './MemberProfileModal';
@@ -214,6 +225,30 @@ export function MemberManagement() {
     setProfileModalOpen(true);
   };
 
+  const handleDelete = async (userId: string, userName: string) => {
+    try {
+      setActionLoading(userId);
+
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: { user_id: userId },
+      });
+
+      if (error) throw error;
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      toast.success(`${userName} has been permanently deleted`);
+      await fetchMembers();
+    } catch (error: any) {
+      console.error('Error deleting member:', error);
+      toast.error(error.message || 'Failed to delete member');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const getRoleBadge = (userId: string) => {
     const role = memberRoles[userId];
     if (!role) return null;
@@ -408,6 +443,36 @@ export function MemberManagement() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary">Inactive</Badge>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={(e) => e.stopPropagation()}
+                          disabled={actionLoading === member.id}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete User Permanently?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will permanently delete <strong>{member.full_name}</strong> ({member.email}) and all their associated data including credits, schedules, and activity history. This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            onClick={() => handleDelete(member.id, member.full_name)}
+                          >
+                            Delete Permanently
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                     <ChevronRight className="h-5 w-5 text-muted-foreground" />
                   </div>
                 </div>
