@@ -4,7 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Check, X, Ban, ChevronRight } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Check, X, Ban, ChevronRight, Shield, User, UserMinus } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { MemberProfileModal } from './MemberProfileModal';
@@ -19,10 +26,26 @@ interface Profile {
   declined_at: string | null;
 }
 
+type AppRole = 'admin' | 'member' | 'guest';
+
+const ROLE_LABELS: Record<AppRole, string> = {
+  admin: 'Admin',
+  member: 'Member',
+  guest: 'Guest',
+};
+
+const ROLE_ICONS: Record<AppRole, React.ReactNode> = {
+  admin: <Shield className="h-3 w-3" />,
+  member: <User className="h-3 w-3" />,
+  guest: <UserMinus className="h-3 w-3" />,
+};
+
 export function MemberManagement() {
   const [pendingMembers, setPendingMembers] = useState<Profile[]>([]);
   const [activeMembers, setActiveMembers] = useState<Profile[]>([]);
   const [inactiveMembers, setInactiveMembers] = useState<Profile[]>([]);
+  const [memberRoles, setMemberRoles] = useState<Record<string, AppRole>>({});
+  const [pendingRoleSelections, setPendingRoleSelections] = useState<Record<string, AppRole>>({});
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [selectedMember, setSelectedMember] = useState<Profile | null>(null);
@@ -44,6 +67,17 @@ export function MemberManagement() {
 
       if (error) throw error;
 
+      // Fetch all roles
+      const { data: roles } = await supabase
+        .from('user_roles')
+        .select('user_id, role');
+
+      const rolesMap: Record<string, AppRole> = {};
+      roles?.forEach(r => {
+        rolesMap[r.user_id] = r.role as AppRole;
+      });
+      setMemberRoles(rolesMap);
+
       // Separate by status
       setPendingMembers((profiles || []).filter(p => p.status === 'pending'));
       setActiveMembers((profiles || []).filter(p => p.status === 'approved'));
@@ -57,6 +91,8 @@ export function MemberManagement() {
   };
 
   const handleApprove = async (userId: string, userName: string, userEmail: string) => {
+    const selectedRole = pendingRoleSelections[userId] || 'member';
+    
     try {
       setActionLoading(userId);
 
@@ -70,6 +106,30 @@ export function MemberManagement() {
         .eq('id', userId);
 
       if (updateError) throw updateError;
+
+      // Set the role - first try to insert, if exists update
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .upsert({
+          user_id: userId,
+          role: selectedRole,
+        }, {
+          onConflict: 'user_id,role'
+        });
+
+      // If upsert failed, try insert (might be first role)
+      if (roleError) {
+        const { error: insertError } = await supabase
+          .from('user_roles')
+          .insert({
+            user_id: userId,
+            role: selectedRole,
+          });
+        
+        if (insertError && !insertError.message.includes('duplicate')) {
+          console.error('Error setting role:', insertError);
+        }
+      }
 
       // Send approval notification via edge function
       const { error: notifyError } = await supabase.functions.invoke('send-notification', {
@@ -86,7 +146,12 @@ export function MemberManagement() {
         console.error('Failed to send approval email:', notifyError);
       }
 
-      toast.success(`${userName} has been approved`);
+      toast.success(`${userName} has been approved as ${ROLE_LABELS[selectedRole]}`);
+      setPendingRoleSelections(prev => {
+        const next = { ...prev };
+        delete next[userId];
+        return next;
+      });
       await fetchMembers();
     } catch (error: any) {
       console.error('Error approving member:', error);
@@ -149,6 +214,21 @@ export function MemberManagement() {
     setProfileModalOpen(true);
   };
 
+  const getRoleBadge = (userId: string) => {
+    const role = memberRoles[userId];
+    if (!role) return null;
+    
+    return (
+      <Badge 
+        variant={role === 'admin' ? 'default' : role === 'guest' ? 'secondary' : 'outline'}
+        className="gap-1"
+      >
+        {ROLE_ICONS[role]}
+        {ROLE_LABELS[role]}
+      </Badge>
+    );
+  };
+
   if (loading) {
     return (
       <div className="py-12 text-center text-muted-foreground">
@@ -187,15 +267,46 @@ export function MemberManagement() {
           pendingMembers.map((member) => (
             <Card key={member.id}>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex-1">
                     <CardTitle>{member.full_name}</CardTitle>
                     <CardDescription>
                       {member.email}<br />
                       Signed up {format(new Date(member.created_at), 'MMM d, yyyy h:mm a')}
                     </CardDescription>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
+                    {/* Role selection for pending */}
+                    <Select
+                      value={pendingRoleSelections[member.id] || 'member'}
+                      onValueChange={(value: AppRole) => 
+                        setPendingRoleSelections(prev => ({ ...prev, [member.id]: value }))
+                      }
+                    >
+                      <SelectTrigger className="w-[120px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="admin">
+                          <div className="flex items-center gap-2">
+                            <Shield className="h-4 w-4" />
+                            Admin
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="member">
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4" />
+                            Member
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="guest">
+                          <div className="flex items-center gap-2">
+                            <UserMinus className="h-4 w-4" />
+                            Guest
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                     <Button
                       size="sm"
                       onClick={() => handleApprove(member.id, member.full_name, member.email)}
@@ -238,7 +349,10 @@ export function MemberManagement() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <CardTitle>{member.full_name}</CardTitle>
+                    <div className="flex items-center gap-2">
+                      <CardTitle>{member.full_name}</CardTitle>
+                      {getRoleBadge(member.id)}
+                    </div>
                     <CardDescription>
                       {member.email}<br />
                       Approved {member.approved_at ? format(new Date(member.approved_at), 'MMM d, yyyy') : 'N/A'}
@@ -283,7 +397,10 @@ export function MemberManagement() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <CardTitle className="text-muted-foreground">{member.full_name}</CardTitle>
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-muted-foreground">{member.full_name}</CardTitle>
+                      {getRoleBadge(member.id)}
+                    </div>
                     <CardDescription>
                       {member.email}<br />
                       Deactivated {member.declined_at ? format(new Date(member.declined_at), 'MMM d, yyyy') : 'N/A'}
@@ -304,6 +421,7 @@ export function MemberManagement() {
         member={selectedMember}
         open={profileModalOpen}
         onOpenChange={setProfileModalOpen}
+        onRoleChange={fetchMembers}
       />
     </Tabs>
   );

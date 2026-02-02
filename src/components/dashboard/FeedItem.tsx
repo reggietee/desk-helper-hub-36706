@@ -15,6 +15,7 @@ interface FeedItemProps {
     created_at: string;
     author?: {
       full_name: string;
+      role: string | null;
     } | null;
   };
   currentUserId: string;
@@ -30,6 +31,7 @@ const ACTION_LABELS: Record<string, string> = {
 export function FeedItem({ item, currentUserId }: FeedItemProps) {
   const isOwnMessage = item.author_id === currentUserId;
   const isActivity = item.type === 'activity';
+  const isGuest = item.author?.role === 'guest';
   
   const timestamp = useMemo(() => {
     const date = new Date(item.created_at);
@@ -70,6 +72,11 @@ export function FeedItem({ item, currentUserId }: FeedItemProps) {
     }
   }, [item.body]);
 
+  // Role-based styling - guests get grey, members/admins get accent/green
+  const nameColorClass = isGuest 
+    ? 'text-muted-foreground' 
+    : 'text-accent';
+
   if (isActivity) {
     // Parse action_name - handle week-specific format like "weekly_planning:2026-01-27"
     const baseActionName = item.action_name?.split(':')[0] || item.action_name;
@@ -78,10 +85,10 @@ export function FeedItem({ item, currentUserId }: FeedItemProps) {
     return (
       <div className="flex justify-center py-1.5">
         <div className="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-0.5 px-2.5 py-1 rounded-full bg-accent/10 text-[11px] text-muted-foreground">
-          <Activity className="h-3 w-3 text-accent flex-shrink-0" />
-          <span className="font-medium text-foreground">{authorName}</span>
+          <Activity className={cn("h-3 w-3 flex-shrink-0", isGuest ? "text-muted-foreground" : "text-accent")} />
+          <span className={cn("font-medium", nameColorClass)}>{authorName}</span>
           <span>earned</span>
-          <span className="font-semibold text-accent whitespace-nowrap">+{item.credits_amount} ©</span>
+          <span className={cn("font-semibold whitespace-nowrap", isGuest ? "text-muted-foreground" : "text-accent")}>+{item.credits_amount} ©</span>
           <span>—</span>
           <span>{actionLabel}</span>
         </div>
@@ -100,7 +107,7 @@ export function FeedItem({ item, currentUserId }: FeedItemProps) {
         "flex items-center gap-1.5 px-1 mb-0.5",
         isOwnMessage ? "flex-row-reverse" : "flex-row"
       )}>
-        <span className="text-[11px] font-medium text-foreground">
+        <span className={cn("text-[11px] font-medium", nameColorClass)}>
           {authorName}
         </span>
         <span className="text-[10px] text-muted-foreground">
@@ -113,7 +120,9 @@ export function FeedItem({ item, currentUserId }: FeedItemProps) {
         "max-w-[85%] rounded-2xl px-3 py-1.5",
         isOwnMessage 
           ? "bg-primary text-primary-foreground rounded-br-sm" 
-          : "bg-muted rounded-bl-sm"
+          : isGuest
+            ? "bg-muted/50 rounded-bl-sm"
+            : "bg-muted rounded-bl-sm"
       )}>
         <div 
           className={cn(

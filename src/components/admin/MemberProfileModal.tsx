@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { Loader2, User, Mail, MapPin, Coins, Plus, Minus } from 'lucide-react';
+import { Loader2, User, Mail, MapPin, Coins, Plus, Minus, Shield, UserMinus, Save } from 'lucide-react';
 
 interface MemberProfile {
   id: string;
@@ -38,17 +38,29 @@ interface Visit {
   checked_in_at: string;
 }
 
+type AppRole = 'admin' | 'member' | 'guest';
+
 interface MemberProfileModalProps {
   member: MemberProfile | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onRoleChange?: () => void;
 }
 
-export function MemberProfileModal({ member, open, onOpenChange }: MemberProfileModalProps) {
+const ROLE_LABELS: Record<AppRole, string> = {
+  admin: 'Admin',
+  member: 'Member',
+  guest: 'Guest',
+};
+
+export function MemberProfileModal({ member, open, onOpenChange, onRoleChange }: MemberProfileModalProps) {
   const [visits, setVisits] = useState<Visit[]>([]);
   const [totalVisits, setTotalVisits] = useState(0);
   const [balance, setBalance] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [currentRole, setCurrentRole] = useState<AppRole | null>(null);
+  const [selectedRole, setSelectedRole] = useState<AppRole>('member');
+  const [savingRole, setSavingRole] = useState(false);
   
   // Adjustment form state
   const [adjustmentAmount, setAdjustmentAmount] = useState('');
@@ -92,11 +104,59 @@ export function MemberProfileModal({ member, open, onOpenChange }: MemberProfile
         .maybeSingle();
 
       setBalance(creditsData?.balance ?? 0);
+
+      // Fetch current role
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', member.id)
+        .maybeSingle();
+
+      if (roleData) {
+        setCurrentRole(roleData.role as AppRole);
+        setSelectedRole(roleData.role as AppRole);
+      } else {
+        setCurrentRole(null);
+        setSelectedRole('member');
+      }
     } catch (error) {
       console.error('Error fetching member data:', error);
       toast.error('Failed to load member data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveRole = async () => {
+    if (!member || selectedRole === currentRole) return;
+
+    setSavingRole(true);
+    try {
+      if (currentRole) {
+        // Update existing role - need to delete and insert due to unique constraint
+        await supabase
+          .from('user_roles')
+          .delete()
+          .eq('user_id', member.id);
+      }
+
+      const { error } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: member.id,
+          role: selectedRole,
+        });
+
+      if (error) throw error;
+
+      setCurrentRole(selectedRole);
+      toast.success(`Role updated to ${ROLE_LABELS[selectedRole]}`);
+      onRoleChange?.();
+    } catch (error: any) {
+      console.error('Error updating role:', error);
+      toast.error('Failed to update role');
+    } finally {
+      setSavingRole(false);
     }
   };
 
@@ -189,6 +249,66 @@ export function MemberProfileModal({ member, open, onOpenChange }: MemberProfile
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-muted-foreground">Status:</span>
                   {getStatusBadge(member.status)}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Role Management Section */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Shield className="h-4 w-4" />
+                  Role Management
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-3">
+                  <Select
+                    value={selectedRole}
+                    onValueChange={(value: AppRole) => setSelectedRole(value)}
+                    disabled={savingRole}
+                  >
+                    <SelectTrigger className="w-[160px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="admin">
+                        <div className="flex items-center gap-2">
+                          <Shield className="h-4 w-4" />
+                          Admin
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="member">
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4" />
+                          Member
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="guest">
+                        <div className="flex items-center gap-2">
+                          <UserMinus className="h-4 w-4" />
+                          Guest
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    size="sm"
+                    onClick={handleSaveRole}
+                    disabled={savingRole || selectedRole === currentRole}
+                  >
+                    {savingRole ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Save className="mr-2 h-4 w-4" />
+                    )}
+                    Save Role
+                  </Button>
+                  {currentRole && (
+                    <span className="text-sm text-muted-foreground">
+                      Current: {ROLE_LABELS[currentRole]}
+                    </span>
+                  )}
                 </div>
               </CardContent>
             </Card>
