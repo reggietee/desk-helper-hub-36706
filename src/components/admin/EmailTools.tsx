@@ -25,6 +25,9 @@ export function EmailTools() {
   const [generatingReport, setGeneratingReport] = useState(false);
   const [reportResult, setReportResult] = useState<TestResult | null>(null);
 
+  const [testingSignupNotification, setTestingSignupNotification] = useState(false);
+  const [signupNotificationResult, setSignupNotificationResult] = useState<TestResult | null>(null);
+
   const handleSendTestEmail = async () => {
     setTestingEmail(true);
     setTestResult(null);
@@ -130,6 +133,53 @@ export function EmailTools() {
     }
   };
 
+  const handleTestSignupNotification = async () => {
+    setTestingSignupNotification(true);
+    setSignupNotificationResult(null);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Please log in to continue");
+        return;
+      }
+
+      const response = await supabase.functions.invoke("send-admin-notification-test", {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || "Failed to send test notification");
+      }
+
+      const data = response.data;
+      setSignupNotificationResult(data);
+
+      if (data.success) {
+        toast.success("Test signup notification sent!", {
+          description: `Message ID: ${data.messageId}`
+        });
+      } else {
+        toast.error("Test notification failed", {
+          description: data.error || "Unknown error"
+        });
+      }
+    } catch (error: any) {
+      console.error("Test signup notification error:", error);
+      setSignupNotificationResult({
+        success: false,
+        error: error.message || "Unknown error"
+      });
+      toast.error("Failed to send test notification", {
+        description: error.message
+      });
+    } finally {
+      setTestingSignupNotification(false);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -195,6 +245,70 @@ export function EmailTools() {
                   ) : (
                     <p className="mt-1 text-red-700 dark:text-red-300">
                       <strong>Error:</strong> {testResult.error}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <hr className="border-border" />
+
+        {/* Test Signup Notification */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-medium">Test Signup Notification</h4>
+              <p className="text-sm text-muted-foreground">
+                Sends a test "new member signup" notification to verify the admin alert system
+              </p>
+            </div>
+            <Button
+              onClick={handleTestSignupNotification}
+              disabled={testingSignupNotification}
+              size="sm"
+              variant="outline"
+            >
+              {testingSignupNotification ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Mail className="h-4 w-4 mr-2" />
+                  Test Signup Alert
+                </>
+              )}
+            </Button>
+          </div>
+
+          {signupNotificationResult && (
+            <div className={`p-3 rounded-lg border ${
+              signupNotificationResult.success 
+                ? 'bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800' 
+                : 'bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800'
+            }`}>
+              <div className="flex items-start gap-2">
+                {signupNotificationResult.success ? (
+                  <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+                ) : (
+                  <XCircle className="h-5 w-5 text-red-600 mt-0.5" />
+                )}
+                <div className="flex-1 text-sm">
+                  <p className={`font-medium ${signupNotificationResult.success ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'}`}>
+                    {signupNotificationResult.success ? 'Test notification sent!' : 'Test notification failed'}
+                  </p>
+                  {signupNotificationResult.success ? (
+                    <div className="mt-1 text-green-700 dark:text-green-300 space-y-1">
+                      <p><strong>Message ID:</strong> {signupNotificationResult.messageId}</p>
+                      <p><strong>Recipient:</strong> {signupNotificationResult.recipient}</p>
+                      <p><strong>Sent at:</strong> {signupNotificationResult.sentAt}</p>
+                    </div>
+                  ) : (
+                    <p className="mt-1 text-red-700 dark:text-red-300">
+                      <strong>Error:</strong> {signupNotificationResult.error}
                     </p>
                   )}
                 </div>

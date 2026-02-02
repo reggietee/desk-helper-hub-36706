@@ -745,6 +745,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          admin_notified_at: string | null
           approved_at: string | null
           created_at: string | null
           credit_email_notifications: boolean
@@ -757,6 +758,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          admin_notified_at?: string | null
           approved_at?: string | null
           created_at?: string | null
           credit_email_notifications?: boolean
@@ -769,6 +771,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          admin_notified_at?: string | null
           approved_at?: string | null
           created_at?: string | null
           credit_email_notifications?: boolean
