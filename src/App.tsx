@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/hooks/use-theme";
+import { MemberGuard } from "@/components/guards/MemberGuard";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import SignProductOut from "./pages/SignProductOut";
@@ -32,17 +33,18 @@ const App = () => (
             <Route path="/" element={<Auth />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/equipment-checkout" element={<SignProductOut />} />
-            <Route path="/sign-product-out" element={<SignProductOut />} />
-            <Route path="/book-call-room" element={<BookCallRoom />} />
-            <Route path="/book-meeting-room" element={<BookMeetingRoom />} />
-            <Route path="/book-private-office" element={<BookPrivateOffice />} />
-            <Route path="/submit-issue" element={<SubmitIssue />} />
-            <Route path="/guest-day-pass" element={<GuestDayPass />} />
-            <Route path="/special-offers" element={<SpecialOffers />} />
+            {/* Member-only routes - wrapped in MemberGuard */}
+            <Route path="/equipment-checkout" element={<MemberGuard><SignProductOut /></MemberGuard>} />
+            <Route path="/sign-product-out" element={<MemberGuard><SignProductOut /></MemberGuard>} />
+            <Route path="/book-call-room" element={<MemberGuard><BookCallRoom /></MemberGuard>} />
+            <Route path="/book-meeting-room" element={<MemberGuard><BookMeetingRoom /></MemberGuard>} />
+            <Route path="/book-private-office" element={<MemberGuard><BookPrivateOffice /></MemberGuard>} />
+            <Route path="/submit-issue" element={<MemberGuard><SubmitIssue /></MemberGuard>} />
+            <Route path="/guest-day-pass" element={<MemberGuard><GuestDayPass /></MemberGuard>} />
+            <Route path="/special-offers" element={<MemberGuard><SpecialOffers /></MemberGuard>} />
             <Route path="/admin" element={<AdminPanel />} />
             <Route path="/admin/schedule-history" element={<AdminScheduleHistory />} />
-            <Route path="/coming-soon" element={<ComingSoon />} />
+            <Route path="/coming-soon" element={<MemberGuard><ComingSoon /></MemberGuard>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

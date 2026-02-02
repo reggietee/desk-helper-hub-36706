@@ -24,6 +24,7 @@ interface Sprint {
   end_time: string;
   max_participants: number;
   is_active: boolean;
+  allow_guests: boolean;
   created_at: string;
 }
 
@@ -56,6 +57,7 @@ export function SprintManagement() {
   const [startTime, setStartTime] = useState('10:00');
   const [endTime, setEndTime] = useState('12:00');
   const [isActive, setIsActive] = useState(false);
+  const [allowGuests, setAllowGuests] = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
 
   useEffect(() => {
@@ -88,6 +90,7 @@ export function SprintManagement() {
       setStartTime(s.start_time.slice(0, 5));
       setEndTime(s.end_time.slice(0, 5));
       setIsActive(s.is_active);
+      setAllowGuests(s.allow_guests);
       
       // Fetch participants
       await fetchParticipants(s.id);
@@ -147,6 +150,7 @@ export function SprintManagement() {
       start_time: startTime + ':00',
       end_time: endTime + ':00',
       is_active: isActive,
+      allow_guests: allowGuests,
     };
 
     let error;
@@ -200,6 +204,7 @@ export function SprintManagement() {
       setStartTime('10:00');
       setEndTime('12:00');
       setIsActive(false);
+      setAllowGuests(false);
       setParticipants([]);
     }
   };
@@ -332,6 +337,20 @@ export function SprintManagement() {
             <Switch
               checked={isActive}
               onCheckedChange={setIsActive}
+            />
+          </div>
+
+          {/* Allow Guests Toggle */}
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="space-y-0.5">
+              <Label className="text-base">Allow Guests to Join</Label>
+              <p className="text-sm text-muted-foreground">
+                When enabled, guests can join this sprint (otherwise members only)
+              </p>
+            </div>
+            <Switch
+              checked={allowGuests}
+              onCheckedChange={setAllowGuests}
             />
           </div>
 

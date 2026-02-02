@@ -17,6 +17,7 @@ interface FeedItemData {
   created_at: string;
   author?: {
     full_name: string;
+    role: string | null;
   } | null;
 }
 
@@ -27,10 +28,10 @@ interface FeedProps {
 
 const PAGE_SIZE = 20;
 
-// Helper to fetch author names for feed items
-async function fetchAuthorNames(items: { author_id: string | null }[]): Promise<Record<string, string>> {
+// Helper to fetch author names and roles for feed items
+async function fetchAuthorData(items: { author_id: string | null }[]): Promise<Record<string, { full_name: string; role: string | null }>> {
   const authorIds = [...new Set(items.filter(d => d.author_id).map(d => d.author_id as string))];
-  let authorMap: Record<string, string> = {};
+  let authorMap: Record<string, { full_name: string; role: string | null }> = {};
   
   if (authorIds.length > 0) {
     const { data: profiles } = await supabase
@@ -38,8 +39,24 @@ async function fetchAuthorNames(items: { author_id: string | null }[]): Promise<
       .select('id, full_name')
       .in('id', authorIds);
     
+    const { data: roles } = await supabase
+      .from('user_roles')
+      .select('user_id, role')
+      .in('user_id', authorIds);
+    
+    const rolesMap: Record<string, string> = {};
+    roles?.forEach(r => {
+      rolesMap[r.user_id] = r.role;
+    });
+    
     if (profiles) {
-      authorMap = profiles.reduce((acc, p) => ({ ...acc, [p.id]: p.full_name }), {} as Record<string, string>);
+      authorMap = profiles.reduce((acc, p) => ({ 
+        ...acc, 
+        [p.id]: { 
+          full_name: p.full_name,
+          role: rolesMap[p.id] || 'member'
+        } 
+      }), {} as Record<string, { full_name: string; role: string | null }>);
     }
   }
   
@@ -69,14 +86,16 @@ export function Feed({ userId, userName }: FeedProps) {
         return;
       }
 
-      // Fetch author names
-      const authorMap = await fetchAuthorNames(data || []);
+      // Fetch author data (names + roles)
+      const authorMap = await fetchAuthorData(data || []);
 
       // Map authors to items and reverse for chronological display
       const itemsWithAuthors = (data || []).map(item => ({
         ...item,
         type: item.type as 'chat' | 'activity',
-        author: item.author_id ? { full_name: authorMap[item.author_id] || 'Member' } : null
+        author: item.author_id && authorMap[item.author_id] 
+          ? { full_name: authorMap[item.author_id].full_name, role: authorMap[item.author_id].role } 
+          : null
       })).reverse();
 
       setItems(itemsWithAuthors);
@@ -109,14 +128,16 @@ export function Feed({ userId, userName }: FeedProps) {
       }
 
       if (data && data.length > 0) {
-        // Fetch author names
-        const authorMap = await fetchAuthorNames(data);
+        // Fetch author data (names + roles)
+        const authorMap = await fetchAuthorData(data);
 
         // Map and reverse to maintain chronological order
         const olderItems = data.map(item => ({
           ...item,
           type: item.type as 'chat' | 'activity',
-          author: item.author_id ? { full_name: authorMap[item.author_id] || 'Member' } : null
+          author: item.author_id && authorMap[item.author_id] 
+            ? { full_name: authorMap[item.author_id].full_name, role: authorMap[item.author_id].role } 
+            : null
         })).reverse();
 
         setItems(prev => [...olderItems, ...prev]);
@@ -161,16 +182,26 @@ export function Feed({ userId, userName }: FeedProps) {
             .single();
 
           if (!error && data) {
-            // Fetch author name if needed
-            let author = null;
+            // Fetch author data (name + role) if needed
+            let author: { full_name: string; role: string | null } | null = null;
             if (data.author_id) {
               const { data: profile } = await supabase
                 .from('profiles')
                 .select('full_name')
                 .eq('id', data.author_id)
                 .single();
+              
+              const { data: roleData } = await supabase
+                .from('user_roles')
+                .select('role')
+                .eq('user_id', data.author_id)
+                .maybeSingle();
+              
               if (profile) {
-                author = { full_name: profile.full_name };
+                author = { 
+                  full_name: profile.full_name,
+                  role: roleData?.role || 'member'
+                };
               }
             }
 

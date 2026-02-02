@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Users, Calendar, Clock, CheckCircle2, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { LockedOverlay } from '@/components/ui/locked-overlay';
 
 interface Sprint {
   id: string;
@@ -16,6 +17,7 @@ interface Sprint {
   end_time: string;
   max_participants: number;
   is_active: boolean;
+  allow_guests: boolean;
 }
 
 interface Participant {
@@ -29,9 +31,10 @@ interface Participant {
 interface CoworkingSprintCardProps {
   userId: string;
   userName: string;
+  userRole?: 'admin' | 'member' | 'guest' | null;
 }
 
-export function CoworkingSprintCard({ userId, userName }: CoworkingSprintCardProps) {
+export function CoworkingSprintCard({ userId, userName, userRole }: CoworkingSprintCardProps) {
   const [sprint, setSprint] = useState<Sprint | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,6 +44,10 @@ export function CoworkingSprintCard({ userId, userName }: CoworkingSprintCardPro
   const isJoined = participants.some(p => p.user_id === userId);
   const isFull = participants.length >= (sprint?.max_participants || 4);
   const spotsRemaining = (sprint?.max_participants || 4) - participants.length;
+  
+  // Check if user can access the sprint
+  const isGuest = userRole === 'guest';
+  const canAccess = !isGuest || sprint?.allow_guests;
 
   useEffect(() => {
     fetchActiveSprint();
@@ -215,7 +222,7 @@ export function CoworkingSprintCard({ userId, userName }: CoworkingSprintCardPro
   const sprintDateFormatted = format(new Date(sprint.sprint_date + 'T00:00:00'), 'EEEE, MMMM d');
   const timeRange = `${sprint.start_time.slice(0, 5)} – ${sprint.end_time.slice(0, 5)}`;
 
-  return (
+  const sprintContent = (
     <Card className="border-accent/30 bg-gradient-to-br from-accent/5 to-transparent">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
@@ -319,4 +326,15 @@ export function CoworkingSprintCard({ userId, userName }: CoworkingSprintCardPro
       </CardContent>
     </Card>
   );
+
+  // If guest and sprint doesn't allow guests, show locked overlay
+  if (isGuest && !sprint.allow_guests) {
+    return (
+      <LockedOverlay isLocked={true} message="Members only">
+        {sprintContent}
+      </LockedOverlay>
+    );
+  }
+
+  return sprintContent;
 }

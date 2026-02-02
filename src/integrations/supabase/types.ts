@@ -263,6 +263,7 @@ export type Database = {
       }
       coworking_sprints: {
         Row: {
+          allow_guests: boolean
           created_at: string
           created_by: string | null
           description: string | null
@@ -276,6 +277,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          allow_guests?: boolean
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -289,6 +291,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          allow_guests?: boolean
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -848,7 +851,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "member"
+      app_role: "admin" | "member" | "guest"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -976,7 +979,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "member"],
+      app_role: ["admin", "member", "guest"],
     },
   },
 } as const

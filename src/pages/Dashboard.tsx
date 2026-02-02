@@ -38,6 +38,8 @@ import { LeaderboardModal } from '@/components/dashboard/LeaderboardModal';
 import { Feed } from '@/components/dashboard/Feed';
 import { CoworkingSprintCard } from '@/components/dashboard/CoworkingSprintCard';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { LockedOverlay } from '@/components/ui/locked-overlay';
+import { useUserRole, type UserRole } from '@/hooks/useUserRole';
 
 interface DashboardCard {
   title: string;
@@ -79,6 +81,9 @@ export default function Dashboard() {
   const [creditsRefreshKey, setCreditsRefreshKey] = useState(0);
   const [hasHavenUpdate, setHasHavenUpdate] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
+  // Get user role from hook
+  const { role: userRole, isGuest } = useUserRole(userId || null);
 
   const handleHavenUpdateVisibilityChange = useCallback((hasUpdate: boolean) => {
     setHasHavenUpdate(hasUpdate);
@@ -204,21 +209,21 @@ export default function Dashboard() {
       title: 'Refer a Friend',
       description: 'Invite friends and earn rewards',
       icon: <Gift className="h-6 w-6" />,
-      path: '/coming-soon',
+      path: '/coming-soon?feature=refer',
       comingSoon: true,
     },
     {
       title: 'Barter Network',
       description: 'Exchange services with other members',
       icon: <Handshake className="h-6 w-6" />,
-      path: '/coming-soon',
+      path: '/coming-soon?feature=barter',
       comingSoon: true,
     },
     {
       title: 'Events Calendar',
       description: 'View and join upcoming community events',
       icon: <Calendar className="h-6 w-6" />,
-      path: '/coming-soon',
+      path: '/coming-soon?feature=events',
       comingSoon: true,
     },
   ];
@@ -440,42 +445,47 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Weekly Presence Section */}
+        {/* Weekly Presence Section - locked for guests */}
         <div className="mb-8">
-          <WeeklyPresence userId={userId} onCreditsEarned={handleCheckInComplete} />
+          <LockedOverlay isLocked={isGuest} message="Members only">
+            <WeeklyPresence userId={userId} onCreditsEarned={handleCheckInComplete} />
+          </LockedOverlay>
         </div>
 
-        {/* Co-Working Sprint Section - only shows if active sprint exists */}
+        {/* Co-Working Sprint Section - only shows if active sprint exists, has its own guest handling */}
         <div className="mb-12">
-          <CoworkingSprintCard userId={userId} userName={userName} />
+          <CoworkingSprintCard userId={userId} userName={userName} userRole={userRole} />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {cards.map((card) => (
-            <Card
-              key={card.path}
-              className="cursor-pointer haven-card border-0 group relative"
-              onClick={() => navigate(card.path)}
-            >
-              {card.comingSoon && (
-                <Badge className="absolute top-6 right-6 bg-accent/20 text-primary border-0" variant="secondary">
-                  Coming Soon
-                </Badge>
-              )}
-              <CardHeader className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-accent/10 rounded-2xl group-hover:bg-accent/20 transition-colors">
-                    {card.icon}
+        {/* Service cards grid - locked for guests */}
+        <LockedOverlay isLocked={isGuest} message="Members only">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {cards.map((card) => (
+              <Card
+                key={card.path}
+                className="cursor-pointer haven-card border-0 group relative"
+                onClick={() => !isGuest && navigate(card.path)}
+              >
+                {card.comingSoon && (
+                  <Badge className="absolute top-6 right-6 bg-accent/20 text-primary border-0" variant="secondary">
+                    Coming Soon
+                  </Badge>
+                )}
+                <CardHeader className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-accent/10 rounded-2xl group-hover:bg-accent/20 transition-colors">
+                      {card.icon}
+                    </div>
+                    <CardTitle className="text-xl font-heading font-bold text-foreground">{card.title}</CardTitle>
                   </div>
-                  <CardTitle className="text-xl font-heading font-bold text-foreground">{card.title}</CardTitle>
-                </div>
-                <CardDescription className="text-base text-muted-foreground leading-relaxed">
-                  {card.description}
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          ))}
-        </div>
+                  <CardDescription className="text-base text-muted-foreground leading-relaxed">
+                    {card.description}
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+        </LockedOverlay>
       </main>
 
       <ProfileSettings
