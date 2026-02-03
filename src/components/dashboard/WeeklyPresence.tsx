@@ -77,21 +77,20 @@ export function WeeklyPresence({ userId, onCreditsEarned }: { userId: string; on
 
       if (error) throw error;
 
-      // Fetch profile names from secure member_directory view (only approved members)
+      // Fetch profile names from secure get_member_directory function (only approved members)
       if (data && data.length > 0) {
         const userIds = [...new Set(data.map(s => s.user_id))];
         const { data: profiles } = await supabase
-          .from("member_directory")
-          .select("id, full_name")
+          .rpc("get_member_directory")
           .in("id", userIds);
 
-        // The member_directory view only returns approved members, so all returned IDs are valid
-        const validUserIds = new Set(profiles?.map(p => p.id) || []);
+        // The function only returns approved members, so all returned IDs are valid
+        const validUserIds = new Set((profiles as { id: string; full_name: string }[] | null)?.map(p => p.id) || []);
         const filteredData = data.filter(schedule => validUserIds.has(schedule.user_id));
 
         const schedulesWithProfiles = filteredData.map(schedule => ({
           ...schedule,
-          profiles: profiles?.find(p => p.id === schedule.user_id)
+          profiles: (profiles as { id: string; full_name: string }[] | null)?.find(p => p.id === schedule.user_id)
         }));
 
         setSchedules(schedulesWithProfiles as WeeklySchedule[]);
