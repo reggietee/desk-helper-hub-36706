@@ -47,13 +47,6 @@ export type Database = {
             foreignKeyName: "approval_events_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "member_directory"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "approval_events_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -384,13 +377,6 @@ export type Database = {
           type?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "feed_items_author_id_fkey"
-            columns: ["author_id"]
-            isOneToOne: false
-            referencedRelation: "member_directory"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "feed_items_author_id_fkey"
             columns: ["author_id"]
@@ -855,24 +841,17 @@ export type Database = {
       }
     }
     Views: {
-      member_directory: {
-        Row: {
-          full_name: string | null
-          id: string | null
-        }
-        Insert: {
-          full_name?: string | null
-          id?: string | null
-        }
-        Update: {
-          full_name?: string | null
-          id?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       cleanup_expired_otp_tokens: { Args: never; Returns: undefined }
+      get_member_directory: {
+        Args: never
+        Returns: {
+          full_name: string
+          id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
