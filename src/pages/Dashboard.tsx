@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { WeeklyPresence } from '@/components/dashboard/WeeklyPresence';
+import { WeeklyPresencePlaceholder } from '@/components/dashboard/WeeklyPresencePlaceholder';
 import { ProfileSettings } from '@/components/dashboard/ProfileSettings';
 import { HavenUpdates } from '@/components/dashboard/HavenUpdates';
 import { CheckInBanner } from '@/components/dashboard/CheckInBanner';
@@ -40,6 +41,7 @@ import { CoworkingSprintCard } from '@/components/dashboard/CoworkingSprintCard'
 import { useIsMobile } from '@/hooks/use-mobile';
 import { LockedOverlay } from '@/components/ui/locked-overlay';
 import { useUserRole, type UserRole } from '@/hooks/useUserRole';
+import { ServiceCardsPlaceholder } from '@/components/dashboard/ServiceCardsPlaceholder';
 
 interface DashboardCard {
   title: string;
@@ -445,9 +447,17 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Weekly Presence Section - locked for guests */}
+        {/* Weekly Presence Section - locked for guests with privacy-safe placeholder */}
         <div className="mb-8">
-          <LockedOverlay isLocked={isGuest} message="Members only">
+          <LockedOverlay 
+            isLocked={isGuest} 
+            message="Members only"
+            teaser="Plan your upcoming coworking days and see how busy Haven will be across the week."
+            modalTitle="Plan My Week / Who's In"
+            modalDescription="Plan your coworking days at Haven for the next two weeks so you can match the vibe you want—lighter days for focus and deeper work, and busier days for networking. Members can also optionally share their name on the calendar to coordinate with others."
+            hideContent={true}
+            placeholder={<WeeklyPresencePlaceholder />}
+          >
             <WeeklyPresence userId={userId} onCreditsEarned={handleCheckInComplete} />
           </LockedOverlay>
         </div>
@@ -457,8 +467,16 @@ export default function Dashboard() {
           <CoworkingSprintCard userId={userId} userName={userName} userRole={userRole} />
         </div>
 
-        {/* Service cards grid - locked for guests */}
-        <LockedOverlay isLocked={isGuest} message="Members only">
+        {/* Service cards grid - locked for guests with privacy-safe placeholder */}
+        <LockedOverlay 
+          isLocked={isGuest} 
+          message="Members only"
+          teaser="Book rooms, sign out shared gear, submit issues, and access member perks—all in one place."
+          modalTitle="Member Services"
+          modalDescription="Members can manage everything they need for working at Haven—booking the call room, meeting room, or private office, signing out shared items, submitting issues, and accessing perks and offers. It's the operational hub for getting the most out of the space."
+          hideContent={true}
+          placeholder={<ServiceCardsPlaceholder />}
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {cards.map((card) => (
               <Card

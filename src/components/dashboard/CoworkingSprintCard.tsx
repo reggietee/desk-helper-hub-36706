@@ -7,6 +7,7 @@ import { Users, Calendar, Clock, CheckCircle2, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { LockedOverlay } from '@/components/ui/locked-overlay';
+import { CoworkingSprintPlaceholder } from '@/components/dashboard/CoworkingSprintPlaceholder';
 
 interface Sprint {
   id: string;
@@ -327,10 +328,18 @@ export function CoworkingSprintCard({ userId, userName, userRole }: CoworkingSpr
     </Card>
   );
 
-  // If guest and sprint doesn't allow guests, show locked overlay
+  // If guest and sprint doesn't allow guests, show locked overlay with privacy-safe placeholder
   if (isGuest && !sprint.allow_guests) {
     return (
-      <LockedOverlay isLocked={true} message="Members only">
+      <LockedOverlay 
+        isLocked={true} 
+        message="Members only"
+        teaser="Join a focused coworking sprint with a small group for a set time block."
+        modalTitle="Co-Working Sprints"
+        modalDescription="Coworking sprints are scheduled, focused work sessions you can join with a small group. They're designed to help you commit to a time block, stay accountable, and build momentum together in the space."
+        hideContent={true}
+        placeholder={<CoworkingSprintPlaceholder />}
+      >
         {sprintContent}
       </LockedOverlay>
     );
