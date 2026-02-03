@@ -43,7 +43,7 @@ export function LockedOverlay({
 
   return (
     <>
-      <div className={cn("relative", className)}>
+      <div className={cn("relative rounded-xl border-2 border-dashed border-muted-foreground/25", className)}>
         {/* The underlying content - blurred or hidden for privacy */}
         <div className="pointer-events-none select-none">
           {hideContent ? (
