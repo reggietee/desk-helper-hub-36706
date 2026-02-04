@@ -365,6 +365,45 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_calls: {
+        Row: {
+          allow_guests: boolean
+          call_name: string
+          created_at: string
+          created_by: string
+          daily_room_name: string
+          daily_room_url: string
+          ended_at: string | null
+          id: string
+          note: string | null
+          status: string
+        }
+        Insert: {
+          allow_guests?: boolean
+          call_name?: string
+          created_at?: string
+          created_by: string
+          daily_room_name: string
+          daily_room_url: string
+          ended_at?: string | null
+          id?: string
+          note?: string | null
+          status?: string
+        }
+        Update: {
+          allow_guests?: boolean
+          call_name?: string
+          created_at?: string
+          created_by?: string
+          daily_room_name?: string
+          daily_room_url?: string
+          ended_at?: string | null
+          id?: string
+          note?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       daily_credits_report_logs: {
         Row: {
           created_at: string

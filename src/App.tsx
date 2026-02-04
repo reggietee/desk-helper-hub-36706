@@ -18,6 +18,7 @@ import SpecialOffers from "./pages/SpecialOffers";
 import ComingSoon from "./pages/ComingSoon";
 import AdminScheduleHistory from "./pages/AdminScheduleHistory";
 import AdminPanel from "./pages/AdminPanel";
+import CallRoom from "./pages/CallRoom";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/special-offers" element={<MemberGuard><SpecialOffers /></MemberGuard>} />
             <Route path="/admin" element={<AdminPanel />} />
             <Route path="/admin/schedule-history" element={<AdminScheduleHistory />} />
+            <Route path="/call/:callId" element={<CallRoom />} />
             <Route path="/coming-soon" element={<MemberGuard><ComingSoon /></MemberGuard>} />
             <Route path="*" element={<NotFound />} />
           </Routes>

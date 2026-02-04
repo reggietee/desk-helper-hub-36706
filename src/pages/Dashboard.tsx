@@ -24,6 +24,7 @@ import {
   Menu,
   X,
   Coins,
+  Video,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { WeeklyPresence } from '@/components/dashboard/WeeklyPresence';
@@ -42,6 +43,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { LockedOverlay } from '@/components/ui/locked-overlay';
 import { useUserRole, type UserRole } from '@/hooks/useUserRole';
 import { ServiceCardsPlaceholder } from '@/components/dashboard/ServiceCardsPlaceholder';
+import { StartCallModal } from '@/components/calls/StartCallModal';
 
 interface DashboardCard {
   title: string;
@@ -83,6 +85,7 @@ export default function Dashboard() {
   const [creditsRefreshKey, setCreditsRefreshKey] = useState(0);
   const [hasHavenUpdate, setHasHavenUpdate] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [startCallOpen, setStartCallOpen] = useState(false);
   
   // Get user role from hook
   const { role: userRole, isGuest } = useUserRole(userId || null);
@@ -275,15 +278,26 @@ export default function Dashboard() {
                 Leaderboard
               </Button>
               {isAdmin && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => navigate('/admin')}
-                  className="rounded-xl"
-                >
-                  <Shield className="mr-2 h-4 w-4" />
-                  Admin
-                </Button>
+                <>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setStartCallOpen(true)}
+                    className="rounded-xl"
+                  >
+                    <Video className="mr-2 h-4 w-4" />
+                    Start a Call
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => navigate('/admin')}
+                    className="rounded-xl"
+                  >
+                    <Shield className="mr-2 h-4 w-4" />
+                    Admin
+                  </Button>
+                </>
               )}
               <Button 
                 variant="outline" 
@@ -348,18 +362,30 @@ export default function Dashboard() {
                       <span>Leaderboard</span>
                     </button>
 
-                    {/* Admin (conditional) */}
+                    {/* Admin options (conditional) */}
                     {isAdmin && (
-                      <button
-                        onClick={() => {
-                          setMobileMenuOpen(false);
-                          navigate('/admin');
-                        }}
-                        className="flex items-center gap-3 px-4 py-3 hover:bg-muted transition-colors text-left"
-                      >
-                        <Shield className="h-5 w-5 text-muted-foreground" />
-                        <span>Admin</span>
-                      </button>
+                      <>
+                        <button
+                          onClick={() => {
+                            setMobileMenuOpen(false);
+                            setStartCallOpen(true);
+                          }}
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-muted transition-colors text-left"
+                        >
+                          <Video className="h-5 w-5 text-muted-foreground" />
+                          <span>Start a Call</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setMobileMenuOpen(false);
+                            navigate('/admin');
+                          }}
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-muted transition-colors text-left"
+                        >
+                          <Shield className="h-5 w-5 text-muted-foreground" />
+                          <span>Admin</span>
+                        </button>
+                      </>
                     )}
 
                     {/* Profile */}
@@ -520,6 +546,14 @@ export default function Dashboard() {
         onOpenChange={setLeaderboardOpen}
         refreshKey={creditsRefreshKey}
       />
+
+      {/* Start Call Modal (Admin only) */}
+      {isAdmin && (
+        <StartCallModal
+          open={startCallOpen}
+          onOpenChange={setStartCallOpen}
+        />
+      )}
     </div>
   );
 }

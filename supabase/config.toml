@@ -29,3 +29,9 @@ verify_jwt = false
 
 [functions.send-sprint-meet-link]
 verify_jwt = false
+
+[functions.create-daily-call]
+verify_jwt = true
+
+[functions.end-daily-call]
+verify_jwt = true
