@@ -35,7 +35,7 @@ export function CoworkingSprintPlaceholder() {
           </div>
           <div className="flex items-center gap-2 text-muted-foreground">
             <Clock className="h-4 w-4" />
-            10:00 – 12:00
+            10:00 AM – 12:00 PM
           </div>
         </div>
 
