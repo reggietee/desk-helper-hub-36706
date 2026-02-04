@@ -69,6 +69,39 @@ export function SprintCard({ sprint, participants, userId, userName, onParticipa
 
     setJoining(true);
 
+    // First, verify the sprint is still joinable with fresh data
+    const { data: freshSprint, error: sprintError } = await supabase
+      .from('coworking_sprints')
+      .select('id, max_participants, is_active')
+      .eq('id', sprint.id)
+      .maybeSingle();
+
+    if (sprintError || !freshSprint || !freshSprint.is_active) {
+      toast.error('Sprint is no longer available');
+      setJoining(false);
+      return;
+    }
+
+    // Check current participant count
+    const { count, error: countError } = await supabase
+      .from('coworking_sprint_participants')
+      .select('*', { count: 'exact', head: true })
+      .eq('sprint_id', sprint.id);
+
+    if (countError) {
+      console.error('Error checking capacity:', countError);
+      toast.error('Failed to join sprint');
+      setJoining(false);
+      return;
+    }
+
+    if ((count || 0) >= freshSprint.max_participants) {
+      toast.error('Sprint is now full');
+      onParticipantsChanged();
+      setJoining(false);
+      return;
+    }
+
     const { error: insertError } = await supabase
       .from('coworking_sprint_participants')
       .insert({
@@ -89,32 +122,21 @@ export function SprintCard({ sprint, participants, userId, userName, onParticipa
       return;
     }
 
-    // Send notification to admin
-    try {
-      await supabase.functions.invoke('send-notification', {
-        body: {
-          type: 'sprint_join',
-          data: {
-            user_name: userName,
-            user_email: (await supabase.auth.getUser()).data.user?.email,
-            sprint_title: sprint.title,
-            sprint_date: format(new Date(sprint.sprint_date), 'EEEE, MMMM d, yyyy'),
-            sprint_time: timeRange,
-            current_count: participants.length + 1,
-            max_count: sprint.max_participants,
-          }
+    // Send notification to admin (fire and forget)
+    supabase.functions.invoke('send-notification', {
+      body: {
+        type: 'sprint_join',
+        data: {
+          user_name: userName,
+          user_email: (await supabase.auth.getUser()).data.user?.email,
+          sprint_title: sprint.title,
+          sprint_date: format(new Date(sprint.sprint_date), 'EEEE, MMMM d, yyyy'),
+          sprint_time: timeRange,
+          current_count: (count || 0) + 1,
+          max_count: sprint.max_participants,
         }
-      });
-    } catch (err) {
-      console.error('Error sending notification:', err);
-    }
-
-    // Mark notification as sent
-    await supabase
-      .from('coworking_sprint_participants')
-      .update({ notification_sent: true })
-      .eq('sprint_id', sprint.id)
-      .eq('user_id', userId);
+      }
+    }).catch(err => console.error('Error sending notification:', err));
 
     toast.success("You've joined the sprint!");
     onParticipantsChanged();
