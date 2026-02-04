@@ -38,7 +38,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { useTheme } from '@/hooks/use-theme';
 import { LeaderboardModal } from '@/components/dashboard/LeaderboardModal';
 import { Feed } from '@/components/dashboard/Feed';
-import { CoworkingSprintCard } from '@/components/dashboard/CoworkingSprintCard';
+import { SprintsList } from '@/components/dashboard/SprintsList';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { LockedOverlay } from '@/components/ui/locked-overlay';
 import { useUserRole, type UserRole } from '@/hooks/useUserRole';
@@ -488,9 +488,9 @@ export default function Dashboard() {
           </LockedOverlay>
         </div>
 
-        {/* Co-Working Sprint Section - only shows if active sprint exists, has its own guest handling */}
+        {/* Co-Working Sprints Section - shows all active sprints, handles guest visibility per-sprint */}
         <div className="mb-12">
-          <CoworkingSprintCard userId={userId} userName={userName} userRole={userRole} />
+          <SprintsList userId={userId} userName={userName} userRole={userRole} />
         </div>
 
         {/* Service cards grid - locked for guests with privacy-safe placeholder */}
