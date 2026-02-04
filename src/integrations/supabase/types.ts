@@ -229,6 +229,53 @@ export type Database = {
         }
         Relationships: []
       }
+      coworking_sprint_emails: {
+        Row: {
+          created_at: string
+          email_type: string
+          error: string | null
+          id: string
+          resend_message_id: string | null
+          sent_at: string | null
+          sprint_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_type: string
+          error?: string | null
+          id?: string
+          resend_message_id?: string | null
+          sent_at?: string | null
+          sprint_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email_type?: string
+          error?: string | null
+          id?: string
+          resend_message_id?: string | null
+          sent_at?: string | null
+          sprint_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coworking_sprint_emails_sprint_id_fkey"
+            columns: ["sprint_id"]
+            isOneToOne: false
+            referencedRelation: "coworking_sprints"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coworking_sprint_participants: {
         Row: {
           id: string
@@ -266,11 +313,15 @@ export type Database = {
           allow_guests: boolean
           created_at: string
           created_by: string | null
+          daily_room_name: string | null
+          daily_room_url: string | null
           description: string | null
           end_time: string
+          hosting_mode: string
           id: string
           is_active: boolean
           max_participants: number
+          meeting_link: string | null
           sprint_date: string
           start_time: string
           title: string
@@ -280,11 +331,15 @@ export type Database = {
           allow_guests?: boolean
           created_at?: string
           created_by?: string | null
+          daily_room_name?: string | null
+          daily_room_url?: string | null
           description?: string | null
           end_time: string
+          hosting_mode?: string
           id?: string
           is_active?: boolean
           max_participants?: number
+          meeting_link?: string | null
           sprint_date: string
           start_time: string
           title?: string
@@ -294,11 +349,15 @@ export type Database = {
           allow_guests?: boolean
           created_at?: string
           created_by?: string | null
+          daily_room_name?: string | null
+          daily_room_url?: string | null
           description?: string | null
           end_time?: string
+          hosting_mode?: string
           id?: string
           is_active?: boolean
           max_participants?: number
+          meeting_link?: string | null
           sprint_date?: string
           start_time?: string
           title?: string
