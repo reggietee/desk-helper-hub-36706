@@ -3,11 +3,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Users, Calendar, Clock, CheckCircle2, Loader2 } from 'lucide-react';
+import { Users, Calendar, Clock, CheckCircle2, Loader2, MapPin, Video, Monitor, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { LockedOverlay } from '@/components/ui/locked-overlay';
 import { CoworkingSprintPlaceholder } from '@/components/dashboard/CoworkingSprintPlaceholder';
+import { formatTo12Hour, formatTimeRange, isSprintClosed } from '@/lib/time-utils';
 
 interface Sprint {
   id: string;
@@ -19,6 +20,9 @@ interface Sprint {
   max_participants: number;
   is_active: boolean;
   allow_guests: boolean;
+  hosting_mode: 'haven' | 'google_meet' | 'daily';
+  meeting_link: string | null;
+  daily_room_url: string | null;
 }
 
 interface Participant {
@@ -35,6 +39,8 @@ interface CoworkingSprintCardProps {
   userRole?: 'admin' | 'member' | 'guest' | null;
 }
 
+const HAVEN_ADDRESS = '242 Mary St, Unit 8, Niagara-on-the-Lake, ON, Canada';
+
 export function CoworkingSprintCard({ userId, userName, userRole }: CoworkingSprintCardProps) {
   const [sprint, setSprint] = useState<Sprint | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -45,6 +51,7 @@ export function CoworkingSprintCard({ userId, userName, userRole }: CoworkingSpr
   const isJoined = participants.some(p => p.user_id === userId);
   const isFull = participants.length >= (sprint?.max_participants || 4);
   const spotsRemaining = (sprint?.max_participants || 4) - participants.length;
+  const isClosed = sprint ? isSprintClosed(sprint.sprint_date, sprint.start_time) : false;
   
   // Check if user can access the sprint
   const isGuest = userRole === 'guest';
@@ -98,7 +105,7 @@ export function CoworkingSprintCard({ userId, userName, userRole }: CoworkingSpr
     }
 
     if (data && data.length > 0) {
-      setSprint(data[0]);
+      setSprint(data[0] as Sprint);
     }
     setLoading(false);
   };
@@ -135,7 +142,7 @@ export function CoworkingSprintCard({ userId, userName, userRole }: CoworkingSpr
   };
 
   const handleJoin = async () => {
-    if (!sprint || isJoined || isFull) return;
+    if (!sprint || isJoined || isFull || isClosed) return;
     
     setJoining(true);
     
@@ -170,7 +177,7 @@ export function CoworkingSprintCard({ userId, userName, userRole }: CoworkingSpr
             user_email: (await supabase.auth.getUser()).data.user?.email,
             sprint_title: sprint.title,
             sprint_date: format(new Date(sprint.sprint_date), 'EEEE, MMMM d, yyyy'),
-            sprint_time: `${sprint.start_time.slice(0, 5)} - ${sprint.end_time.slice(0, 5)}`,
+            sprint_time: formatTimeRange(sprint.start_time, sprint.end_time),
             current_count: participants.length + 1,
             max_count: sprint.max_participants,
           }
@@ -221,7 +228,117 @@ export function CoworkingSprintCard({ userId, userName, userRole }: CoworkingSpr
   if (!sprint) return null;
 
   const sprintDateFormatted = format(new Date(sprint.sprint_date + 'T00:00:00'), 'EEEE, MMMM d');
-  const timeRange = `${sprint.start_time.slice(0, 5)} – ${sprint.end_time.slice(0, 5)}`;
+  const timeRange = formatTimeRange(sprint.start_time, sprint.end_time);
+  
+  // Access label
+  const accessLabel = sprint.allow_guests ? 'All Visitors' : 'Members Only';
+  
+  // Hosting mode icons and labels
+  const hostingInfo = {
+    haven: { icon: MapPin, label: 'In person at Haven', address: HAVEN_ADDRESS },
+    google_meet: { icon: Video, label: 'Virtual via Google Meet' },
+    daily: { icon: Monitor, label: 'Virtual in Homebase' },
+  };
+  const currentHosting = hostingInfo[sprint.hosting_mode] || hostingInfo.haven;
+  const HostingIcon = currentHosting.icon;
+
+  // Determine join button state and action
+  const getJoinContent = () => {
+    if (isClosed) {
+      return (
+        <div className="text-center p-3 rounded-lg bg-muted/50">
+          <p className="text-sm text-muted-foreground">
+            This coworking sprint has closed — join the next one.
+          </p>
+        </div>
+      );
+    }
+
+    if (isJoined) {
+      return (
+        <div className="space-y-3">
+          {/* Participation confirmed */}
+          <div className="flex gap-2">
+            <Button 
+              variant="secondary" 
+              className="flex-1"
+              disabled
+            >
+              <CheckCircle2 className="mr-2 h-4 w-4" />
+              You're In!
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={handleLeave}
+              disabled={leaving}
+            >
+              {leaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Leave'}
+            </Button>
+          </div>
+          
+          {/* Join instructions based on hosting mode */}
+          {sprint.hosting_mode === 'haven' && (
+            <div className="text-sm text-muted-foreground bg-muted/30 rounded-lg p-3">
+              <p className="font-medium text-foreground">You're in — see you at Haven!</p>
+              <p className="text-xs mt-1">{HAVEN_ADDRESS}</p>
+            </div>
+          )}
+          
+          {sprint.hosting_mode === 'google_meet' && sprint.meeting_link && (
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => window.open(sprint.meeting_link!, '_blank')}
+            >
+              <Video className="mr-2 h-4 w-4" />
+              Join Google Meet
+              <ExternalLink className="ml-2 h-3 w-3" />
+            </Button>
+          )}
+          
+          {sprint.hosting_mode === 'google_meet' && !sprint.meeting_link && (
+            <div className="text-sm text-muted-foreground bg-muted/30 rounded-lg p-3">
+              <p>The Google Meet link will be sent 5 minutes before the sprint starts.</p>
+            </div>
+          )}
+          
+          {sprint.hosting_mode === 'daily' && sprint.daily_room_url && (
+            <Button 
+              variant="default" 
+              className="w-full"
+              onClick={() => window.open(sprint.daily_room_url!, '_blank')}
+            >
+              <Monitor className="mr-2 h-4 w-4" />
+              Join Video Room
+              <ExternalLink className="ml-2 h-3 w-3" />
+            </Button>
+          )}
+          
+          {sprint.hosting_mode === 'daily' && !sprint.daily_room_url && (
+            <div className="text-sm text-muted-foreground bg-muted/30 rounded-lg p-3">
+              <p>The video room is being set up. Check back soon!</p>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Not joined yet
+    return (
+      <Button 
+        className="w-full"
+        onClick={handleJoin}
+        disabled={joining || isFull}
+      >
+        {joining ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        ) : (
+          <Users className="mr-2 h-4 w-4" />
+        )}
+        {isFull ? 'Sprint is Full' : "I'm In!"}
+      </Button>
+    );
+  };
 
   const sprintContent = (
     <Card className="border-accent/30 bg-gradient-to-br from-accent/5 to-transparent">
@@ -238,17 +355,22 @@ export function CoworkingSprintCard({ userId, userName, userRole }: CoworkingSpr
               </CardDescription>
             )}
           </div>
-          <Badge 
-            variant={isFull ? "destructive" : "secondary"}
-            className="shrink-0"
-          >
-            {isFull ? 'Full' : `${spotsRemaining} spot${spotsRemaining !== 1 ? 's' : ''} left`}
-          </Badge>
+          <div className="flex flex-col items-end gap-1">
+            <Badge 
+              variant={isFull ? "destructive" : "secondary"}
+              className="shrink-0"
+            >
+              {isFull ? 'Full' : `${spotsRemaining} spot${spotsRemaining !== 1 ? 's' : ''} left`}
+            </Badge>
+            <Badge variant="outline" className="text-xs">
+              {accessLabel}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Date & Time */}
-        <div className="flex flex-wrap gap-4 text-sm">
+        {/* Date, Time & Hosting */}
+        <div className="flex flex-wrap gap-3 text-sm">
           <div className="flex items-center gap-2 text-muted-foreground">
             <Calendar className="h-4 w-4" />
             {sprintDateFormatted}
@@ -256,6 +378,10 @@ export function CoworkingSprintCard({ userId, userName, userRole }: CoworkingSpr
           <div className="flex items-center gap-2 text-muted-foreground">
             <Clock className="h-4 w-4" />
             {timeRange}
+          </div>
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <HostingIcon className="h-4 w-4" />
+            {currentHosting.label}
           </div>
         </div>
 
@@ -291,39 +417,8 @@ export function CoworkingSprintCard({ userId, userName, userRole }: CoworkingSpr
           {participants.length} of {sprint.max_participants} spots filled
         </p>
 
-        {/* Action Button */}
-        {isJoined ? (
-          <div className="flex gap-2">
-            <Button 
-              variant="secondary" 
-              className="flex-1"
-              disabled
-            >
-              <CheckCircle2 className="mr-2 h-4 w-4" />
-              You're In!
-            </Button>
-            <Button 
-              variant="outline"
-              onClick={handleLeave}
-              disabled={leaving}
-            >
-              {leaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Leave'}
-            </Button>
-          </div>
-        ) : (
-          <Button 
-            className="w-full"
-            onClick={handleJoin}
-            disabled={joining || isFull}
-          >
-            {joining ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Users className="mr-2 h-4 w-4" />
-            )}
-            {isFull ? 'Sprint is Full' : "I'm In!"}
-          </Button>
-        )}
+        {/* Action Button / Join Content */}
+        {getJoinContent()}
       </CardContent>
     </Card>
   );
