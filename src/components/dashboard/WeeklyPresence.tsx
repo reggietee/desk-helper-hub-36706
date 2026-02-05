@@ -8,7 +8,8 @@ import { SchedulePlanModal } from "./SchedulePlanModal";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 interface WeeklySchedule {
   id: string;
@@ -23,6 +24,45 @@ interface WeeklySchedule {
 }
 
 const TIMEZONE = "America/Toronto";
+
+// Mobile bottom sheet component for showing additional members
+function MoreMembersSheet({
+  members,
+  count,
+  renderTimeWindowEmojis
+}: {
+  members: { name: string; timeWindows: string[] }[];
+  count: number;
+  renderTimeWindowEmojis: (timeWindows: string[]) => JSX.Element;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <>
+      <button
+        onClick={() => setIsOpen(true)}
+        className="text-sm text-muted-foreground cursor-pointer hover:underline focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 rounded"
+        aria-label={`Show ${count} more members`}
+      >
+        +{count} more
+      </button>
+      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <SheetContent side="bottom" className="rounded-t-2xl">
+          <SheetHeader>
+            <SheetTitle>Additional Members</SheetTitle>
+          </SheetHeader>
+          <div className="space-y-2 py-4">
+            {members.map((member, i) => (
+              <div key={i} className="text-sm py-2 border-b border-border last:border-0">
+                {member.name} {renderTimeWindowEmojis(member.timeWindows)}
+              </div>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
+    </>
+  );
+}
 
 export function WeeklyPresence({ userId, onCreditsEarned }: { userId: string; onCreditsEarned?: () => void }) {
   const [schedules, setSchedules] = useState<WeeklySchedule[]>([]);
@@ -169,24 +209,25 @@ export function WeeklyPresence({ userId, onCreditsEarned }: { userId: string; on
               </div>
             ))}
             {visibleMembers.length > 2 && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="text-xs text-muted-foreground cursor-pointer hover:underline">
-                      +{visibleMembers.length - 2} more
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <div className="space-y-1">
-                      {visibleMembers.slice(2).map((member, i) => (
-                        <div key={i} className="text-sm">
-                          {member.name} {renderTimeWindowEmojis(member.timeWindows)}
-                        </div>
-                      ))}
-                    </div>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    className="text-xs text-muted-foreground cursor-pointer hover:underline focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 rounded"
+                    aria-label={`Show ${visibleMembers.length - 2} more members`}
+                  >
+                    +{visibleMembers.length - 2} more
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-3" align="start">
+                  <div className="space-y-1">
+                    {visibleMembers.slice(2).map((member, i) => (
+                      <div key={i} className="text-sm">
+                        {member.name} {renderTimeWindowEmojis(member.timeWindows)}
+                      </div>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
             )}
           </div>
         )}
@@ -238,24 +279,11 @@ export function WeeklyPresence({ userId, onCreditsEarned }: { userId: string; on
                 </div>
               ))}
               {visibleMembers.length > 3 && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="text-sm text-muted-foreground cursor-pointer hover:underline">
-                        +{visibleMembers.length - 3} more
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <div className="space-y-1">
-                        {visibleMembers.slice(3).map((member, i) => (
-                          <div key={i} className="text-sm">
-                            {member.name} {renderTimeWindowEmojis(member.timeWindows)}
-                          </div>
-                        ))}
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <MoreMembersSheet
+                  members={visibleMembers.slice(3)}
+                  count={visibleMembers.length - 3}
+                  renderTimeWindowEmojis={renderTimeWindowEmojis}
+                />
               )}
             </div>
           )}
