@@ -494,42 +494,55 @@ export default function Dashboard() {
         </div>
 
         {/* Service cards grid - locked for guests with privacy-safe placeholder */}
-        <LockedOverlay 
-          isLocked={isGuest} 
-          message="Members only"
-          teaser="Book rooms, sign out shared gear, submit issues, and access member perks—all in one place."
-          modalTitle="Member Services"
-          modalDescription="Members can manage everything they need for working at Haven—booking the call room, meeting room, or private office, signing out shared items, submitting issues, and accessing perks and offers. It's the operational hub for getting the most out of the space."
-          hideContent={true}
-          placeholder={<ServiceCardsPlaceholder />}
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {cards.map((card) => (
-              <Card
-                key={card.path}
-                className="cursor-pointer haven-card border-0 group relative"
-                onClick={() => !isGuest && navigate(card.path)}
-              >
-                {card.comingSoon && (
-                  <Badge className="absolute top-6 right-6 bg-accent/20 text-primary border-0" variant="secondary">
-                    Coming Soon
-                  </Badge>
-                )}
-                <CardHeader className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-accent/10 rounded-2xl group-hover:bg-accent/20 transition-colors">
-                      {card.icon}
-                    </div>
-                    <CardTitle className="text-xl font-heading font-bold text-foreground">{card.title}</CardTitle>
-                  </div>
-                  <CardDescription className="text-base text-muted-foreground leading-relaxed">
-                    {card.description}
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            ))}
+        <div className="space-y-4">
+          {/* Section Header */}
+          <div>
+            <h2 className="text-2xl font-semibold text-foreground flex items-center gap-2">
+              <Package className="h-6 w-6" />
+              Member Services
+            </h2>
+            <p className="text-muted-foreground mt-1">
+              All the infrastructure, support, and perks that make Haven a plug-and-play work environment.
+            </p>
           </div>
-        </LockedOverlay>
+
+          <LockedOverlay 
+            isLocked={isGuest} 
+            message="Members only"
+            teaser="Book rooms, sign out shared gear, submit issues, and access member perks—all in one place."
+            modalTitle="Member Services"
+            modalDescription="Members can manage everything they need for working at Haven—booking the call room, meeting room, or private office, signing out shared items, submitting issues, and accessing perks and offers. It's the operational hub for getting the most out of the space."
+            hideContent={true}
+            placeholder={<ServiceCardsPlaceholder />}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {cards.map((card) => (
+                <Card
+                  key={card.path}
+                  className="cursor-pointer haven-card border-0 group relative"
+                  onClick={() => !isGuest && navigate(card.path)}
+                >
+                  {card.comingSoon && (
+                    <Badge className="absolute top-6 right-6 bg-accent/20 text-primary border-0" variant="secondary">
+                      Coming Soon
+                    </Badge>
+                  )}
+                  <CardHeader className="space-y-4">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-accent/10 rounded-2xl group-hover:bg-accent/20 transition-colors">
+                        {card.icon}
+                      </div>
+                      <CardTitle className="text-xl font-heading font-bold text-foreground">{card.title}</CardTitle>
+                    </div>
+                    <CardDescription className="text-base text-muted-foreground leading-relaxed">
+                      {card.description}
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              ))}
+            </div>
+          </LockedOverlay>
+        </div>
       </main>
 
       <ProfileSettings
