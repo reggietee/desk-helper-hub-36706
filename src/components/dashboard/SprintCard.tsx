@@ -110,13 +110,20 @@ export function SprintCard({ sprint, participants, userId, userName, onParticipa
       });
 
     if (insertError) {
-      console.error('Error joining sprint:', insertError);
+      console.error('Error joining sprint:', {
+        code: insertError.code,
+        message: insertError.message,
+        details: insertError.details,
+        hint: insertError.hint,
+      });
       if (insertError.code === '23505') {
         toast.error('You have already joined this sprint');
       } else if (insertError.message.includes('row-level security')) {
         toast.error('Sprint is full or no longer available');
+      } else if (insertError.code === '42P17') {
+        toast.error('Unable to join - please try again');
       } else {
-        toast.error('Failed to join sprint');
+        toast.error(`Unable to join sprint: ${insertError.message}`);
       }
       setJoining(false);
       return;
