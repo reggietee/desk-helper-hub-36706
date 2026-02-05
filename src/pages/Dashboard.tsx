@@ -6,26 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import havenLogo from '@/assets/haven-logo.svg';
 import havenLogoWhite from '@/assets/haven-logo-white.png';
-import {
-  Package,
-  Phone,
-  Users,
-  Building,
-  AlertCircle,
-  UserPlus,
-  Gift,
-  Tag,
-  Handshake,
-  Calendar,
-  LogOut,
-  Settings,
-  Shield,
-  Trophy,
-  Menu,
-  X,
-  Coins,
-  Video,
-} from 'lucide-react';
+import { Package, Phone, Users, Building, AlertCircle, UserPlus, Gift, Tag, Handshake, Calendar, LogOut, Settings, Shield, Trophy, Menu, X, Coins, Video } from 'lucide-react';
 import { toast } from 'sonner';
 import { WeeklyPresence } from '@/components/dashboard/WeeklyPresence';
 import { WeeklyPresencePlaceholder } from '@/components/dashboard/WeeklyPresencePlaceholder';
@@ -44,7 +25,6 @@ import { LockedOverlay } from '@/components/ui/locked-overlay';
 import { useUserRole, type UserRole } from '@/hooks/useUserRole';
 import { ServiceCardsPlaceholder } from '@/components/dashboard/ServiceCardsPlaceholder';
 import { StartCallModal } from '@/components/calls/StartCallModal';
-
 interface DashboardCard {
   title: string;
   description: string;
@@ -52,27 +32,18 @@ interface DashboardCard {
   path: string;
   comingSoon?: boolean;
 }
-
-const greetings = [
-  (name: string) => `Welcome back, ${name} 👋`,
-  (name: string) => `Good to see you again, ${name}!`,
-  (name: string) => `Hey there, ${name} — ready to get things done?`,
-  (name: string) => `Howdy, ${name} 🤠`,
-  (name: string) => `Hi ${name}, your space is ready 🌿`,
-  (name: string) => `Welcome in, ${name} — make yourself at home.`,
-  (name: string) => `Hey ${name}, great to have you back at Haven.`,
-];
-
+const greetings = [(name: string) => `Welcome back, ${name} 👋`, (name: string) => `Good to see you again, ${name}!`, (name: string) => `Hey there, ${name} — ready to get things done?`, (name: string) => `Howdy, ${name} 🤠`, (name: string) => `Hi ${name}, your space is ready 🌿`, (name: string) => `Welcome in, ${name} — make yourself at home.`, (name: string) => `Hey ${name}, great to have you back at Haven.`];
 const getDailyGreeting = (name: string) => {
   const today = new Date().toDateString();
   const seed = today.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const index = seed % greetings.length;
   return greetings[index](name);
 };
-
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { theme } = useTheme();
+  const {
+    theme
+  } = useTheme();
   const isMobile = useIsMobile();
   const [userName, setUserName] = useState<string>('');
   const [userEmail, setUserEmail] = useState<string>('');
@@ -86,39 +57,39 @@ export default function Dashboard() {
   const [hasHavenUpdate, setHasHavenUpdate] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [startCallOpen, setStartCallOpen] = useState(false);
-  
-  // Get user role from hook
-  const { role: userRole, isGuest } = useUserRole(userId || null);
 
+  // Get user role from hook
+  const {
+    role: userRole,
+    isGuest
+  } = useUserRole(userId || null);
   const handleHavenUpdateVisibilityChange = useCallback((hasUpdate: boolean) => {
     setHasHavenUpdate(hasUpdate);
   }, []);
-
   const handleCheckInComplete = () => {
     // Refresh credits display after check-in
     setCreditsRefreshKey(prev => prev + 1);
   };
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
+      const {
+        data: {
+          session
+        }
+      } = await supabase.auth.getSession();
       if (!session) {
         navigate('/auth');
         return;
       }
-
       setUserEmail(session.user.email || '');
 
       // Get user profile
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name, status')
-        .eq('id', session.user.id)
-        .single();
-
+      const {
+        data: profile
+      } = await supabase.from('profiles').select('full_name, status').eq('id', session.user.id).single();
       if (profile) {
         setUserName(profile.full_name);
-        
+
         // Check if user is pending approval
         if (profile.status === 'pending') {
           toast.error('Your account is pending approval. You\'ll receive an email once approved.');
@@ -126,7 +97,7 @@ export default function Dashboard() {
           navigate('/auth');
           return;
         }
-        
+
         // Check if user is declined
         if (profile.status === 'declined') {
           toast.error('Your account request was not approved.');
@@ -135,114 +106,94 @@ export default function Dashboard() {
           return;
         }
       }
-      
+
       // Check if user is admin
-      const { data: roles } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', session.user.id);
-      
+      const {
+        data: roles
+      } = await supabase.from('user_roles').select('role').eq('user_id', session.user.id);
       if (roles && roles.some(r => r.role === 'admin')) {
         setIsAdmin(true);
       }
-      
       setUserId(session.user.id);
       setLoading(false);
     };
-
     checkAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: {
+        subscription
+      }
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT') {
         navigate('/auth');
       }
     });
-
     return () => subscription.unsubscribe();
   }, [navigate]);
-
   const handleLogout = async () => {
     await supabase.auth.signOut();
     toast.success('Logged out successfully');
     navigate('/auth');
   };
-
-  const cards: DashboardCard[] = [
-    {
-      title: 'Equipment Checkout',
-      description: 'Borrow shared items from the coworking space',
-      icon: <Package className="h-6 w-6" />,
-      path: '/equipment-checkout',
-    },
-    {
-      title: 'Book Call Room',
-      description: 'Reserve the call room for private calls',
-      icon: <Phone className="h-6 w-6" />,
-      path: '/book-call-room',
-    },
-    {
-      title: 'Book Meeting Room',
-      description: 'Reserve the meeting room for team sessions',
-      icon: <Users className="h-6 w-6" />,
-      path: '/book-meeting-room',
-    },
-    {
-      title: 'Book Private Office',
-      description: 'Reserve the private office for a full day',
-      icon: <Building className="h-6 w-6" />,
-      path: '/book-private-office',
-    },
-    {
-      title: 'Submit an Issue',
-      description: 'Report issues or request maintenance',
-      icon: <AlertCircle className="h-6 w-6" />,
-      path: '/submit-issue',
-    },
-    {
-      title: 'Guest Day Pass',
-      description: 'Request a day pass for your guest',
-      icon: <UserPlus className="h-6 w-6" />,
-      path: '/guest-day-pass',
-    },
-    {
-      title: 'Special Offers',
-      description: 'Exclusive deals for members',
-      icon: <Tag className="h-6 w-6" />,
-      path: '/special-offers',
-    },
-    {
-      title: 'Refer a Friend',
-      description: 'Invite friends and earn rewards',
-      icon: <Gift className="h-6 w-6" />,
-      path: '/coming-soon?feature=refer',
-      comingSoon: true,
-    },
-    {
-      title: 'Barter Network',
-      description: 'Exchange services with other members',
-      icon: <Handshake className="h-6 w-6" />,
-      path: '/coming-soon?feature=barter',
-      comingSoon: true,
-    },
-    {
-      title: 'Events Calendar',
-      description: 'View and join upcoming community events',
-      icon: <Calendar className="h-6 w-6" />,
-      path: '/coming-soon?feature=events',
-      comingSoon: true,
-    },
-  ];
-
+  const cards: DashboardCard[] = [{
+    title: 'Equipment Checkout',
+    description: 'Borrow shared items from the coworking space',
+    icon: <Package className="h-6 w-6" />,
+    path: '/equipment-checkout'
+  }, {
+    title: 'Book Call Room',
+    description: 'Reserve the call room for private calls',
+    icon: <Phone className="h-6 w-6" />,
+    path: '/book-call-room'
+  }, {
+    title: 'Book Meeting Room',
+    description: 'Reserve the meeting room for team sessions',
+    icon: <Users className="h-6 w-6" />,
+    path: '/book-meeting-room'
+  }, {
+    title: 'Book Private Office',
+    description: 'Reserve the private office for a full day',
+    icon: <Building className="h-6 w-6" />,
+    path: '/book-private-office'
+  }, {
+    title: 'Submit an Issue',
+    description: 'Report issues or request maintenance',
+    icon: <AlertCircle className="h-6 w-6" />,
+    path: '/submit-issue'
+  }, {
+    title: 'Guest Day Pass',
+    description: 'Request a day pass for your guest',
+    icon: <UserPlus className="h-6 w-6" />,
+    path: '/guest-day-pass'
+  }, {
+    title: 'Special Offers',
+    description: 'Exclusive deals for members',
+    icon: <Tag className="h-6 w-6" />,
+    path: '/special-offers'
+  }, {
+    title: 'Refer a Friend',
+    description: 'Invite friends and earn rewards',
+    icon: <Gift className="h-6 w-6" />,
+    path: '/coming-soon?feature=refer',
+    comingSoon: true
+  }, {
+    title: 'Barter Network',
+    description: 'Exchange services with other members',
+    icon: <Handshake className="h-6 w-6" />,
+    path: '/coming-soon?feature=barter',
+    comingSoon: true
+  }, {
+    title: 'Events Calendar',
+    description: 'View and join upcoming community events',
+    icon: <Calendar className="h-6 w-6" />,
+    path: '/coming-soon?feature=events',
+    comingSoon: true
+  }];
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
+    return <div className="min-h-screen flex items-center justify-center">
         <p className="text-muted-foreground">Loading...</p>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="min-h-screen bg-background flex flex-col">
+  return <div className="min-h-screen bg-background flex flex-col">
       {/* Sticky navigation wrapper */}
       <div className="sticky top-0 z-50">
         {/* Check-in banner - appears above everything when on Haven Wi-Fi */}
@@ -251,63 +202,33 @@ export default function Dashboard() {
         <header className="bg-card/95 backdrop-blur-md border-b border-border shadow-sm">
           <div className="container mx-auto px-4 md:px-6 py-4 md:py-5 flex justify-between items-center">
             <div className="flex items-center">
-              <img 
-                src={theme === 'dark' ? havenLogoWhite : havenLogo} 
-                alt="Haven Workspace" 
-                className="w-[113px] h-16 object-contain" 
-              />
+              <img src={theme === 'dark' ? havenLogoWhite : havenLogo} alt="Haven Workspace" className="w-[113px] h-16 object-contain" />
             </div>
             
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-2">
-              <CreditsDisplay 
-                userId={userId} 
-                refreshKey={creditsRefreshKey} 
-                onClick={() => {
-                  setProfileDefaultTab("credits");
-                  setProfileSettingsOpen(true);
-                }}
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setLeaderboardOpen(true)}
-                className="rounded-xl"
-              >
+              <CreditsDisplay userId={userId} refreshKey={creditsRefreshKey} onClick={() => {
+              setProfileDefaultTab("credits");
+              setProfileSettingsOpen(true);
+            }} />
+              <Button variant="outline" size="sm" onClick={() => setLeaderboardOpen(true)} className="rounded-xl">
                 <Trophy className="mr-2 h-4 w-4" />
                 Leaderboard
               </Button>
-              {isAdmin && (
-                <>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => setStartCallOpen(true)}
-                    className="rounded-xl"
-                  >
+              {isAdmin && <>
+                  <Button variant="outline" size="sm" onClick={() => setStartCallOpen(true)} className="rounded-xl">
                     <Video className="mr-2 h-4 w-4" />
                     Start a Call
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => navigate('/admin')}
-                    className="rounded-xl"
-                  >
+                  <Button variant="outline" size="sm" onClick={() => navigate('/admin')} className="rounded-xl">
                     <Shield className="mr-2 h-4 w-4" />
                     Admin
                   </Button>
-                </>
-              )}
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => {
-                  setProfileDefaultTab("name");
-                  setProfileSettingsOpen(true);
-                }} 
-                className="rounded-xl"
-              >
+                </>}
+              <Button variant="outline" size="sm" onClick={() => {
+              setProfileDefaultTab("name");
+              setProfileSettingsOpen(true);
+            }} className="rounded-xl">
                 <Settings className="mr-2 h-4 w-4" />
                 Profile
               </Button>
@@ -332,83 +253,58 @@ export default function Dashboard() {
                   </SheetHeader>
                   <div className="flex flex-col py-2">
                     {/* Credits */}
-                    <button
-                      onClick={() => {
-                        setMobileMenuOpen(false);
-                        setProfileDefaultTab("credits");
-                        setProfileSettingsOpen(true);
-                      }}
-                      className="flex items-center gap-3 px-4 py-3 hover:bg-muted transition-colors text-left"
-                    >
+                    <button onClick={() => {
+                    setMobileMenuOpen(false);
+                    setProfileDefaultTab("credits");
+                    setProfileSettingsOpen(true);
+                  }} className="flex items-center gap-3 px-4 py-3 hover:bg-muted transition-colors text-left">
                       <Coins className="h-5 w-5 text-primary" />
                       <span className="font-medium">Credits</span>
-                      <CreditsDisplay 
-                        userId={userId} 
-                        refreshKey={creditsRefreshKey} 
-                        onClick={() => {}}
-                        className="ml-auto"
-                      />
+                      <CreditsDisplay userId={userId} refreshKey={creditsRefreshKey} onClick={() => {}} className="ml-auto" />
                     </button>
 
                     {/* Leaderboard */}
-                    <button
-                      onClick={() => {
-                        setMobileMenuOpen(false);
-                        setLeaderboardOpen(true);
-                      }}
-                      className="flex items-center gap-3 px-4 py-3 hover:bg-muted transition-colors text-left"
-                    >
+                    <button onClick={() => {
+                    setMobileMenuOpen(false);
+                    setLeaderboardOpen(true);
+                  }} className="flex items-center gap-3 px-4 py-3 hover:bg-muted transition-colors text-left">
                       <Trophy className="h-5 w-5 text-muted-foreground" />
                       <span>Leaderboard</span>
                     </button>
 
                     {/* Admin options (conditional) */}
-                    {isAdmin && (
-                      <>
-                        <button
-                          onClick={() => {
-                            setMobileMenuOpen(false);
-                            setStartCallOpen(true);
-                          }}
-                          className="flex items-center gap-3 px-4 py-3 hover:bg-muted transition-colors text-left"
-                        >
+                    {isAdmin && <>
+                        <button onClick={() => {
+                      setMobileMenuOpen(false);
+                      setStartCallOpen(true);
+                    }} className="flex items-center gap-3 px-4 py-3 hover:bg-muted transition-colors text-left">
                           <Video className="h-5 w-5 text-muted-foreground" />
                           <span>Start a Call</span>
                         </button>
-                        <button
-                          onClick={() => {
-                            setMobileMenuOpen(false);
-                            navigate('/admin');
-                          }}
-                          className="flex items-center gap-3 px-4 py-3 hover:bg-muted transition-colors text-left"
-                        >
+                        <button onClick={() => {
+                      setMobileMenuOpen(false);
+                      navigate('/admin');
+                    }} className="flex items-center gap-3 px-4 py-3 hover:bg-muted transition-colors text-left">
                           <Shield className="h-5 w-5 text-muted-foreground" />
                           <span>Admin</span>
                         </button>
-                      </>
-                    )}
+                      </>}
 
                     {/* Profile */}
-                    <button
-                      onClick={() => {
-                        setMobileMenuOpen(false);
-                        setProfileDefaultTab("name");
-                        setProfileSettingsOpen(true);
-                      }}
-                      className="flex items-center gap-3 px-4 py-3 hover:bg-muted transition-colors text-left"
-                    >
+                    <button onClick={() => {
+                    setMobileMenuOpen(false);
+                    setProfileDefaultTab("name");
+                    setProfileSettingsOpen(true);
+                  }} className="flex items-center gap-3 px-4 py-3 hover:bg-muted transition-colors text-left">
                       <Settings className="h-5 w-5 text-muted-foreground" />
                       <span>Profile</span>
                     </button>
 
                     {/* Sign Out */}
-                    <button
-                      onClick={() => {
-                        setMobileMenuOpen(false);
-                        handleLogout();
-                      }}
-                      className="flex items-center gap-3 px-4 py-3 hover:bg-muted transition-colors text-left"
-                    >
+                    <button onClick={() => {
+                    setMobileMenuOpen(false);
+                    handleLogout();
+                  }} className="flex items-center gap-3 px-4 py-3 hover:bg-muted transition-colors text-left">
                       <LogOut className="h-5 w-5 text-muted-foreground" />
                       <span>Sign Out</span>
                     </button>
@@ -433,27 +329,24 @@ export default function Dashboard() {
           <h2 className="text-4xl font-heading font-bold mb-3 text-foreground">
             {getDailyGreeting(userName)}
           </h2>
-          <p className="text-lg text-muted-foreground">
-            What would you like to do today?
-          </p>
+          <p className="text-lg text-muted-foreground">Welcome to Homebase. What would you like to do today?</p>
         </div>
 
         {/* Haven Updates + Feed Section */}
         <div className="mb-8">
-          {isMobile ? (
-            // Mobile: Stack vertically with fixed height Feed
-            <div className="space-y-6">
-              {hasHavenUpdate && (
-                <HavenUpdates onVisibilityChange={handleHavenUpdateVisibilityChange} />
-              )}
+          {isMobile ?
+        // Mobile: Stack vertically with fixed height Feed
+        <div className="space-y-6">
+              {hasHavenUpdate && <HavenUpdates onVisibilityChange={handleHavenUpdateVisibilityChange} />}
               <div className="h-[400px]">
                 <Feed userId={userId} userName={userName} />
               </div>
-            </div>
-          ) : hasHavenUpdate ? (
-            // Desktop with Haven Update: CSS Grid with subgrid-like behavior
-            // Haven Updates defines the implicit row height, Feed container is constrained to match
-            <div className="grid grid-cols-[3fr_1fr] gap-6" style={{ gridTemplateRows: 'auto' }}>
+            </div> : hasHavenUpdate ?
+        // Desktop with Haven Update: CSS Grid with subgrid-like behavior
+        // Haven Updates defines the implicit row height, Feed container is constrained to match
+        <div className="grid grid-cols-[3fr_1fr] gap-6" style={{
+          gridTemplateRows: 'auto'
+        }}>
               <div className="row-start-1">
                 <HavenUpdates onVisibilityChange={handleHavenUpdateVisibilityChange} />
               </div>
@@ -463,27 +356,17 @@ export default function Dashboard() {
                   <Feed userId={userId} userName={userName} />
                 </div>
               </div>
-            </div>
-          ) : (
-            // Desktop without Haven Update: Full-width Feed with fixed height
-            <div className="h-[500px]">
+            </div> :
+        // Desktop without Haven Update: Full-width Feed with fixed height
+        <div className="h-[500px]">
               <HavenUpdates onVisibilityChange={handleHavenUpdateVisibilityChange} />
               <Feed userId={userId} userName={userName} />
-            </div>
-          )}
+            </div>}
         </div>
 
         {/* Weekly Presence Section - locked for guests with privacy-safe placeholder */}
         <div className="mb-8">
-          <LockedOverlay 
-            isLocked={isGuest} 
-            message="Members only"
-            teaser="Plan your upcoming coworking days and see how busy Haven will be across the week."
-            modalTitle="Plan My Week / Who's In"
-            modalDescription="Plan your coworking days at Haven for the next two weeks so you can match the vibe you want—lighter days for focus and deeper work, and busier days for networking. Members can also optionally share their name on the calendar to coordinate with others."
-            hideContent={true}
-            placeholder={<WeeklyPresencePlaceholder />}
-          >
+          <LockedOverlay isLocked={isGuest} message="Members only" teaser="Plan your upcoming coworking days and see how busy Haven will be across the week." modalTitle="Plan My Week / Who's In" modalDescription="Plan your coworking days at Haven for the next two weeks so you can match the vibe you want—lighter days for focus and deeper work, and busier days for networking. Members can also optionally share their name on the calendar to coordinate with others." hideContent={true} placeholder={<WeeklyPresencePlaceholder />}>
             <WeeklyPresence userId={userId} onCreditsEarned={handleCheckInComplete} />
           </LockedOverlay>
         </div>
@@ -506,27 +389,12 @@ export default function Dashboard() {
             </p>
           </div>
 
-          <LockedOverlay 
-            isLocked={isGuest} 
-            message="Members only"
-            teaser="Book rooms, sign out shared gear, submit issues, and access member perks—all in one place."
-            modalTitle="Member Services"
-            modalDescription="Members can manage everything they need for working at Haven—booking the call room, meeting room, or private office, signing out shared items, submitting issues, and accessing perks and offers. It's the operational hub for getting the most out of the space."
-            hideContent={true}
-            placeholder={<ServiceCardsPlaceholder />}
-          >
+          <LockedOverlay isLocked={isGuest} message="Members only" teaser="Book rooms, sign out shared gear, submit issues, and access member perks—all in one place." modalTitle="Member Services" modalDescription="Members can manage everything they need for working at Haven—booking the call room, meeting room, or private office, signing out shared items, submitting issues, and accessing perks and offers. It's the operational hub for getting the most out of the space." hideContent={true} placeholder={<ServiceCardsPlaceholder />}>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {cards.map((card) => (
-                <Card
-                  key={card.path}
-                  className="cursor-pointer haven-card border-0 group relative"
-                  onClick={() => !isGuest && navigate(card.path)}
-                >
-                  {card.comingSoon && (
-                    <Badge className="absolute top-6 right-6 bg-accent/20 text-primary border-0" variant="secondary">
+              {cards.map(card => <Card key={card.path} className="cursor-pointer haven-card border-0 group relative" onClick={() => !isGuest && navigate(card.path)}>
+                  {card.comingSoon && <Badge className="absolute top-6 right-6 bg-accent/20 text-primary border-0" variant="secondary">
                       Coming Soon
-                    </Badge>
-                  )}
+                    </Badge>}
                   <CardHeader className="space-y-4">
                     <div className="flex items-center gap-4">
                       <div className="p-3 bg-accent/10 rounded-2xl group-hover:bg-accent/20 transition-colors">
@@ -538,35 +406,17 @@ export default function Dashboard() {
                       {card.description}
                     </CardDescription>
                   </CardHeader>
-                </Card>
-              ))}
+                </Card>)}
             </div>
           </LockedOverlay>
         </div>
       </main>
 
-      <ProfileSettings
-        open={profileSettingsOpen}
-        onOpenChange={setProfileSettingsOpen}
-        currentName={userName}
-        currentEmail={userEmail}
-        onNameUpdate={setUserName}
-        defaultTab={profileDefaultTab}
-      />
+      <ProfileSettings open={profileSettingsOpen} onOpenChange={setProfileSettingsOpen} currentName={userName} currentEmail={userEmail} onNameUpdate={setUserName} defaultTab={profileDefaultTab} />
 
-      <LeaderboardModal
-        open={leaderboardOpen}
-        onOpenChange={setLeaderboardOpen}
-        refreshKey={creditsRefreshKey}
-      />
+      <LeaderboardModal open={leaderboardOpen} onOpenChange={setLeaderboardOpen} refreshKey={creditsRefreshKey} />
 
       {/* Start Call Modal (Admin only) */}
-      {isAdmin && (
-        <StartCallModal
-          open={startCallOpen}
-          onOpenChange={setStartCallOpen}
-        />
-      )}
-    </div>
-  );
+      {isAdmin && <StartCallModal open={startCallOpen} onOpenChange={setStartCallOpen} />}
+    </div>;
 }
