@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { SprintCard } from './SprintCard';
 import { CoworkingSprintPlaceholder } from './CoworkingSprintPlaceholder';
 import { LockedOverlay } from '@/components/ui/locked-overlay';
+import { Zap } from 'lucide-react';
 
 interface Sprint {
   id: string;
@@ -152,6 +153,17 @@ export function SprintsList({ userId, userName, userRole }: SprintsListProps) {
 
   return (
     <div className="space-y-4">
+      {/* Section Header */}
+      <div>
+        <h2 className="text-2xl font-semibold text-foreground flex items-center gap-2">
+          <Zap className="h-6 w-6" />
+          Work Sprints
+        </h2>
+        <p className="text-muted-foreground mt-1">
+          Coworking sprints are structured, timed sessions where you and a group work in silence on your own tasks, using collective presence and regular breaks to stay intensely focused. Meet virtually or in-person.
+        </p>
+      </div>
+
       {/* Render visible sprints */}
       {visibleSprints.map(sprint => (
         <SprintCard
