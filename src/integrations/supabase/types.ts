@@ -676,6 +676,57 @@ export type Database = {
         }
         Relationships: []
       }
+      livestreams: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          player_embed_html: string | null
+          player_url: string | null
+          replace_haven_updates: boolean
+          replay_url: string | null
+          restream_rtmp_url: string | null
+          restream_stream_key: string | null
+          starts_at: string | null
+          status: Database["public"]["Enums"]["livestream_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          player_embed_html?: string | null
+          player_url?: string | null
+          replace_haven_updates?: boolean
+          replay_url?: string | null
+          restream_rtmp_url?: string | null
+          restream_stream_key?: string | null
+          starts_at?: string | null
+          status?: Database["public"]["Enums"]["livestream_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          player_embed_html?: string | null
+          player_url?: string | null
+          replace_haven_updates?: boolean
+          replay_url?: string | null
+          restream_rtmp_url?: string | null
+          restream_stream_key?: string | null
+          starts_at?: string | null
+          status?: Database["public"]["Enums"]["livestream_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       meeting_room_bookings: {
         Row: {
           booking_time: string
@@ -943,11 +994,41 @@ export type Database = {
     }
     Functions: {
       cleanup_expired_otp_tokens: { Args: never; Returns: undefined }
+      get_active_livestream: {
+        Args: never
+        Returns: {
+          description: string
+          id: string
+          player_embed_html: string
+          player_url: string
+          replace_haven_updates: boolean
+          replay_url: string
+          starts_at: string
+          status: Database["public"]["Enums"]["livestream_status"]
+          title: string
+        }[]
+      }
       get_member_directory: {
         Args: never
         Returns: {
           full_name: string
           id: string
+        }[]
+      }
+      get_public_livestreams: {
+        Args: never
+        Returns: {
+          created_at: string
+          description: string
+          id: string
+          player_embed_html: string
+          player_url: string
+          replace_haven_updates: boolean
+          replay_url: string
+          starts_at: string
+          status: Database["public"]["Enums"]["livestream_status"]
+          title: string
+          updated_at: string
         }[]
       }
       has_role: {
@@ -960,6 +1041,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "member" | "guest"
+      livestream_status: "draft" | "scheduled" | "live" | "ended"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1088,6 +1170,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "member", "guest"],
+      livestream_status: ["draft", "scheduled", "live", "ended"],
     },
   },
 } as const
