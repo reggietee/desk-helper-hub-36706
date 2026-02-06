@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import havenLogo from '@/assets/haven-logo.svg';
 import havenLogoWhite from '@/assets/haven-logo-white.png';
-import { Package, Phone, Users, Building, AlertCircle, UserPlus, Gift, Tag, Handshake, Calendar, LogOut, Settings, Shield, Trophy, Menu, X, Coins, Video } from 'lucide-react';
+import { Package, Phone, Users, Building, AlertCircle, UserPlus, Gift, Tag, Handshake, Calendar, LogOut, Settings, Shield, Trophy, Menu, X, Coins, Video, Radio } from 'lucide-react';
 import { toast } from 'sonner';
 import { WeeklyPresence } from '@/components/dashboard/WeeklyPresence';
 import { WeeklyPresencePlaceholder } from '@/components/dashboard/WeeklyPresencePlaceholder';
@@ -25,6 +25,9 @@ import { LockedOverlay } from '@/components/ui/locked-overlay';
 import { useUserRole, type UserRole } from '@/hooks/useUserRole';
 import { ServiceCardsPlaceholder } from '@/components/dashboard/ServiceCardsPlaceholder';
 import { StartCallModal } from '@/components/calls/StartCallModal';
+import { LivestreamPanel } from '@/components/dashboard/LivestreamPanel';
+import { useLivestream } from '@/hooks/useLivestream';
+
 interface DashboardCard {
   title: string;
   description: string;
@@ -57,6 +60,9 @@ export default function Dashboard() {
   const [hasHavenUpdate, setHasHavenUpdate] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [startCallOpen, setStartCallOpen] = useState(false);
+
+  // Get livestream state
+  const { shouldReplaceDashboard, hasActiveLivestream, livestream } = useLivestream();
 
   // Get user role from hook
   const {
@@ -332,23 +338,57 @@ export default function Dashboard() {
           <p className="text-lg text-muted-foreground">Welcome to Homebase. What would you like to do today?</p>
         </div>
 
-        {/* Haven Updates + Feed Section */}
+        {/* Haven Updates / Livestream + Feed Section */}
         <div className="mb-8">
           {isMobile ?
-        // Mobile: Stack vertically with fixed height Feed
-        <div className="space-y-6">
-              {hasHavenUpdate && <HavenUpdates onVisibilityChange={handleHavenUpdateVisibilityChange} />}
+          // Mobile: Stack vertically with fixed height Feed
+          <div className="space-y-6">
+              {/* Show Livestream OR Haven Updates based on replace mode */}
+              {shouldReplaceDashboard && !isGuest ? (
+                <LivestreamPanel mode="full" />
+              ) : hasHavenUpdate ? (
+                <HavenUpdates onVisibilityChange={handleHavenUpdateVisibilityChange} />
+              ) : null}
+              
+              {/* Watch Live button when NOT in replace mode but livestream active */}
+              {hasActiveLivestream && !shouldReplaceDashboard && !isGuest && (
+                <Button
+                  variant="default"
+                  className="w-full gap-2 bg-destructive hover:bg-destructive/90"
+                  onClick={() => navigate('/live')}
+                >
+                  <Radio className="h-4 w-4 animate-pulse" />
+                  {livestream?.status === 'live' ? 'Watch Live' : 'View Upcoming Stream'}
+                </Button>
+              )}
+              
               <div className="h-[400px]">
                 <Feed userId={userId} userName={userName} />
               </div>
-            </div> : hasHavenUpdate ?
-        // Desktop with Haven Update: CSS Grid with subgrid-like behavior
-        // Haven Updates defines the implicit row height, Feed container is constrained to match
-        <div className="grid grid-cols-[3fr_1fr] gap-6" style={{
-          gridTemplateRows: 'auto'
-        }}>
+            </div> : (shouldReplaceDashboard && !isGuest) || hasHavenUpdate ?
+          // Desktop with Haven Update OR Livestream: CSS Grid with subgrid-like behavior
+          <div className="grid grid-cols-[3fr_1fr] gap-6" style={{
+            gridTemplateRows: 'auto'
+          }}>
               <div className="row-start-1">
-                <HavenUpdates onVisibilityChange={handleHavenUpdateVisibilityChange} />
+                {/* Show Livestream OR Haven Updates based on replace mode */}
+                {shouldReplaceDashboard && !isGuest ? (
+                  <LivestreamPanel mode="full" />
+                ) : (
+                  <HavenUpdates onVisibilityChange={handleHavenUpdateVisibilityChange} />
+                )}
+                
+                {/* Watch Live button when NOT in replace mode but livestream active */}
+                {hasActiveLivestream && !shouldReplaceDashboard && !isGuest && (
+                  <Button
+                    variant="default"
+                    className="mt-4 gap-2 bg-destructive hover:bg-destructive/90"
+                    onClick={() => navigate('/live')}
+                  >
+                    <Radio className="h-4 w-4 animate-pulse" />
+                    {livestream?.status === 'live' ? 'Watch Live' : 'View Upcoming Stream'}
+                  </Button>
+                )}
               </div>
               {/* Feed container: absolute positioning trick to constrain height to grid row */}
               <div className="row-start-1 relative">
@@ -357,9 +397,22 @@ export default function Dashboard() {
                 </div>
               </div>
             </div> :
-        // Desktop without Haven Update: Full-width Feed with fixed height
-        <div className="h-[500px]">
+          // Desktop without Haven Update and no livestream: Full-width Feed with fixed height
+          <div className="h-[500px]">
               <HavenUpdates onVisibilityChange={handleHavenUpdateVisibilityChange} />
+              
+              {/* Watch Live button when livestream active (no Haven Update) */}
+              {hasActiveLivestream && !isGuest && (
+                <Button
+                  variant="default"
+                  className="mb-4 gap-2 bg-destructive hover:bg-destructive/90"
+                  onClick={() => navigate('/live')}
+                >
+                  <Radio className="h-4 w-4 animate-pulse" />
+                  {livestream?.status === 'live' ? 'Watch Live' : 'View Upcoming Stream'}
+                </Button>
+              )}
+              
               <Feed userId={userId} userName={userName} />
             </div>}
         </div>
