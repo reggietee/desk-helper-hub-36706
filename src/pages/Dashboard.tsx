@@ -366,12 +366,14 @@ export default function Dashboard() {
                 <Feed userId={userId} userName={userName} />
               </div>
             </div> : (shouldReplaceDashboard && !isGuest) || hasHavenUpdate ?
-          // Desktop with Haven Update OR Livestream: CSS Grid with fixed height
+          // Desktop with Haven Update OR Livestream: CSS Grid with FIXED height container
+          // Both columns use h-full to fill this fixed height exactly
           <div className="grid grid-cols-[3fr_1fr] gap-6 h-[500px]">
-              <div className="row-start-1 h-full">
+              {/* Left column - Livestream or Haven Updates */}
+              <div className="h-full overflow-hidden">
                 {/* Show Livestream OR Haven Updates based on replace mode */}
                 {shouldReplaceDashboard && !isGuest ? (
-                  <LivestreamPanel mode="full" />
+                  <LivestreamPanel mode="full" userId={userId} />
                 ) : (
                   <HavenUpdates onVisibilityChange={handleHavenUpdateVisibilityChange} />
                 )}
@@ -388,8 +390,8 @@ export default function Dashboard() {
                   </Button>
                 )}
               </div>
-              {/* Feed container */}
-              <div className="row-start-1 h-full">
+              {/* Right column - Feed with fixed height matching left */}
+              <div className="h-full overflow-hidden">
                 <Feed userId={userId} userName={userName} />
               </div>
             </div> :
