@@ -390,16 +390,18 @@ export default function Dashboard() {
               <div className="min-h-0 max-h-[600px] overflow-hidden">
                 <Feed userId={userId} userName={userName} />
               </div>
-            </div> : hasHavenUpdate ?
-          // Desktop with Haven Update (no livestream): Fixed height layout
-          <div className="grid grid-cols-[3fr_1fr] gap-6 h-[500px]">
-              {/* Left column - Haven Updates */}
-              <div className="h-full overflow-hidden">
+          </div> : hasHavenUpdate ?
+          // Desktop with Haven Update (no livestream): Left column drives height naturally, right matches
+          <div className="grid grid-cols-[3fr_1fr] gap-6 items-stretch">
+              {/* Left column - Haven Updates (natural height, no constraints) */}
+              <div className="min-h-0">
                 <HavenUpdates onVisibilityChange={handleHavenUpdateVisibilityChange} />
               </div>
-              {/* Right column - Feed with fixed height matching left */}
-              <div className="h-full overflow-hidden">
-                <Feed userId={userId} userName={userName} />
+              {/* Right column - Feed stretches to match left column, scrolls internally */}
+              <div className="relative min-h-[400px] max-h-[600px]">
+                <div className="absolute inset-0">
+                  <Feed userId={userId} userName={userName} />
+                </div>
               </div>
             </div> :
           // Desktop without Haven Update and no livestream: Full-width Feed with fixed height
