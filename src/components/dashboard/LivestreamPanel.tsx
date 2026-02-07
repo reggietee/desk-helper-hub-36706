@@ -113,8 +113,8 @@ export function LivestreamPanel({ mode = 'full', onLivestreamChange }: Livestrea
 
   // Full panel mode
   return (
-    <Card className="haven-card border-0">
-      <CardHeader className="pb-3">
+    <Card className="haven-card border-0 h-full flex flex-col">
+      <CardHeader className="pb-3 flex-shrink-0">
         <div className="flex items-center justify-between">
           <CardTitle className="text-xl font-heading font-bold text-foreground flex items-center gap-2">
             <Video className="h-5 w-5 text-red-500" />
@@ -128,10 +128,10 @@ export function LivestreamPanel({ mode = 'full', onLivestreamChange }: Livestrea
           <p className="text-sm text-muted-foreground mt-2">{livestream.description}</p>
         )}
       </CardHeader>
-      <CardContent className="space-y-4 pb-6">
+      <CardContent className="flex-1 flex flex-col space-y-4 pb-6 min-h-0">
         {/* Countdown for scheduled streams */}
         {countdown && livestream.status === 'scheduled' && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg p-3">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg p-3 flex-shrink-0">
             <Clock className="h-4 w-4" />
             <span>{countdown}</span>
           </div>
@@ -139,7 +139,7 @@ export function LivestreamPanel({ mode = 'full', onLivestreamChange }: Livestrea
 
         {/* Video player embed */}
         {livestream.status === 'live' && (sanitizedEmbed || livestream.player_url) && (
-          <div className="aspect-video w-full rounded-xl overflow-hidden bg-black">
+          <div className="flex-1 min-h-[300px] w-full rounded-xl overflow-hidden bg-black">
             {sanitizedEmbed ? (
               <div 
                 className="w-full h-full [&>iframe]:w-full [&>iframe]:h-full [&>iframe]:border-0"
@@ -158,7 +158,7 @@ export function LivestreamPanel({ mode = 'full', onLivestreamChange }: Livestrea
 
         {/* Scheduled - show placeholder */}
         {livestream.status === 'scheduled' && (
-          <div className="aspect-video w-full rounded-xl overflow-hidden bg-gradient-to-br from-muted to-muted/50 flex flex-col items-center justify-center">
+          <div className="flex-1 min-h-[300px] w-full rounded-xl overflow-hidden bg-gradient-to-br from-muted to-muted/50 flex flex-col items-center justify-center">
             <Play className="h-16 w-16 text-muted-foreground/50 mb-4" />
             <p className="text-muted-foreground font-medium">Stream will appear here when live</p>
             {livestream.starts_at && (
@@ -179,7 +179,7 @@ export function LivestreamPanel({ mode = 'full', onLivestreamChange }: Livestrea
         {livestream.status === 'ended' && livestream.replay_url && (
           <Button
             variant="outline"
-            className="gap-2"
+            className="gap-2 flex-shrink-0"
             onClick={() => window.open(livestream.replay_url!, '_blank')}
           >
             <ExternalLink className="h-4 w-4" />
@@ -191,7 +191,7 @@ export function LivestreamPanel({ mode = 'full', onLivestreamChange }: Livestrea
         {!livestream.replace_haven_updates && (
           <Button
             variant="secondary"
-            className="gap-2 w-full"
+            className="gap-2 w-full flex-shrink-0"
             onClick={() => window.open('/live', '_blank')}
           >
             <ExternalLink className="h-4 w-4" />

@@ -366,11 +366,9 @@ export default function Dashboard() {
                 <Feed userId={userId} userName={userName} />
               </div>
             </div> : (shouldReplaceDashboard && !isGuest) || hasHavenUpdate ?
-          // Desktop with Haven Update OR Livestream: CSS Grid with subgrid-like behavior
-          <div className="grid grid-cols-[3fr_1fr] gap-6" style={{
-            gridTemplateRows: 'auto'
-          }}>
-              <div className="row-start-1">
+          // Desktop with Haven Update OR Livestream: CSS Grid with fixed height
+          <div className="grid grid-cols-[3fr_1fr] gap-6 h-[500px]">
+              <div className="row-start-1 h-full">
                 {/* Show Livestream OR Haven Updates based on replace mode */}
                 {shouldReplaceDashboard && !isGuest ? (
                   <LivestreamPanel mode="full" />
@@ -390,11 +388,9 @@ export default function Dashboard() {
                   </Button>
                 )}
               </div>
-              {/* Feed container: absolute positioning trick to constrain height to grid row */}
-              <div className="row-start-1 relative">
-                <div className="absolute inset-0">
-                  <Feed userId={userId} userName={userName} />
-                </div>
+              {/* Feed container */}
+              <div className="row-start-1 h-full">
+                <Feed userId={userId} userName={userName} />
               </div>
             </div> :
           // Desktop without Haven Update and no livestream: Full-width Feed with fixed height
