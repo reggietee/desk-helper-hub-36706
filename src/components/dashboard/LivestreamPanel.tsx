@@ -3,9 +3,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Video, ExternalLink, Clock, Play } from 'lucide-react';
-import { formatDistanceToNow, isPast, differenceInMinutes } from 'date-fns';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Video, ExternalLink, Clock, Play, AlertTriangle, ChevronDown, Settings } from 'lucide-react';
+import { formatDistanceToNow, isPast, differenceInMinutes, format } from 'date-fns';
 import DOMPurify from 'dompurify';
+import { useUserRole } from '@/hooks/useUserRole';
 
 interface Livestream {
   id: string;
@@ -24,11 +26,15 @@ interface LivestreamPanelProps {
   mode?: 'full' | 'compact';
   /** Callback when livestream availability changes */
   onLivestreamChange?: (livestream: Livestream | null) => void;
+  /** Current user ID for admin detection */
+  userId?: string;
 }
 
-export function LivestreamPanel({ mode = 'full', onLivestreamChange }: LivestreamPanelProps) {
+export function LivestreamPanel({ mode = 'full', onLivestreamChange, userId }: LivestreamPanelProps) {
   const [livestream, setLivestream] = useState<Livestream | null>(null);
   const [loading, setLoading] = useState(true);
+  const [embedError, setEmbedError] = useState(false);
+  const { isAdmin } = useUserRole(userId || null);
 
   useEffect(() => {
     fetchActiveLivestream();
@@ -67,6 +73,20 @@ export function LivestreamPanel({ mode = 'full', onLivestreamChange }: Livestrea
       ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'width', 'height'],
     });
   }, [livestream?.player_embed_html]);
+
+  // Check if we have a valid embed source
+  const hasValidEmbed = !!(sanitizedEmbed || livestream?.player_url);
+  const embedType = sanitizedEmbed ? 'html' : livestream?.player_url ? 'url' : 'none';
+
+  // Get player URL host for diagnostics
+  const playerUrlHost = useMemo(() => {
+    if (!livestream?.player_url) return null;
+    try {
+      return new URL(livestream.player_url).host;
+    } catch {
+      return 'invalid-url';
+    }
+  }, [livestream?.player_url]);
 
   // Calculate countdown for scheduled streams
   const countdown = useMemo(() => {
@@ -111,9 +131,79 @@ export function LivestreamPanel({ mode = 'full', onLivestreamChange }: Livestrea
     );
   }
 
+  // Error/Warning UI for missing embed
+  const renderEmbedError = () => (
+    <div className="flex-1 flex flex-col items-center justify-center bg-muted/30 rounded-xl p-6">
+      <AlertTriangle className="h-12 w-12 text-amber-500 mb-4" />
+      <p className="text-foreground font-medium text-center mb-2">
+        {isAdmin ? 'Stream embed not configured' : 'Stream will be available soon'}
+      </p>
+      <p className="text-sm text-muted-foreground text-center max-w-sm">
+        {isAdmin 
+          ? 'Add a player embed HTML or player URL in the admin panel to display the stream.'
+          : 'The stream is being set up. Please check back shortly.'}
+      </p>
+      
+      {/* Admin diagnostics */}
+      {isAdmin && (
+        <Collapsible className="mt-4 w-full max-w-sm">
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" size="sm" className="w-full gap-2 text-muted-foreground">
+              <Settings className="h-4 w-4" />
+              Diagnostics
+              <ChevronDown className="h-4 w-4 ml-auto" />
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-2 p-3 bg-muted/50 rounded-lg text-xs space-y-1">
+            <p><span className="font-medium">ID:</span> {livestream.id}</p>
+            <p><span className="font-medium">Status:</span> {livestream.status}</p>
+            <p><span className="font-medium">Embed type:</span> {embedType}</p>
+            {playerUrlHost && <p><span className="font-medium">Player host:</span> {playerUrlHost}</p>}
+            <p><span className="font-medium">Has embed HTML:</span> {livestream.player_embed_html ? 'Yes' : 'No'}</p>
+            <p><span className="font-medium">Has player URL:</span> {livestream.player_url ? 'Yes' : 'No'}</p>
+          </CollapsibleContent>
+        </Collapsible>
+      )}
+    </div>
+  );
+
+  // Player render error handler
+  const renderPlayerError = () => (
+    <div className="flex-1 flex flex-col items-center justify-center bg-muted/30 rounded-xl p-6">
+      <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
+      <p className="text-foreground font-medium text-center mb-2">
+        Stream player couldn't load
+      </p>
+      <p className="text-sm text-muted-foreground text-center max-w-sm">
+        There was an issue loading the stream. Please try refreshing the page.
+      </p>
+      
+      {/* Admin diagnostics */}
+      {isAdmin && (
+        <Collapsible className="mt-4 w-full max-w-sm">
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" size="sm" className="w-full gap-2 text-muted-foreground">
+              <Settings className="h-4 w-4" />
+              Diagnostics
+              <ChevronDown className="h-4 w-4 ml-auto" />
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-2 p-3 bg-muted/50 rounded-lg text-xs space-y-1">
+            <p><span className="font-medium">ID:</span> {livestream.id}</p>
+            <p><span className="font-medium">Status:</span> {livestream.status}</p>
+            <p><span className="font-medium">Embed type:</span> {embedType}</p>
+            {playerUrlHost && <p><span className="font-medium">Player host:</span> {playerUrlHost}</p>}
+            <p><span className="font-medium">Embed HTML length:</span> {livestream.player_embed_html?.length || 0}</p>
+            {livestream.player_url && <p><span className="font-medium">Player URL:</span> {livestream.player_url}</p>}
+          </CollapsibleContent>
+        </Collapsible>
+      )}
+    </div>
+  );
+
   // Full panel mode
   return (
-    <Card className="haven-card border-0 h-full flex flex-col">
+    <Card className="haven-card border-0 h-full flex flex-col overflow-hidden">
       <CardHeader className="pb-3 flex-shrink-0">
         <div className="flex items-center justify-between">
           <CardTitle className="text-xl font-heading font-bold text-foreground flex items-center gap-2">
@@ -128,37 +218,50 @@ export function LivestreamPanel({ mode = 'full', onLivestreamChange }: Livestrea
           <p className="text-sm text-muted-foreground mt-2">{livestream.description}</p>
         )}
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col space-y-4 pb-6 min-h-0">
+      <CardContent className="flex-1 flex flex-col pb-6 min-h-0 overflow-hidden">
         {/* Countdown for scheduled streams */}
         {countdown && livestream.status === 'scheduled' && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg p-3 flex-shrink-0">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg p-3 mb-4 flex-shrink-0">
             <Clock className="h-4 w-4" />
             <span>{countdown}</span>
           </div>
         )}
 
-        {/* Video player embed */}
-        {livestream.status === 'live' && (sanitizedEmbed || livestream.player_url) && (
-          <div className="flex-1 min-h-[300px] w-full rounded-xl overflow-hidden bg-black">
-            {sanitizedEmbed ? (
-              <div 
-                className="w-full h-full [&>iframe]:w-full [&>iframe]:h-full [&>iframe]:border-0"
-                dangerouslySetInnerHTML={{ __html: sanitizedEmbed }} 
-              />
-            ) : livestream.player_url ? (
-              <iframe
-                src={livestream.player_url}
-                className="w-full h-full border-0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            ) : null}
-          </div>
+        {/* Video player embed - LIVE status */}
+        {livestream.status === 'live' && (
+          <>
+            {!hasValidEmbed ? (
+              renderEmbedError()
+            ) : embedError ? (
+              renderPlayerError()
+            ) : (
+              <div className="flex-1 w-full rounded-xl overflow-hidden bg-black relative">
+                {/* Aspect ratio container that fills available space */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  {sanitizedEmbed ? (
+                    <div 
+                      className="w-full h-full [&>iframe]:w-full [&>iframe]:h-full [&>iframe]:border-0"
+                      dangerouslySetInnerHTML={{ __html: sanitizedEmbed }}
+                      onError={() => setEmbedError(true)}
+                    />
+                  ) : livestream.player_url ? (
+                    <iframe
+                      src={livestream.player_url}
+                      className="w-full h-full border-0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      onError={() => setEmbedError(true)}
+                    />
+                  ) : null}
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* Scheduled - show placeholder */}
         {livestream.status === 'scheduled' && (
-          <div className="flex-1 min-h-[300px] w-full rounded-xl overflow-hidden bg-gradient-to-br from-muted to-muted/50 flex flex-col items-center justify-center">
+          <div className="flex-1 w-full rounded-xl overflow-hidden bg-gradient-to-br from-muted to-muted/50 flex flex-col items-center justify-center">
             <Play className="h-16 w-16 text-muted-foreground/50 mb-4" />
             <p className="text-muted-foreground font-medium">Stream will appear here when live</p>
             {livestream.starts_at && (
@@ -179,7 +282,7 @@ export function LivestreamPanel({ mode = 'full', onLivestreamChange }: Livestrea
         {livestream.status === 'ended' && livestream.replay_url && (
           <Button
             variant="outline"
-            className="gap-2 flex-shrink-0"
+            className="gap-2 flex-shrink-0 mt-auto"
             onClick={() => window.open(livestream.replay_url!, '_blank')}
           >
             <ExternalLink className="h-4 w-4" />
@@ -191,7 +294,7 @@ export function LivestreamPanel({ mode = 'full', onLivestreamChange }: Livestrea
         {!livestream.replace_haven_updates && (
           <Button
             variant="secondary"
-            className="gap-2 w-full flex-shrink-0"
+            className="gap-2 w-full flex-shrink-0 mt-4"
             onClick={() => window.open('/live', '_blank')}
           >
             <ExternalLink className="h-4 w-4" />
