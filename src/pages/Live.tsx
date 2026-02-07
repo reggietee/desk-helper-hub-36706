@@ -18,6 +18,7 @@ interface Livestream {
   player_url: string | null;
   replace_haven_updates: boolean;
   replay_url: string | null;
+  allow_guests: boolean;
 }
 
 export default function Live() {
@@ -43,19 +44,34 @@ export default function Live() {
     if (userId && !roleLoading) {
       fetchActiveLivestream();
     }
-  }, [userId, roleLoading]);
+  }, [userId, roleLoading, isGuest]);
 
   const fetchActiveLivestream = async () => {
     try {
-      const { data, error } = await supabase.rpc('get_active_livestream');
-      
-      if (error) {
-        console.error('Error fetching livestream:', error);
-        setLivestream(null);
-      } else if (data && data.length > 0) {
-        setLivestream(data[0] as Livestream);
+      // For guests, use the guest-specific function that respects allow_guests
+      if (isGuest) {
+        const { data, error } = await supabase.rpc('get_active_livestream_for_guests');
+        
+        if (error) {
+          console.error('Error fetching livestream for guest:', error);
+          setLivestream(null);
+        } else if (data && data.length > 0) {
+          setLivestream(data[0] as Livestream);
+        } else {
+          setLivestream(null);
+        }
       } else {
-        setLivestream(null);
+        // For members/admins
+        const { data, error } = await supabase.rpc('get_active_livestream');
+        
+        if (error) {
+          console.error('Error fetching livestream:', error);
+          setLivestream(null);
+        } else if (data && data.length > 0) {
+          setLivestream(data[0] as Livestream);
+        } else {
+          setLivestream(null);
+        }
       }
     } catch (err) {
       console.error('Error:', err);
@@ -96,8 +112,8 @@ export default function Live() {
     );
   }
 
-  // Guest restriction
-  if (isGuest) {
+  // Guest restriction - show locked state if guest and no livestream returned (meaning allow_guests is false)
+  if (isGuest && !livestream) {
     return (
       <div className="min-h-screen bg-background">
         <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border">
@@ -131,7 +147,7 @@ export default function Live() {
     );
   }
 
-  // No active livestream
+  // No active livestream (for members/admins or guests with allow_guests=true but no stream)
   if (!livestream) {
     return (
       <div className="min-h-screen bg-background">
@@ -197,7 +213,7 @@ export default function Live() {
           {/* Title and description */}
           <div>
             <h1 className="text-3xl font-bold flex items-center gap-3">
-              <Video className="h-8 w-8 text-red-500" />
+              <Video className="h-8 w-8 text-destructive" />
               {livestream.title}
             </h1>
             {livestream.description && (

@@ -678,6 +678,7 @@ export type Database = {
       }
       livestreams: {
         Row: {
+          allow_guests: boolean
           created_at: string
           created_by: string | null
           description: string | null
@@ -694,6 +695,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          allow_guests?: boolean
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -710,6 +712,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          allow_guests?: boolean
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -997,6 +1000,22 @@ export type Database = {
       get_active_livestream: {
         Args: never
         Returns: {
+          allow_guests: boolean
+          description: string
+          id: string
+          player_embed_html: string
+          player_url: string
+          replace_haven_updates: boolean
+          replay_url: string
+          starts_at: string
+          status: Database["public"]["Enums"]["livestream_status"]
+          title: string
+        }[]
+      }
+      get_active_livestream_for_guests: {
+        Args: never
+        Returns: {
+          allow_guests: boolean
           description: string
           id: string
           player_embed_html: string
@@ -1018,6 +1037,7 @@ export type Database = {
       get_public_livestreams: {
         Args: never
         Returns: {
+          allow_guests: boolean
           created_at: string
           description: string
           id: string
