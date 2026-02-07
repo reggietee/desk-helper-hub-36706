@@ -235,19 +235,19 @@ export function LivestreamPanel({ mode = 'full', onLivestreamChange, userId }: L
             ) : embedError ? (
               renderPlayerError()
             ) : (
-              <div className="flex-1 w-full rounded-xl overflow-hidden bg-black relative">
-                {/* Aspect ratio container that fills available space */}
-                <div className="absolute inset-0 flex items-center justify-center">
+              <div className="flex-1 w-full rounded-xl overflow-hidden bg-black">
+                {/* True 16:9 aspect ratio container */}
+                <div className="relative w-full" style={{ aspectRatio: '16 / 9' }}>
                   {sanitizedEmbed ? (
                     <div 
-                      className="w-full h-full [&>iframe]:w-full [&>iframe]:h-full [&>iframe]:border-0"
+                      className="absolute inset-0 w-full h-full [&>iframe]:absolute [&>iframe]:inset-0 [&>iframe]:w-full [&>iframe]:h-full [&>iframe]:border-0"
                       dangerouslySetInnerHTML={{ __html: sanitizedEmbed }}
                       onError={() => setEmbedError(true)}
                     />
                   ) : livestream.player_url ? (
                     <iframe
                       src={livestream.player_url}
-                      className="w-full h-full border-0"
+                      className="absolute inset-0 w-full h-full border-0"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
                       onError={() => setEmbedError(true)}
