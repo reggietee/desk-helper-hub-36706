@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import havenLogo from '@/assets/haven-logo.svg';
 import havenLogoWhite from '@/assets/haven-logo-white.png';
-import { Package, Phone, Users, Building, AlertCircle, UserPlus, Gift, Tag, Handshake, Calendar, LogOut, Settings, Shield, Trophy, Menu, X, Coins, Video, Radio } from 'lucide-react';
+import { Package, Phone, Users, Building, AlertCircle, UserPlus, Gift, Tag, Handshake, Calendar, LogOut, Settings, Shield, Trophy, Menu, Coins, Video } from 'lucide-react';
 import { toast } from 'sonner';
 import { WeeklyPresence } from '@/components/dashboard/WeeklyPresence';
 import { WeeklyPresencePlaceholder } from '@/components/dashboard/WeeklyPresencePlaceholder';
@@ -26,7 +26,8 @@ import { useUserRole, type UserRole } from '@/hooks/useUserRole';
 import { ServiceCardsPlaceholder } from '@/components/dashboard/ServiceCardsPlaceholder';
 import { StartCallModal } from '@/components/calls/StartCallModal';
 import { LivestreamPanel } from '@/components/dashboard/LivestreamPanel';
-import { useLivestream } from '@/hooks/useLivestream';
+import { useLivestreamWithGuest } from '@/hooks/useLivestreamWithGuest';
+import { WatchNowButton } from '@/components/dashboard/WatchNowButton';
 
 interface DashboardCard {
   title: string;
@@ -61,14 +62,14 @@ export default function Dashboard() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [startCallOpen, setStartCallOpen] = useState(false);
 
-  // Get livestream state
-  const { shouldReplaceDashboard, hasActiveLivestream, livestream } = useLivestream();
-
   // Get user role from hook
   const {
     role: userRole,
     isGuest
   } = useUserRole(userId || null);
+
+  // Get livestream state (needs isGuest for proper guest access check)
+  const { shouldReplaceDashboard, hasActiveLivestream, shouldShowWatchNow, livestream } = useLivestreamWithGuest(isGuest);
   const handleHavenUpdateVisibilityChange = useCallback((hasUpdate: boolean) => {
     setHasHavenUpdate(hasUpdate);
   }, []);
@@ -213,6 +214,10 @@ export default function Dashboard() {
             
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-2">
+              {/* Watch Now Button - prominent position, left of credits */}
+              {shouldShowWatchNow && livestream && (
+                <WatchNowButton status={livestream.status as 'scheduled' | 'live'} />
+              )}
               <CreditsDisplay userId={userId} refreshKey={creditsRefreshKey} onClick={() => {
               setProfileDefaultTab("credits");
               setProfileSettingsOpen(true);
@@ -258,6 +263,26 @@ export default function Dashboard() {
                     <SheetTitle className="text-left">Menu</SheetTitle>
                   </SheetHeader>
                   <div className="flex flex-col py-2">
+                    {/* Watch Now - Prominent at top of mobile menu */}
+                    {shouldShowWatchNow && livestream && (
+                      <button onClick={() => {
+                        setMobileMenuOpen(false);
+                        navigate('/live');
+                      }} className="flex items-center gap-3 px-4 py-3 bg-destructive/10 hover:bg-destructive/20 transition-colors text-left border-b border-border">
+                        <span className="relative flex h-2.5 w-2.5">
+                          {livestream.status === 'live' && (
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75" />
+                          )}
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-destructive" />
+                        </span>
+                        <Video className="h-5 w-5 text-destructive" />
+                        <span className="font-semibold text-destructive">Watch Now</span>
+                        {livestream.status === 'live' && (
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-destructive opacity-75 ml-auto">LIVE</span>
+                        )}
+                      </button>
+                    )}
+
                     {/* Credits */}
                     <button onClick={() => {
                     setMobileMenuOpen(false);
@@ -350,18 +375,6 @@ export default function Dashboard() {
                 <HavenUpdates onVisibilityChange={handleHavenUpdateVisibilityChange} />
               ) : null}
               
-              {/* Watch Live button when NOT in replace mode but livestream active */}
-              {hasActiveLivestream && !shouldReplaceDashboard && !isGuest && (
-                <Button
-                  variant="default"
-                  className="w-full gap-2 bg-destructive hover:bg-destructive/90"
-                  onClick={() => navigate('/live')}
-                >
-                  <Radio className="h-4 w-4 animate-pulse" />
-                  {livestream?.status === 'live' ? 'Watch Live' : 'View Upcoming Stream'}
-                </Button>
-              )}
-              
               <div className="h-[400px]">
                 <Feed userId={userId} userName={userName} />
               </div>
@@ -383,18 +396,6 @@ export default function Dashboard() {
               {/* Left column - Haven Updates */}
               <div className="h-full overflow-hidden">
                 <HavenUpdates onVisibilityChange={handleHavenUpdateVisibilityChange} />
-                
-                {/* Watch Live button when NOT in replace mode but livestream active */}
-                {hasActiveLivestream && !isGuest && (
-                  <Button
-                    variant="default"
-                    className="mt-4 gap-2 bg-destructive hover:bg-destructive/90"
-                    onClick={() => navigate('/live')}
-                  >
-                    <Radio className="h-4 w-4 animate-pulse" />
-                    {livestream?.status === 'live' ? 'Watch Live' : 'View Upcoming Stream'}
-                  </Button>
-                )}
               </div>
               {/* Right column - Feed with fixed height matching left */}
               <div className="h-full overflow-hidden">
@@ -404,18 +405,6 @@ export default function Dashboard() {
           // Desktop without Haven Update and no livestream: Full-width Feed with fixed height
           <div className="h-[500px]">
               <HavenUpdates onVisibilityChange={handleHavenUpdateVisibilityChange} />
-              
-              {/* Watch Live button when livestream active (no Haven Update) */}
-              {hasActiveLivestream && !isGuest && (
-                <Button
-                  variant="default"
-                  className="mb-4 gap-2 bg-destructive hover:bg-destructive/90"
-                  onClick={() => navigate('/live')}
-                >
-                  <Radio className="h-4 w-4 animate-pulse" />
-                  {livestream?.status === 'live' ? 'Watch Live' : 'View Upcoming Stream'}
-                </Button>
-              )}
               
               <Feed userId={userId} userName={userName} />
             </div>}

@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, Video, Eye, EyeOff } from 'lucide-react';
 import {
@@ -43,6 +44,7 @@ interface Livestream {
   player_url: string | null;
   replace_haven_updates: boolean;
   replay_url: string | null;
+  allow_guests: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -58,6 +60,7 @@ interface LivestreamFormData {
   player_url: string;
   replace_haven_updates: boolean;
   replay_url: string;
+  allow_guests: boolean;
 }
 
 const defaultFormData: LivestreamFormData = {
@@ -71,6 +74,7 @@ const defaultFormData: LivestreamFormData = {
   player_url: '',
   replace_haven_updates: false,
   replay_url: '',
+  allow_guests: false,
 };
 
 export function LivestreamManagement() {
@@ -125,6 +129,7 @@ export function LivestreamManagement() {
       player_url: livestream.player_url || '',
       replace_haven_updates: livestream.replace_haven_updates,
       replay_url: livestream.replay_url || '',
+      allow_guests: livestream.allow_guests,
     });
     setShowStreamKey(false);
     setDialogOpen(true);
@@ -149,6 +154,7 @@ export function LivestreamManagement() {
         player_url: formData.player_url.trim() || null,
         replace_haven_updates: formData.replace_haven_updates,
         replay_url: formData.replay_url.trim() || null,
+        allow_guests: formData.allow_guests,
       };
 
       if (editingId) {
@@ -446,8 +452,28 @@ export function LivestreamManagement() {
 
             {/* Dashboard Behavior */}
             <div className="space-y-4 border-t pt-4">
-              <h4 className="font-medium">Dashboard Behavior</h4>
+              <h4 className="font-medium">Access & Dashboard Behavior</h4>
               
+              {/* Allow Guests Toggle */}
+              <div className="flex items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <Label htmlFor="allow_guests" className="cursor-pointer font-medium">
+                    Allow Guests to watch
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    When enabled, Guest users can view the livestream. Default is Members only.
+                  </p>
+                </div>
+                <Switch
+                  id="allow_guests"
+                  checked={formData.allow_guests}
+                  onCheckedChange={(checked) => 
+                    setFormData({ ...formData, allow_guests: checked })
+                  }
+                />
+              </div>
+              
+              {/* Replace Haven Updates Checkbox */}
               <div className="flex items-start space-x-3">
                 <Checkbox
                   id="replace_updates"
@@ -458,11 +484,11 @@ export function LivestreamManagement() {
                 />
                 <div className="space-y-1">
                   <Label htmlFor="replace_updates" className="cursor-pointer">
-                    Live stream (replace Haven Updates on dashboard)
+                    Replace Haven Updates on dashboard
                   </Label>
                   <p className="text-xs text-muted-foreground">
                     When checked, the livestream panel replaces Haven Updates during scheduled/live status. 
-                    When unchecked, members access via /live page or Watch Live button.
+                    When unchecked, members access via /live page or "Watch Now" button in the nav.
                   </p>
                 </div>
               </div>
