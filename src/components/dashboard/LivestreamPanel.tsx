@@ -203,11 +203,12 @@ export function LivestreamPanel({ mode = 'full', onLivestreamChange, userId }: L
 
   // Full panel mode
   return (
-    <Card className="haven-card border-0 h-full flex flex-col overflow-hidden">
-      <CardHeader className="pb-3 flex-shrink-0">
+    <Card className="haven-card border-0 overflow-hidden">
+      {/* Compact header - minimal chrome to maximize player area */}
+      <CardHeader className="pb-2 pt-4 px-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-xl font-heading font-bold text-foreground flex items-center gap-2">
-            <Video className="h-5 w-5 text-red-500" />
+          <CardTitle className="text-lg font-heading font-bold text-foreground flex items-center gap-2">
+            <Video className="h-4 w-4 text-destructive" />
             {livestream.title}
           </CardTitle>
           <Badge variant="outline" className={statusBadge.className}>
@@ -215,10 +216,10 @@ export function LivestreamPanel({ mode = 'full', onLivestreamChange, userId }: L
           </Badge>
         </div>
         {livestream.description && (
-          <p className="text-sm text-muted-foreground mt-2">{livestream.description}</p>
+          <p className="text-xs text-muted-foreground mt-1">{livestream.description}</p>
         )}
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col pb-6 min-h-0 overflow-hidden">
+      <CardContent className="p-4 pt-0">
         {/* Countdown for scheduled streams */}
         {countdown && livestream.status === 'scheduled' && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg p-3 mb-4 flex-shrink-0">
@@ -259,22 +260,24 @@ export function LivestreamPanel({ mode = 'full', onLivestreamChange, userId }: L
           </>
         )}
 
-        {/* Scheduled - show placeholder */}
+        {/* Scheduled - show placeholder with 16:9 aspect ratio */}
         {livestream.status === 'scheduled' && (
-          <div className="flex-1 w-full rounded-xl overflow-hidden bg-gradient-to-br from-muted to-muted/50 flex flex-col items-center justify-center">
-            <Play className="h-16 w-16 text-muted-foreground/50 mb-4" />
-            <p className="text-muted-foreground font-medium">Stream will appear here when live</p>
-            {livestream.starts_at && (
-              <p className="text-sm text-muted-foreground/70 mt-2">
-                {new Date(livestream.starts_at).toLocaleDateString('en-US', {
-                  weekday: 'long',
-                  month: 'short',
-                  day: 'numeric',
-                  hour: 'numeric',
-                  minute: '2-digit',
-                })}
-              </p>
-            )}
+          <div className="w-full rounded-xl overflow-hidden bg-gradient-to-br from-muted to-muted/50" style={{ aspectRatio: '16 / 9' }}>
+            <div className="w-full h-full flex flex-col items-center justify-center">
+              <Play className="h-16 w-16 text-muted-foreground/50 mb-4" />
+              <p className="text-muted-foreground font-medium">Stream will appear here when live</p>
+              {livestream.starts_at && (
+                <p className="text-sm text-muted-foreground/70 mt-2">
+                  {new Date(livestream.starts_at).toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                  })}
+                </p>
+              )}
+            </div>
           </div>
         )}
 

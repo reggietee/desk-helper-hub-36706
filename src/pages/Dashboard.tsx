@@ -365,21 +365,27 @@ export default function Dashboard() {
               <div className="h-[400px]">
                 <Feed userId={userId} userName={userName} />
               </div>
-            </div> : (shouldReplaceDashboard && !isGuest) || hasHavenUpdate ?
-          // Desktop with Haven Update OR Livestream: CSS Grid with FIXED height container
-          // Both columns use h-full to fill this fixed height exactly
+            </div> : (shouldReplaceDashboard && !isGuest) ?
+          // Desktop with Livestream: Width-driven layout where 16:9 video determines row height
+          // Left column drives height via aspect-ratio, right column stretches to match
+          <div className="grid grid-cols-[3fr_1fr] gap-6 items-stretch">
+              {/* Left column - Livestream (drives height via 16:9 aspect ratio) */}
+              <div className="min-h-0">
+                <LivestreamPanel mode="full" userId={userId} />
+              </div>
+              {/* Right column - Feed stretches to match left column height */}
+              <div className="min-h-0 max-h-[600px] overflow-hidden">
+                <Feed userId={userId} userName={userName} />
+              </div>
+            </div> : hasHavenUpdate ?
+          // Desktop with Haven Update (no livestream): Fixed height layout
           <div className="grid grid-cols-[3fr_1fr] gap-6 h-[500px]">
-              {/* Left column - Livestream or Haven Updates */}
+              {/* Left column - Haven Updates */}
               <div className="h-full overflow-hidden">
-                {/* Show Livestream OR Haven Updates based on replace mode */}
-                {shouldReplaceDashboard && !isGuest ? (
-                  <LivestreamPanel mode="full" userId={userId} />
-                ) : (
-                  <HavenUpdates onVisibilityChange={handleHavenUpdateVisibilityChange} />
-                )}
+                <HavenUpdates onVisibilityChange={handleHavenUpdateVisibilityChange} />
                 
                 {/* Watch Live button when NOT in replace mode but livestream active */}
-                {hasActiveLivestream && !shouldReplaceDashboard && !isGuest && (
+                {hasActiveLivestream && !isGuest && (
                   <Button
                     variant="default"
                     className="mt-4 gap-2 bg-destructive hover:bg-destructive/90"
