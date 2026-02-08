@@ -30,15 +30,14 @@ interface FeedProps {
 const PAGE_SIZE = 20;
 
 // Helper to fetch author names and roles for feed items
+// Uses get_member_directory RPC to bypass RLS restrictions (allows guests to see member names)
 async function fetchAuthorData(items: { author_id: string | null }[]): Promise<Record<string, { full_name: string; role: string | null }>> {
   const authorIds = [...new Set(items.filter(d => d.author_id).map(d => d.author_id as string))];
   let authorMap: Record<string, { full_name: string; role: string | null }> = {};
   
   if (authorIds.length > 0) {
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('id, full_name')
-      .in('id', authorIds);
+    // Use RPC function to get member names (bypasses RLS, works for guests)
+    const { data: members } = await supabase.rpc('get_member_directory');
     
     const { data: roles } = await supabase
       .from('user_roles')
@@ -50,14 +49,16 @@ async function fetchAuthorData(items: { author_id: string | null }[]): Promise<R
       rolesMap[r.user_id] = r.role;
     });
     
-    if (profiles) {
-      authorMap = profiles.reduce((acc, p) => ({ 
-        ...acc, 
-        [p.id]: { 
-          full_name: p.full_name,
-          role: rolesMap[p.id] || 'member'
-        } 
-      }), {} as Record<string, { full_name: string; role: string | null }>);
+    // Build author map from member directory
+    if (members) {
+      members.forEach((m: { id: string; full_name: string }) => {
+        if (authorIds.includes(m.id)) {
+          authorMap[m.id] = {
+            full_name: m.full_name,
+            role: rolesMap[m.id] || 'member'
+          };
+        }
+      });
     }
   }
   
