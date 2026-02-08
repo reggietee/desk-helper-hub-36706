@@ -19,6 +19,7 @@ interface FeedItemProps {
     } | null;
   };
   currentUserId: string;
+  isGuestViewer?: boolean;
 }
 
 const ACTION_LABELS: Record<string, string> = {
@@ -28,10 +29,10 @@ const ACTION_LABELS: Record<string, string> = {
   admin_adjustment: 'Admin adjustment',
 };
 
-export function FeedItem({ item, currentUserId }: FeedItemProps) {
+export function FeedItem({ item, currentUserId, isGuestViewer = false }: FeedItemProps) {
   const isOwnMessage = item.author_id === currentUserId;
   const isActivity = item.type === 'activity';
-  const isGuest = item.author?.role === 'guest';
+  const isAuthorGuest = item.author?.role === 'guest';
   
   const timestamp = useMemo(() => {
     const date = new Date(item.created_at);
@@ -51,10 +52,14 @@ export function FeedItem({ item, currentUserId }: FeedItemProps) {
   }, [item.created_at]);
 
   const authorName = useMemo(() => {
-    // For activity items, show the member who earned credits (not "System")
+    // For activity items: guests see "Member" (anonymized), members/admin see real name
+    if (isActivity && isGuestViewer) {
+      return 'Member';
+    }
+    // For chat items: everyone sees the real name
     if (item.author?.full_name) return item.author.full_name;
     return 'Member';
-  }, [item.author?.full_name]);
+  }, [item.author?.full_name, isActivity, isGuestViewer]);
 
   const sanitizedBody = useMemo(() => {
     const isHtml = /<[a-z][\s\S]*>/i.test(item.body);
@@ -73,22 +78,28 @@ export function FeedItem({ item, currentUserId }: FeedItemProps) {
   }, [item.body]);
 
   // Role-based styling - guests get grey, members/admins get accent/green
-  const nameColorClass = isGuest 
-    ? 'text-muted-foreground' 
-    : 'text-accent';
+  // For activity items shown to guest viewers, use neutral styling (anonymized)
+  const nameColorClass = (isActivity && isGuestViewer) 
+    ? 'text-muted-foreground'
+    : isAuthorGuest 
+      ? 'text-muted-foreground' 
+      : 'text-accent';
 
   if (isActivity) {
     // Parse action_name - handle week-specific format like "weekly_planning:2026-01-27"
     const baseActionName = item.action_name?.split(':')[0] || item.action_name;
     const actionLabel = baseActionName ? ACTION_LABELS[baseActionName] || baseActionName : 'Credits';
     
+    // For guest viewers, use neutral styling for anonymized activity posts
+    const activityColorClass = (isGuestViewer || isAuthorGuest) ? 'text-muted-foreground' : 'text-accent';
+    
     return (
       <div className="flex justify-center py-1.5">
         <div className="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-0.5 px-2.5 py-1 rounded-full bg-accent/10 text-[11px] text-muted-foreground">
-          <Activity className={cn("h-3 w-3 flex-shrink-0", isGuest ? "text-muted-foreground" : "text-accent")} />
+          <Activity className={cn("h-3 w-3 flex-shrink-0", activityColorClass)} />
           <span className={cn("font-medium", nameColorClass)}>{authorName}</span>
           <span>earned</span>
-          <span className={cn("font-semibold whitespace-nowrap", isGuest ? "text-muted-foreground" : "text-accent")}>+{item.credits_amount} ©</span>
+          <span className={cn("font-semibold whitespace-nowrap", activityColorClass)}>+{item.credits_amount} ©</span>
           <span>—</span>
           <span>{actionLabel}</span>
         </div>
@@ -120,7 +131,7 @@ export function FeedItem({ item, currentUserId }: FeedItemProps) {
         "max-w-[85%] rounded-2xl px-3 py-1.5",
         isOwnMessage 
           ? "bg-primary text-primary-foreground rounded-br-sm" 
-          : isGuest
+          : isAuthorGuest
             ? "bg-muted/50 rounded-bl-sm"
             : "bg-muted rounded-bl-sm"
       )}>

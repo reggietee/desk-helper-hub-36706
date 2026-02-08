@@ -24,6 +24,7 @@ interface FeedItemData {
 interface FeedProps {
   userId: string;
   userName: string;
+  isGuestViewer?: boolean;
 }
 
 const PAGE_SIZE = 20;
@@ -63,7 +64,7 @@ async function fetchAuthorData(items: { author_id: string | null }[]): Promise<R
   return authorMap;
 }
 
-export function Feed({ userId, userName }: FeedProps) {
+export function Feed({ userId, userName, isGuestViewer = false }: FeedProps) {
   const [items, setItems] = useState<FeedItemData[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -304,6 +305,7 @@ export function Feed({ userId, userName }: FeedProps) {
                     key={item.id} 
                     item={item} 
                     currentUserId={userId}
+                    isGuestViewer={isGuestViewer}
                   />
                 ))
               )}

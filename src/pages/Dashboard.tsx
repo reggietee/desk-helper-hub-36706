@@ -376,7 +376,7 @@ export default function Dashboard() {
               ) : null}
               
               <div className="h-[400px]">
-                <Feed userId={userId} userName={userName} />
+                <Feed userId={userId} userName={userName} isGuestViewer={isGuest} />
               </div>
             </div> : (shouldReplaceDashboard && !isGuest) ?
           // Desktop with Livestream: Width-driven layout where 16:9 video determines row height
@@ -388,7 +388,7 @@ export default function Dashboard() {
               </div>
               {/* Right column - Feed stretches to match left column height */}
               <div className="min-h-0 max-h-[600px] overflow-hidden">
-                <Feed userId={userId} userName={userName} />
+                <Feed userId={userId} userName={userName} isGuestViewer={isGuest} />
               </div>
           </div> : hasHavenUpdate ?
           // Desktop with Haven Update (no livestream): Left column drives height naturally, right matches
@@ -400,7 +400,7 @@ export default function Dashboard() {
               {/* Right column - Feed stretches to match left column, scrolls internally */}
               <div className="relative min-h-[400px] max-h-[600px]">
                 <div className="absolute inset-0">
-                  <Feed userId={userId} userName={userName} />
+                  <Feed userId={userId} userName={userName} isGuestViewer={isGuest} />
                 </div>
               </div>
             </div> :
@@ -408,7 +408,7 @@ export default function Dashboard() {
           <div className="h-[500px]">
               <HavenUpdates onVisibilityChange={handleHavenUpdateVisibilityChange} />
               
-              <Feed userId={userId} userName={userName} />
+              <Feed userId={userId} userName={userName} isGuestViewer={isGuest} />
             </div>}
         </div>
 
