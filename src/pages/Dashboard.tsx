@@ -303,7 +303,7 @@ export default function Dashboard() {
         </div>
 
         {/* Haven Updates / Livestream + Feed Section */}
-        <div className="mb-8">
+        <div>
           {isMobile ?
           // Mobile: Stack vertically with fixed height Feed
           <div className="space-y-6">
@@ -351,16 +351,31 @@ export default function Dashboard() {
             </div>}
         </div>
 
+        {/* Divider: Updates/Feed → Who's In */}
+        <div className="my-8 md:my-10">
+          <div className="h-px w-full bg-border/50" />
+        </div>
+
         {/* Weekly Presence Section - locked for guests with privacy-safe placeholder */}
-        <div className="mb-8">
+        <div>
           <LockedOverlay isLocked={isGuest} message="Members only" teaser="Plan your upcoming coworking days and see how busy Haven will be across the week." modalTitle="Plan My Week / Who's In" modalDescription="Plan your coworking days at Haven for the next two weeks so you can match the vibe you want—lighter days for focus and deeper work, and busier days for networking. Members can also optionally share their name on the calendar to coordinate with others." hideContent={true} placeholder={<WeeklyPresencePlaceholder />}>
             <WeeklyPresence userId={userId} onCreditsEarned={handleCheckInComplete} />
           </LockedOverlay>
         </div>
 
-        {/* Co-Working Sprints Section - shows all active sprints, handles guest visibility per-sprint */}
-        <div className="mb-12">
+        {/* Divider: Who's In → Work Sprints */}
+        <div className="my-8 md:my-10">
+          <div className="h-px w-full bg-border/50" />
+        </div>
+
+        {/* Co-Working Sprints Section */}
+        <div>
           <SprintsList userId={userId} userName={userName} userRole={userRole} />
+        </div>
+
+        {/* Divider: Work Sprints → Haven Services */}
+        <div className="my-8 md:my-10">
+          <div className="h-px w-full bg-border/50" />
         </div>
 
         {/* Haven Services - with per-service locking for guests */}
