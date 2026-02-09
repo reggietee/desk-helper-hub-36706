@@ -11,7 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import SignProductOut from "./pages/SignProductOut";
 import BookCallRoom from "./pages/BookCallRoom";
 import BookMeetingRoom from "./pages/BookMeetingRoom";
-import BookPrivateOffice from "./pages/BookPrivateOffice";
+// BookPrivateOffice removed - service discontinued
 import SubmitIssue from "./pages/SubmitIssue";
 import GuestDayPass from "./pages/GuestDayPass";
 import SpecialOffers from "./pages/SpecialOffers";
@@ -39,10 +39,11 @@ const App = () => (
             <Route path="/equipment-checkout" element={<MemberGuard><SignProductOut /></MemberGuard>} />
             <Route path="/sign-product-out" element={<MemberGuard><SignProductOut /></MemberGuard>} />
             <Route path="/book-call-room" element={<MemberGuard><BookCallRoom /></MemberGuard>} />
-            <Route path="/book-meeting-room" element={<MemberGuard><BookMeetingRoom /></MemberGuard>} />
-            <Route path="/book-private-office" element={<MemberGuard><BookPrivateOffice /></MemberGuard>} />
-            <Route path="/submit-issue" element={<MemberGuard><SubmitIssue /></MemberGuard>} />
-            <Route path="/guest-day-pass" element={<MemberGuard><GuestDayPass /></MemberGuard>} />
+            {/* Guest-accessible routes - no MemberGuard */}
+            <Route path="/book-meeting-room" element={<BookMeetingRoom />} />
+            <Route path="/submit-issue" element={<SubmitIssue />} />
+            <Route path="/guest-day-pass" element={<GuestDayPass />} />
+            {/* Member-only routes continued */}
             <Route path="/special-offers" element={<MemberGuard><SpecialOffers /></MemberGuard>} />
             <Route path="/admin" element={<AdminPanel />} />
             <Route path="/admin/schedule-history" element={<AdminScheduleHistory />} />

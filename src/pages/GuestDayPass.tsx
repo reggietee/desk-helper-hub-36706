@@ -121,9 +121,9 @@ export default function GuestDayPass() {
       <main className="container mx-auto px-6 py-12 max-w-3xl">
         <Card className="haven-card border-0 mb-8 bg-accent/5">
           <CardHeader className="space-y-3">
-            <CardTitle className="text-2xl font-heading font-bold text-foreground">Guest Day Pass Information</CardTitle>
+            <CardTitle className="text-2xl font-heading font-bold text-foreground">Day Pass Information</CardTitle>
             <CardDescription className="text-base text-muted-foreground">
-              All members have access to free guest passes each month
+              All members and guests can request day passes
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -142,9 +142,9 @@ export default function GuestDayPass() {
 
         <Card className="haven-card border-0">
           <CardHeader className="space-y-3">
-            <CardTitle className="text-3xl font-heading font-bold text-foreground">Request Guest Day Pass</CardTitle>
+            <CardTitle className="text-3xl font-heading font-bold text-foreground">Request Day Pass</CardTitle>
             <CardDescription className="text-base text-muted-foreground">
-              Submit a request for your guest to visit the workspace
+              Submit a request for a guest to visit the workspace
             </CardDescription>
           </CardHeader>
           <CardContent>
