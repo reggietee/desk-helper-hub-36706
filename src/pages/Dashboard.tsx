@@ -2,11 +2,9 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import havenLogo from '@/assets/haven-logo.svg';
 import havenLogoWhite from '@/assets/haven-logo-white.png';
-import { Package, Phone, Users, Building, AlertCircle, UserPlus, Gift, Tag, Handshake, Calendar, LogOut, Settings, Shield, Trophy, Menu, Coins, Video } from 'lucide-react';
+import { LogOut, Settings, Shield, Trophy, Menu, Coins, Video } from 'lucide-react';
 import { toast } from 'sonner';
 import { WeeklyPresence } from '@/components/dashboard/WeeklyPresence';
 import { WeeklyPresencePlaceholder } from '@/components/dashboard/WeeklyPresencePlaceholder';
@@ -23,19 +21,13 @@ import { SprintsList } from '@/components/dashboard/SprintsList';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { LockedOverlay } from '@/components/ui/locked-overlay';
 import { useUserRole, type UserRole } from '@/hooks/useUserRole';
-import { ServiceCardsPlaceholder } from '@/components/dashboard/ServiceCardsPlaceholder';
+import { HavenServices } from '@/components/dashboard/HavenServices';
 import { StartCallModal } from '@/components/calls/StartCallModal';
 import { LivestreamPanel } from '@/components/dashboard/LivestreamPanel';
 import { useLivestreamWithGuest } from '@/hooks/useLivestreamWithGuest';
 import { WatchNowButton } from '@/components/dashboard/WatchNowButton';
 
-interface DashboardCard {
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  path: string;
-  comingSoon?: boolean;
-}
+// Greeting utilities
 const greetings = [(name: string) => `Welcome back, ${name} 👋`, (name: string) => `Good to see you again, ${name}!`, (name: string) => `Hey there, ${name} — ready to get things done?`, (name: string) => `Howdy, ${name} 🤠`, (name: string) => `Hi ${name}, your space is ready 🌿`, (name: string) => `Welcome in, ${name} — make yourself at home.`, (name: string) => `Hey ${name}, great to have you back at Haven.`];
 const getDailyGreeting = (name: string) => {
   const today = new Date().toDateString();
@@ -141,60 +133,7 @@ export default function Dashboard() {
     toast.success('Logged out successfully');
     navigate('/auth');
   };
-  const cards: DashboardCard[] = [{
-    title: 'Equipment Checkout',
-    description: 'Borrow shared items from the coworking space',
-    icon: <Package className="h-6 w-6" />,
-    path: '/equipment-checkout'
-  }, {
-    title: 'Book Call Room',
-    description: 'Reserve the call room for private calls',
-    icon: <Phone className="h-6 w-6" />,
-    path: '/book-call-room'
-  }, {
-    title: 'Book Meeting Room',
-    description: 'Reserve the meeting room for team sessions',
-    icon: <Users className="h-6 w-6" />,
-    path: '/book-meeting-room'
-  }, {
-    title: 'Book Private Office',
-    description: 'Reserve the private office for a full day',
-    icon: <Building className="h-6 w-6" />,
-    path: '/book-private-office'
-  }, {
-    title: 'Submit an Issue',
-    description: 'Report issues or request maintenance',
-    icon: <AlertCircle className="h-6 w-6" />,
-    path: '/submit-issue'
-  }, {
-    title: 'Guest Day Pass',
-    description: 'Request a day pass for your guest',
-    icon: <UserPlus className="h-6 w-6" />,
-    path: '/guest-day-pass'
-  }, {
-    title: 'Special Offers',
-    description: 'Exclusive deals for members',
-    icon: <Tag className="h-6 w-6" />,
-    path: '/special-offers'
-  }, {
-    title: 'Refer a Friend',
-    description: 'Invite friends and earn rewards',
-    icon: <Gift className="h-6 w-6" />,
-    path: '/coming-soon?feature=refer',
-    comingSoon: true
-  }, {
-    title: 'Barter Network',
-    description: 'Exchange services with other members',
-    icon: <Handshake className="h-6 w-6" />,
-    path: '/coming-soon?feature=barter',
-    comingSoon: true
-  }, {
-    title: 'Events Calendar',
-    description: 'View and join upcoming community events',
-    icon: <Calendar className="h-6 w-6" />,
-    path: '/coming-soon?feature=events',
-    comingSoon: true
-  }];
+  // Service cards are now handled by HavenServices component
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">
         <p className="text-muted-foreground">Loading...</p>
@@ -424,40 +363,8 @@ export default function Dashboard() {
           <SprintsList userId={userId} userName={userName} userRole={userRole} />
         </div>
 
-        {/* Service cards grid - locked for guests with privacy-safe placeholder */}
-        <div className="space-y-4">
-          {/* Section Header */}
-          <div>
-            <h2 className="text-2xl font-semibold text-foreground flex items-center gap-2">
-              <Package className="h-6 w-6" />
-              Member Services
-            </h2>
-            <p className="text-muted-foreground mt-1">
-              All the infrastructure, support, and perks that make Haven a plug-and-play work environment.
-            </p>
-          </div>
-
-          <LockedOverlay isLocked={isGuest} message="Members only" teaser="Book rooms, sign out shared gear, submit issues, and access member perks—all in one place." modalTitle="Member Services" modalDescription="Members can manage everything they need for working at Haven—booking the call room, meeting room, or private office, signing out shared items, submitting issues, and accessing perks and offers. It's the operational hub for getting the most out of the space." hideContent={true} placeholder={<ServiceCardsPlaceholder />}>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {cards.map(card => <Card key={card.path} className="cursor-pointer haven-card border-0 group relative" onClick={() => !isGuest && navigate(card.path)}>
-                  {card.comingSoon && <Badge className="absolute top-6 right-6 bg-accent/20 text-primary border-0" variant="secondary">
-                      Coming Soon
-                    </Badge>}
-                  <CardHeader className="space-y-4">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-accent/10 rounded-2xl group-hover:bg-accent/20 transition-colors">
-                        {card.icon}
-                      </div>
-                      <CardTitle className="text-xl font-heading font-bold text-foreground">{card.title}</CardTitle>
-                    </div>
-                    <CardDescription className="text-base text-muted-foreground leading-relaxed">
-                      {card.description}
-                    </CardDescription>
-                  </CardHeader>
-                </Card>)}
-            </div>
-          </LockedOverlay>
-        </div>
+        {/* Haven Services - with per-service locking for guests */}
+        <HavenServices isGuest={isGuest} />
       </main>
 
       <ProfileSettings open={profileSettingsOpen} onOpenChange={setProfileSettingsOpen} currentName={userName} currentEmail={userEmail} onNameUpdate={setUserName} defaultTab={profileDefaultTab} />
