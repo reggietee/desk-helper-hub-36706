@@ -57,7 +57,8 @@ export default function Dashboard() {
   // Get user role from hook
   const {
     role: userRole,
-    isGuest
+    isGuest,
+    loading: roleLoading
   } = useUserRole(userId || null);
 
   // Get livestream state (needs isGuest for proper guest access check)
@@ -302,7 +303,7 @@ export default function Dashboard() {
             </h2>
             <p className="text-lg text-muted-foreground">Welcome to Homebase. What would you like to do today?</p>
           </div>
-          {!isGuest && (
+          {!isGuest && !roleLoading && (
             <div className="hidden md:block w-[280px] flex-shrink-0">
               <OnboardingChecklist
                 userId={userId}
@@ -321,7 +322,7 @@ export default function Dashboard() {
         </div>
 
         {/* Mobile onboarding checklist */}
-        {!isGuest && (
+        {!isGuest && !roleLoading && (
           <div className="md:hidden mb-8">
             <OnboardingChecklist
               userId={userId}
