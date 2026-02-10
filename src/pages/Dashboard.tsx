@@ -304,7 +304,7 @@ export default function Dashboard() {
             <p className="text-lg text-muted-foreground">Welcome to Homebase. What would you like to do today?</p>
           </div>
           {!isGuest && !roleLoading && (
-            <div className="hidden md:block w-[280px] flex-shrink-0">
+            <div className="hidden md:block w-[380px] flex-shrink-0">
               <OnboardingChecklist
                 userId={userId}
                 onCreditsEarned={handleCheckInComplete}

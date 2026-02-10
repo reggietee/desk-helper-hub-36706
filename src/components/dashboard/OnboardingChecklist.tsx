@@ -166,18 +166,17 @@ export function OnboardingChecklist({ userId, onCreditsEarned, onOpenProfile, on
 
   return (
     <Card className="haven-card border border-border/50 bg-card/50">
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-sm font-semibold text-foreground">Get Started</span>
+      <CardContent className="p-3">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="flex items-center gap-1.5">
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            <span className="text-xs font-semibold text-foreground">Get Started</span>
           </div>
-          <span className="text-xs text-muted-foreground font-medium">{completedCount}/{STEPS.length}</span>
+          <Progress value={progressPercent} className="h-1 flex-1" />
+          <span className="text-[11px] text-muted-foreground font-medium whitespace-nowrap">{completedCount}/{STEPS.length} · <span className="text-primary font-semibold">150 ©</span></span>
         </div>
 
-        <Progress value={progressPercent} className="h-1.5 mb-3" />
-
-        <div className="space-y-1.5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-0.5">
           {STEPS.map((step) => {
             const done = !!progress[step.key as keyof OnboardingProgress];
             return (
@@ -186,7 +185,7 @@ export function OnboardingChecklist({ userId, onCreditsEarned, onOpenProfile, on
                 onClick={() => !done && handleAction(step.action)}
                 disabled={done || !step.action}
                 className={cn(
-                  "w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-left text-sm transition-colors",
+                  "flex items-center gap-1.5 px-1.5 py-1 rounded-md text-left text-xs transition-colors",
                   done
                     ? "text-muted-foreground"
                     : step.action
@@ -195,22 +194,18 @@ export function OnboardingChecklist({ userId, onCreditsEarned, onOpenProfile, on
                 )}
               >
                 {done ? (
-                  <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+                  <CheckCircle2 className="h-3.5 w-3.5 text-primary flex-shrink-0" />
                 ) : (
-                  <Circle className="h-4 w-4 text-muted-foreground/50 flex-shrink-0" />
+                  <Circle className="h-3.5 w-3.5 text-muted-foreground/50 flex-shrink-0" />
                 )}
-                <span className={cn(done && "line-through")}>{step.label}</span>
+                <span className={cn("truncate", done && "line-through")}>{step.label}</span>
                 {!done && step.action && (
-                  <ArrowRight className="h-3 w-3 text-muted-foreground ml-auto flex-shrink-0" />
+                  <ArrowRight className="h-2.5 w-2.5 text-muted-foreground ml-auto flex-shrink-0" />
                 )}
               </button>
             );
           })}
         </div>
-
-        <p className="text-[11px] text-muted-foreground mt-3 text-center">
-          Complete all steps to earn <span className="font-semibold text-primary">+150 ©</span>
-        </p>
       </CardContent>
     </Card>
   );
