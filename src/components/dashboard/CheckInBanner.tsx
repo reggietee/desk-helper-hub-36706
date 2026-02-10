@@ -6,10 +6,11 @@ import { Loader2, MapPin, CheckCircle } from "lucide-react";
 
 interface CheckInBannerProps {
   userId: string;
+  userRole?: 'admin' | 'member' | 'guest' | null;
   onCheckIn?: () => void;
 }
 
-export const CheckInBanner = ({ userId, onCheckIn }: CheckInBannerProps) => {
+export const CheckInBanner = ({ userId, userRole, onCheckIn }: CheckInBannerProps) => {
   const [showBanner, setShowBanner] = useState(false);
   const [checking, setChecking] = useState(true);
   const [checkingIn, setCheckingIn] = useState(false);
@@ -101,8 +102,8 @@ export const CheckInBanner = ({ userId, onCheckIn }: CheckInBannerProps) => {
     }
   };
 
-  // Don't render anything while checking or if banner shouldn't show
-  if (checking || !showBanner) {
+  // Don't render anything while checking, if banner shouldn't show, or if user is a guest
+  if (checking || !showBanner || userRole === 'guest') {
     return null;
   }
 

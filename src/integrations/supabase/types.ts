@@ -781,6 +781,45 @@ export type Database = {
         }
         Relationships: []
       }
+      onboarding_progress: {
+        Row: {
+          bonus_awarded_at: string | null
+          checked_in_at: string | null
+          created_at: string
+          feed_posted_at: string | null
+          id: string
+          profile_completed_at: string | null
+          sprint_joined_at: string | null
+          updated_at: string
+          user_id: string
+          week_planned_at: string | null
+        }
+        Insert: {
+          bonus_awarded_at?: string | null
+          checked_in_at?: string | null
+          created_at?: string
+          feed_posted_at?: string | null
+          id?: string
+          profile_completed_at?: string | null
+          sprint_joined_at?: string | null
+          updated_at?: string
+          user_id: string
+          week_planned_at?: string | null
+        }
+        Update: {
+          bonus_awarded_at?: string | null
+          checked_in_at?: string | null
+          created_at?: string
+          feed_posted_at?: string | null
+          id?: string
+          profile_completed_at?: string | null
+          sprint_joined_at?: string | null
+          updated_at?: string
+          user_id?: string
+          week_planned_at?: string | null
+        }
+        Relationships: []
+      }
       otp_tokens: {
         Row: {
           attempts: number | null

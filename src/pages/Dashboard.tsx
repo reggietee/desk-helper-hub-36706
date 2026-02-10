@@ -26,7 +26,7 @@ import { StartCallModal } from '@/components/calls/StartCallModal';
 import { LivestreamPanel } from '@/components/dashboard/LivestreamPanel';
 import { useLivestreamWithGuest } from '@/hooks/useLivestreamWithGuest';
 import { WatchNowButton } from '@/components/dashboard/WatchNowButton';
-
+import { OnboardingChecklist } from '@/components/dashboard/OnboardingChecklist';
 // Greeting utilities
 const greetings = [(name: string) => `Welcome back, ${name} 👋`, (name: string) => `Good to see you again, ${name}!`, (name: string) => `Hey there, ${name} — ready to get things done?`, (name: string) => `Howdy, ${name} 🤠`, (name: string) => `Hi ${name}, your space is ready 🌿`, (name: string) => `Welcome in, ${name} — make yourself at home.`, (name: string) => `Hey ${name}, great to have you back at Haven.`];
 const getDailyGreeting = (name: string) => {
@@ -143,7 +143,7 @@ export default function Dashboard() {
       {/* Sticky navigation wrapper */}
       <div className="sticky top-0 z-50">
         {/* Check-in banner - appears above everything when on Haven Wi-Fi */}
-        <CheckInBanner userId={userId} onCheckIn={handleCheckInComplete} />
+        <CheckInBanner userId={userId} userRole={userRole} onCheckIn={handleCheckInComplete} />
         
         <header className="bg-card/95 backdrop-blur-md border-b border-border shadow-sm">
           <div className="container mx-auto px-4 md:px-6 py-4 md:py-5 flex justify-between items-center">
@@ -295,15 +295,50 @@ export default function Dashboard() {
       </div>
 
       <main className="container mx-auto px-6 py-12 flex-1">
-        <div className="mb-12">
-          <h2 className="text-4xl font-heading font-bold mb-3 text-foreground">
-            {getDailyGreeting(userName)}
-          </h2>
-          <p className="text-lg text-muted-foreground">Welcome to Homebase. What would you like to do today?</p>
+        <div className="mb-12 flex items-start justify-between gap-6">
+          <div>
+            <h2 className="text-4xl font-heading font-bold mb-3 text-foreground">
+              {getDailyGreeting(userName)}
+            </h2>
+            <p className="text-lg text-muted-foreground">Welcome to Homebase. What would you like to do today?</p>
+          </div>
+          {!isGuest && (
+            <div className="hidden md:block w-[280px] flex-shrink-0">
+              <OnboardingChecklist
+                userId={userId}
+                onCreditsEarned={handleCheckInComplete}
+                onOpenProfile={() => {
+                  setProfileDefaultTab("name");
+                  setProfileSettingsOpen(true);
+                }}
+                onOpenWeekPlan={() => {
+                  // Scroll to weekly presence section
+                  document.querySelector('[data-section="weekly-presence"]')?.scrollIntoView({ behavior: "smooth" });
+                }}
+              />
+            </div>
+          )}
         </div>
 
+        {/* Mobile onboarding checklist */}
+        {!isGuest && (
+          <div className="md:hidden mb-8">
+            <OnboardingChecklist
+              userId={userId}
+              onCreditsEarned={handleCheckInComplete}
+              onOpenProfile={() => {
+                setProfileDefaultTab("name");
+                setProfileSettingsOpen(true);
+              }}
+              onOpenWeekPlan={() => {
+                document.querySelector('[data-section="weekly-presence"]')?.scrollIntoView({ behavior: "smooth" });
+              }}
+            />
+          </div>
+        )}
+
         {/* Haven Updates / Livestream + Feed Section */}
-        <div>
+        <div data-section="feed">
           {isMobile ?
           // Mobile: Stack vertically with fixed height Feed
           <div className="space-y-6">
@@ -357,7 +392,7 @@ export default function Dashboard() {
         </div>
 
         {/* Weekly Presence Section - locked for guests with privacy-safe placeholder */}
-        <div>
+        <div data-section="weekly-presence">
           <LockedOverlay isLocked={isGuest} message="Members only" teaser="Plan your upcoming coworking days and see how busy Haven will be across the week." modalTitle="Plan My Week / Who's In" modalDescription="Plan your coworking days at Haven for the next two weeks so you can match the vibe you want—lighter days for focus and deeper work, and busier days for networking. Members can also optionally share their name on the calendar to coordinate with others." hideContent={true} placeholder={<WeeklyPresencePlaceholder />}>
             <WeeklyPresence userId={userId} onCreditsEarned={handleCheckInComplete} />
           </LockedOverlay>
@@ -369,7 +404,7 @@ export default function Dashboard() {
         </div>
 
         {/* Co-Working Sprints Section */}
-        <div>
+        <div data-section="sprints">
           <SprintsList userId={userId} userName={userName} userRole={userRole} />
         </div>
 
