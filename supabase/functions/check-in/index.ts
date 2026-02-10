@@ -151,6 +151,21 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Check if user is a guest - block check-in
+    const { data: roleData } = await supabaseClient
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (roleData?.role === "guest") {
+      console.log(`[check-in] Guest user ${user.id} blocked from check-in`);
+      return new Response(
+        JSON.stringify({ success: false, error: "Check-in is available to members only" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Get the allowed IP from settings
     const { data: setting, error: settingError } = await supabaseClient
       .from("haven_settings")

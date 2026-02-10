@@ -86,6 +86,21 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Check if user is a guest - don't show banner
+    const { data: roleData } = await supabaseClient
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (roleData?.role === "guest") {
+      console.log("[check-ip] Guest user, hiding check-in banner");
+      return new Response(
+        JSON.stringify({ matches: false, reason: "guest_user" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Get the allowed IP from settings
     const { data: setting, error: settingError } = await supabaseClient
       .from("haven_settings")
