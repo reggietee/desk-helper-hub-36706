@@ -23,7 +23,7 @@ interface OnboardingProgress {
 }
 
 const STEPS = [
-  { key: "profile_completed_at", label: "Complete your profile", action: "profile" },
+  { key: "profile_completed_at", label: "Complete profile", action: "profile" },
   { key: "week_planned_at", label: "Plan your week", action: "weekplan" },
   { key: "checked_in_at", label: "Check in at Haven", action: null },
   { key: "feed_posted_at", label: "Say hello in the Feed", action: "feed" },
@@ -157,7 +157,7 @@ export function OnboardingChecklist({ userId, onCreditsEarned, onOpenProfile, on
           <h2 className="text-2xl font-heading font-bold text-foreground mb-2">
             Onboarding Complete!
           </h2>
-          <p className="text-3xl font-bold text-primary mb-2">+150 ©</p>
+          <p className="text-3xl font-bold text-primary mb-2">+100 ©</p>
           <p className="text-muted-foreground">Welcome to Haven! 🎉</p>
         </div>
       </div>
@@ -170,13 +170,13 @@ export function OnboardingChecklist({ userId, onCreditsEarned, onOpenProfile, on
         <div className="flex items-center gap-3 mb-2">
           <div className="flex items-center gap-1.5">
             <Sparkles className="h-3.5 w-3.5 text-primary" />
-            <span className="text-xs font-semibold text-foreground">Get Started</span>
+            <span className="text-xs font-semibold text-foreground">New Member Quest</span>
           </div>
           <Progress value={progressPercent} className="h-1 flex-1" />
-          <span className="text-[11px] text-muted-foreground font-medium whitespace-nowrap">{completedCount}/{STEPS.length} · <span className="text-primary font-semibold">150 ©</span></span>
+          <span className="text-[11px] text-muted-foreground font-medium whitespace-nowrap">{completedCount}/{STEPS.length} · <span className="text-primary font-semibold">Reward: +100 ©</span></span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-0.5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-0.5">
           {STEPS.map((step) => {
             const done = !!progress[step.key as keyof OnboardingProgress];
             return (

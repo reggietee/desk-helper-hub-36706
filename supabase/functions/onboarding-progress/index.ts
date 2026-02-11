@@ -5,7 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const ONBOARDING_BONUS = 150;
+const ONBOARDING_BONUS = 100;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -86,7 +86,10 @@ Deno.serve(async (req) => {
         .select("full_name, email")
         .eq("id", user.id)
         .single();
-      if (profile?.full_name && profile.full_name.trim().includes(" ") && profile.email) {
+      // Check if user has an avatar set in auth metadata
+      const { data: { user: authUser } } = await supabaseClient.auth.admin.getUserById(user.id);
+      const avatarUrl = authUser?.user_metadata?.avatar_url || authUser?.user_metadata?.picture;
+      if (profile?.full_name && profile.full_name.trim().includes(" ") && profile.email && avatarUrl) {
         updates.profile_completed_at = now;
       }
     }
