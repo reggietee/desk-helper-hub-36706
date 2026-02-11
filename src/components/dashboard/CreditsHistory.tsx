@@ -67,6 +67,9 @@ export const CreditsHistory = ({ userId, refreshKey = 0 }: CreditsHistoryProps) 
     if (reason === "weekly_planning") {
       return <Calendar className="h-4 w-4 text-blue-500" />;
     }
+    if (reason === "onboarding_bonus") {
+      return <Coins className="h-4 w-4 text-amber-500" />;
+    }
     return <Calendar className="h-4 w-4 text-primary" />;
   };
 
@@ -78,6 +81,8 @@ export const CreditsHistory = ({ userId, refreshKey = 0 }: CreditsHistoryProps) 
         return "5-day streak bonus";
       case "weekly_planning":
         return "Weekly planning";
+      case "onboarding_bonus":
+        return "Onboarding bonus";
       default:
         return reason;
     }
