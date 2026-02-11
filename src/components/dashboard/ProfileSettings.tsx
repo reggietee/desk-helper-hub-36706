@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Camera, User } from "lucide-react";
 import { VisitHistory } from "@/components/dashboard/VisitHistory";
 import { CreditsHistory } from "@/components/dashboard/CreditsHistory";
 
@@ -36,6 +36,9 @@ export const ProfileSettings = ({
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [creditEmailNotifications, setCreditEmailNotifications] = useState(true);
   const [notificationLoading, setNotificationLoading] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Update active tab when defaultTab changes or modal opens
   useEffect(() => {
@@ -49,19 +52,66 @@ export const ProfileSettings = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setUserId(user.id);
-        // Fetch notification preference
         const { data: profile } = await supabase
           .from("profiles")
-          .select("credit_email_notifications")
+          .select("credit_email_notifications, avatar_url")
           .eq("id", user.id)
           .single();
         if (profile) {
           setCreditEmailNotifications(profile.credit_email_notifications ?? true);
+          setAvatarUrl(profile.avatar_url ?? null);
         }
       }
     };
     getUser();
   }, []);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !userId) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be under 5MB");
+      return;
+    }
+
+    setAvatarUploading(true);
+    try {
+      const fileExt = file.name.split(".").pop();
+      const filePath = `${userId}/avatar.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(filePath);
+
+      // Add cache buster
+      const urlWithCacheBust = `${publicUrl}?t=${Date.now()}`;
+
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: urlWithCacheBust })
+        .eq("id", userId);
+
+      if (updateError) throw updateError;
+
+      setAvatarUrl(urlWithCacheBust);
+      toast.success("Profile picture updated!");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to upload avatar");
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
 
   const handleNotificationToggle = async (enabled: boolean) => {
     setNotificationLoading(true);
@@ -149,6 +199,37 @@ export const ProfileSettings = ({
           </TabsList>
 
           <TabsContent value="name" className="space-y-4">
+            <div className="flex flex-col items-center gap-3">
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={avatarUploading}
+                className="relative group w-20 h-20 rounded-full overflow-hidden border-2 border-border hover:border-primary transition-colors"
+              >
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-muted flex items-center justify-center">
+                    <User className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  {avatarUploading ? (
+                    <Loader2 className="h-5 w-5 text-white animate-spin" />
+                  ) : (
+                    <Camera className="h-5 w-5 text-white" />
+                  )}
+                </div>
+              </button>
+              <p className="text-xs text-muted-foreground">Click to upload profile picture</p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarUpload}
+              />
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
               <Input

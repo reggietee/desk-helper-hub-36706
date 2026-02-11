@@ -938,6 +938,7 @@ export type Database = {
         Row: {
           admin_notified_at: string | null
           approved_at: string | null
+          avatar_url: string | null
           created_at: string | null
           credit_email_notifications: boolean
           declined_at: string | null
@@ -951,6 +952,7 @@ export type Database = {
         Insert: {
           admin_notified_at?: string | null
           approved_at?: string | null
+          avatar_url?: string | null
           created_at?: string | null
           credit_email_notifications?: boolean
           declined_at?: string | null
@@ -964,6 +966,7 @@ export type Database = {
         Update: {
           admin_notified_at?: string | null
           approved_at?: string | null
+          avatar_url?: string | null
           created_at?: string | null
           credit_email_notifications?: boolean
           declined_at?: string | null

@@ -83,13 +83,10 @@ Deno.serve(async (req) => {
     if (!progress?.profile_completed_at) {
       const { data: profile } = await supabaseClient
         .from("profiles")
-        .select("full_name, email")
+        .select("full_name, email, avatar_url")
         .eq("id", user.id)
         .single();
-      // Check if user has an avatar set in auth metadata
-      const { data: { user: authUser } } = await supabaseClient.auth.admin.getUserById(user.id);
-      const avatarUrl = authUser?.user_metadata?.avatar_url || authUser?.user_metadata?.picture;
-      if (profile?.full_name && profile.full_name.trim().includes(" ") && profile.email && avatarUrl) {
+      if (profile?.full_name && profile.full_name.trim().includes(" ") && profile.email && profile.avatar_url) {
         updates.profile_completed_at = now;
       }
     }
