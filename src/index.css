@@ -143,3 +143,53 @@
 .theme-transition *::after {
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.2s ease !important;
 }
+
+/* Quest card styles */
+.quest-card {
+  --shimmer-color: hsl(var(--accent) / 0.15);
+}
+
+.quest-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--shimmer-color) 50%,
+    transparent 100%
+  );
+  animation: quest-shimmer-move 2.5s ease-in-out infinite;
+  background-size: 200% 100%;
+}
+
+@keyframes quest-shimmer-move {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes quest-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-quest-enter {
+  animation: quest-enter 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.quest-reward-capsule:hover .lucide-sparkles {
+  animation: quest-sparkle-spin 0.6s ease-in-out;
+}
+
+@keyframes quest-sparkle-spin {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(15deg) scale(1.2); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
+.quest-progress [data-state="complete"] {
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
