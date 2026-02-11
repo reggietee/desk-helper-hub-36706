@@ -1,8 +1,17 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle2, Circle, ArrowRight, Sparkles } from "lucide-react";
+import {
+  CheckCircle2,
+  Circle,
+  ArrowRight,
+  Sparkles,
+  User,
+  CalendarDays,
+  MapPin,
+  MessageCircle,
+  Zap,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import confetti from "canvas-confetti";
 
@@ -23,18 +32,26 @@ interface OnboardingProgress {
 }
 
 const STEPS = [
-  { key: "profile_completed_at", label: "Complete profile", action: "profile" },
-  { key: "week_planned_at", label: "Plan your week", action: "weekplan" },
-  { key: "checked_in_at", label: "Check in at Haven", action: null },
-  { key: "feed_posted_at", label: "Say hello in the Feed", action: "feed" },
-  { key: "sprint_joined_at", label: "Join a Work Sprint", action: "sprint" },
+  { key: "profile_completed_at", label: "Complete profile", action: "profile", icon: User },
+  { key: "week_planned_at", label: "Plan your week", action: "weekplan", icon: CalendarDays },
+  { key: "checked_in_at", label: "Check in at Haven", action: null, icon: MapPin },
+  { key: "feed_posted_at", label: "Say hello in the Feed", action: "feed", icon: MessageCircle },
+  { key: "sprint_joined_at", label: "Join a Work Sprint", action: "sprint", icon: Zap },
 ] as const;
+
+function getStatusMessage(completed: number, total: number) {
+  if (completed === total) return null;
+  if (completed === total - 1) return "One more step to claim your reward ✨";
+  return `Complete all steps to unlock +100 ©`;
+}
 
 export function OnboardingChecklist({ userId, onCreditsEarned, onOpenProfile, onOpenWeekPlan }: OnboardingChecklistProps) {
   const [progress, setProgress] = useState<OnboardingProgress | null>(null);
   const [loading, setLoading] = useState(true);
   const [hidden, setHidden] = useState(false);
   const [celebrating, setCelebrating] = useState(false);
+  const [hasAnimated, setHasAnimated] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const fetchProgress = useCallback(async () => {
     try {
@@ -54,42 +71,25 @@ export function OnboardingChecklist({ userId, onCreditsEarned, onOpenProfile, on
       const { progress: prog, bonusJustAwarded, bonusAwarded } = response.data;
 
       if (bonusAwarded && !bonusJustAwarded) {
-        // Already completed previously - hide checklist
         setHidden(true);
         return;
       }
 
       if (bonusJustAwarded) {
-        // Just completed! Show celebration
         setProgress(prog);
         setCelebrating(true);
         onCreditsEarned?.();
 
-        // Fire confetti
         const duration = 3000;
         const end = Date.now() + duration;
         const colors = ["hsl(var(--primary))", "#FFD700", "#FF6B6B", "#4ECDC4", "#45B7D1"];
-
         const frame = () => {
-          confetti({
-            particleCount: 4,
-            angle: 60,
-            spread: 55,
-            origin: { x: 0, y: 0.7 },
-            colors,
-          });
-          confetti({
-            particleCount: 4,
-            angle: 120,
-            spread: 55,
-            origin: { x: 1, y: 0.7 },
-            colors,
-          });
+          confetti({ particleCount: 4, angle: 60, spread: 55, origin: { x: 0, y: 0.7 }, colors });
+          confetti({ particleCount: 4, angle: 120, spread: 55, origin: { x: 1, y: 0.7 }, colors });
           if (Date.now() < end) requestAnimationFrame(frame);
         };
         frame();
 
-        // Hide after celebration
         setTimeout(() => {
           setCelebrating(false);
           setHidden(true);
@@ -108,14 +108,11 @@ export function OnboardingChecklist({ userId, onCreditsEarned, onOpenProfile, on
 
   useEffect(() => {
     fetchProgress();
-
-    // Re-check progress periodically when window regains focus
     const handleFocus = () => fetchProgress();
     window.addEventListener("focus", handleFocus);
     return () => window.removeEventListener("focus", handleFocus);
   }, [fetchProgress]);
 
-  // Also re-check after visibility changes (tab switch back)
   useEffect(() => {
     const handleVisibility = () => {
       if (document.visibilityState === "visible") fetchProgress();
@@ -124,10 +121,18 @@ export function OnboardingChecklist({ userId, onCreditsEarned, onOpenProfile, on
     return () => document.removeEventListener("visibilitychange", handleVisibility);
   }, [fetchProgress]);
 
+  // Entrance animation (once per session)
+  useEffect(() => {
+    if (!loading && !hidden && progress && !hasAnimated) {
+      setHasAnimated(true);
+    }
+  }, [loading, hidden, progress, hasAnimated]);
+
   if (loading || hidden || !progress) return null;
 
   const completedCount = STEPS.filter(s => progress[s.key as keyof OnboardingProgress]).length;
   const progressPercent = (completedCount / STEPS.length) * 100;
+  const statusMessage = getStatusMessage(completedCount, STEPS.length);
 
   const handleAction = (action: string | null) => {
     if (!action) return;
@@ -139,7 +144,6 @@ export function OnboardingChecklist({ userId, onCreditsEarned, onOpenProfile, on
         onOpenWeekPlan?.();
         break;
       case "feed":
-        // Scroll to feed section
         document.querySelector('[data-section="feed"]')?.scrollIntoView({ behavior: "smooth" });
         break;
       case "sprint":
@@ -148,7 +152,6 @@ export function OnboardingChecklist({ userId, onCreditsEarned, onOpenProfile, on
     }
   };
 
-  // Celebration overlay
   if (celebrating) {
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none">
@@ -165,48 +168,98 @@ export function OnboardingChecklist({ userId, onCreditsEarned, onOpenProfile, on
   }
 
   return (
-    <Card className="haven-card border border-border/50 bg-card/50">
-      <CardContent className="p-3">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="flex items-center gap-1.5">
-            <Sparkles className="h-3.5 w-3.5 text-primary" />
-            <span className="text-xs font-semibold text-foreground">New Member Quest</span>
+    <div
+      ref={cardRef}
+      className={cn(
+        "quest-card relative overflow-hidden rounded-2xl border border-accent/30 p-4 transition-all duration-500",
+        "bg-card shadow-[0_8px_30px_-8px_hsl(var(--accent)/0.15)]",
+        "dark:shadow-[0_8px_30px_-8px_hsl(var(--accent)/0.1)] dark:border-accent/20",
+        hasAnimated ? "animate-quest-enter" : "opacity-0 translate-y-3"
+      )}
+    >
+      {/* Subtle accent gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-accent/[0.04] via-transparent to-primary/[0.03] pointer-events-none rounded-2xl" />
+
+      {/* Header row */}
+      <div className="relative flex items-center justify-between gap-3 mb-3">
+        <div className="flex items-center gap-2">
+          {/* Quest badge pill */}
+          <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 dark:bg-primary/15 border border-primary/20">
+            <Sparkles className="h-3 w-3 text-primary" />
+            <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
+              New Member Quest
+            </span>
           </div>
-          <Progress value={progressPercent} className="h-1 flex-1" />
-          <span className="text-[11px] text-muted-foreground font-medium whitespace-nowrap">{completedCount}/{STEPS.length} · <span className="text-primary font-semibold">Reward: +100 ©</span></span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-0.5">
-          {STEPS.map((step) => {
-            const done = !!progress[step.key as keyof OnboardingProgress];
-            return (
-              <button
-                key={step.key}
-                onClick={() => !done && handleAction(step.action)}
-                disabled={done || !step.action}
-                className={cn(
-                  "flex items-center gap-1.5 px-1.5 py-1 rounded-md text-left text-xs transition-colors",
-                  done
-                    ? "text-muted-foreground"
-                    : step.action
-                    ? "text-foreground hover:bg-muted/50 cursor-pointer"
-                    : "text-foreground"
-                )}
-              >
-                {done ? (
-                  <CheckCircle2 className="h-3.5 w-3.5 text-primary flex-shrink-0" />
-                ) : (
-                  <Circle className="h-3.5 w-3.5 text-muted-foreground/50 flex-shrink-0" />
-                )}
-                <span className={cn("truncate", done && "line-through")}>{step.label}</span>
-                {!done && step.action && (
-                  <ArrowRight className="h-2.5 w-2.5 text-muted-foreground ml-auto flex-shrink-0" />
-                )}
-              </button>
-            );
-          })}
+        {/* Reward capsule */}
+        <div className="quest-reward-capsule group flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent text-accent-foreground cursor-default">
+          <span className="text-[11px] font-bold">+100 ©</span>
+          <span className="text-[10px] font-semibold opacity-80">Reward</span>
+          <Sparkles className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         </div>
-      </CardContent>
-    </Card>
+      </div>
+
+      {/* Progress bar area */}
+      <div className="relative flex items-center gap-3 mb-3">
+        <div className="flex-1 relative">
+          <Progress value={progressPercent} className="h-2 quest-progress" />
+          {/* Shimmer overlay on incomplete bar */}
+          {progressPercent < 100 && (
+            <div className="absolute inset-0 overflow-hidden rounded-full pointer-events-none">
+              <div className="quest-shimmer absolute inset-0" />
+            </div>
+          )}
+        </div>
+        <span className="text-xs font-semibold text-foreground whitespace-nowrap tabular-nums">
+          {completedCount}/{STEPS.length}
+        </span>
+      </div>
+
+      {/* Checklist grid */}
+      <div className="relative grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1">
+        {STEPS.map((step) => {
+          const done = !!progress[step.key as keyof OnboardingProgress];
+          const Icon = step.icon;
+          return (
+            <button
+              key={step.key}
+              onClick={() => !done && handleAction(step.action)}
+              disabled={done || !step.action}
+              className={cn(
+                "group flex items-center gap-2 px-2 py-1.5 rounded-lg text-left text-[13px] transition-all duration-200",
+                done
+                  ? "text-muted-foreground"
+                  : step.action
+                  ? "text-foreground hover:bg-accent/10 dark:hover:bg-accent/15 cursor-pointer"
+                  : "text-foreground"
+              )}
+            >
+              {done ? (
+                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+              ) : (
+                <div className="relative flex-shrink-0">
+                  <Circle className="h-4 w-4 text-border" />
+                  <Icon className="h-2 w-2 text-muted-foreground absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+                </div>
+              )}
+              <span className={cn("truncate", done && "line-through decoration-muted-foreground/40 decoration-1")}>
+                {step.label}
+              </span>
+              {!done && step.action && (
+                <ArrowRight className="h-3 w-3 text-muted-foreground/50 ml-auto flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Status message */}
+      {statusMessage && (
+        <p className="relative text-[11px] text-muted-foreground mt-2 text-center font-medium">
+          {statusMessage}
+        </p>
+      )}
+    </div>
   );
 }
