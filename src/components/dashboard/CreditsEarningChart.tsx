@@ -1,4 +1,5 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const CREDITS_EARNING_DATA = [
   { task: "Check-in", guest: null, member: 5 },
@@ -22,33 +23,41 @@ const CreditValue = ({ value }: { value: number | null }) => {
 
 export const CreditsEarningChart = () => {
   return (
-    <div className="space-y-2">
-      <h4 className="text-sm font-medium text-foreground">How to earn Haven Credits</h4>
-      <p className="text-xs text-muted-foreground">Credits vary by role (Guest vs Member).</p>
-      <div className="rounded-lg border overflow-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="text-xs font-semibold">Task</TableHead>
-              <TableHead className="text-xs font-semibold text-center w-[80px]">Guest</TableHead>
-              <TableHead className="text-xs font-semibold text-center w-[80px]">Member</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {CREDITS_EARNING_DATA.map((row) => (
-              <TableRow key={row.task}>
-                <TableCell className="text-xs py-2">{row.task}</TableCell>
-                <TableCell className="text-xs text-center py-2">
-                  <CreditValue value={row.guest} />
-                </TableCell>
-                <TableCell className="text-xs text-center py-2">
-                  <CreditValue value={row.member} />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
+    <Accordion type="single" collapsible>
+      <AccordionItem value="earning-chart" className="border rounded-lg px-3">
+        <AccordionTrigger className="py-3 text-sm font-medium hover:no-underline">
+          <div className="text-left">
+            <span>How to earn</span>
+            <span className="block text-xs font-normal text-muted-foreground">See the earning chart (Guest vs Member)</span>
+          </div>
+        </AccordionTrigger>
+        <AccordionContent>
+          <div className="rounded-lg border overflow-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs font-semibold">Task</TableHead>
+                  <TableHead className="text-xs font-semibold text-center w-[80px]">Guest</TableHead>
+                  <TableHead className="text-xs font-semibold text-center w-[80px]">Member</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {CREDITS_EARNING_DATA.map((row) => (
+                  <TableRow key={row.task}>
+                    <TableCell className="text-xs py-2">{row.task}</TableCell>
+                    <TableCell className="text-xs text-center py-2">
+                      <CreditValue value={row.guest} />
+                    </TableCell>
+                    <TableCell className="text-xs text-center py-2">
+                      <CreditValue value={row.member} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
   );
 };
