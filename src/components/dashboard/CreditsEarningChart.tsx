@@ -6,7 +6,7 @@ const CREDITS_EARNING_DATA = [
   { task: "Event attendance (verified check-in)", guest: 30, member: 60 },
   { task: "Virtual sprint (45–60 min)", guest: 15, member: 30 },
   { task: "IRL sprint (45–60 min)", guest: null, member: 60 },
-  { task: "New Member Quest (5-step wizard completion)", guest: null, member: 100 },
+  { task: "Host a Haven event", guest: null, member: 300 },
 ] as const;
 
 const CREDITS_REDEMPTION_DATA = [
@@ -58,7 +58,7 @@ const CreditsTable = ({ data, firstColumnHeader }: { data: readonly { task: stri
 export const CreditsEarningChart = () => (
   <div className="space-y-2">
     <h4 className="text-sm font-medium text-foreground">How to earn Haven Credits</h4>
-    <p className="text-xs text-muted-foreground">Credits vary by role (Guest vs Member).</p>
+    <p className="text-xs text-muted-foreground">You can earn credits by being a part of Haven. Members get extra credit opportunities. Event participation is manually added.</p>
     <CreditsTable data={CREDITS_EARNING_DATA} firstColumnHeader="Task" />
   </div>
 );
@@ -66,7 +66,7 @@ export const CreditsEarningChart = () => (
 export const CreditsRedemptionChart = () => (
   <div className="space-y-2">
     <h4 className="text-sm font-medium text-foreground">How to redeem Haven Credits</h4>
-    <p className="text-xs text-muted-foreground">Redemption options vary by role (Guest vs Member).</p>
+    <p className="text-xs text-muted-foreground">Looking to redeem credits? Reach out to the Haven team on Slack in the #support channel.</p>
     <CreditsTable data={CREDITS_REDEMPTION_DATA} firstColumnHeader="Redemption" />
   </div>
 );
