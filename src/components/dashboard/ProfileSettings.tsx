@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Loader2, Camera, User } from "lucide-react";
 import { VisitHistory } from "@/components/dashboard/VisitHistory";
 import { CreditsHistory } from "@/components/dashboard/CreditsHistory";
+import { CreditsEarningChart } from "@/components/dashboard/CreditsEarningChart";
 
 interface ProfileSettingsProps {
   open: boolean;
@@ -297,6 +298,7 @@ export const ProfileSettings = ({
           </TabsContent>
 
           <TabsContent value="credits" className="space-y-4">
+            <CreditsEarningChart />
             {userId && <CreditsHistory userId={userId} refreshKey={visitRefreshKey} />}
           </TabsContent>
 
