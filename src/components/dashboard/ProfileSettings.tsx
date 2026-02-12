@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { Loader2, Camera, User } from "lucide-react";
 import { VisitHistory } from "@/components/dashboard/VisitHistory";
 import { CreditsHistory } from "@/components/dashboard/CreditsHistory";
-import { CreditsEarningChart } from "@/components/dashboard/CreditsEarningChart";
+import { CreditsEarningChart, CreditsRedemptionChart } from "@/components/dashboard/CreditsEarningChart";
 
 interface ProfileSettingsProps {
   open: boolean;
@@ -298,8 +298,22 @@ export const ProfileSettings = ({
           </TabsContent>
 
           <TabsContent value="credits" className="space-y-4">
-            <CreditsEarningChart />
-            {userId && <CreditsHistory userId={userId} refreshKey={visitRefreshKey} />}
+            <Tabs defaultValue="history" className="w-full">
+              <TabsList className="grid w-full grid-cols-3 h-8">
+                <TabsTrigger value="history" className="text-xs">History</TabsTrigger>
+                <TabsTrigger value="earn" className="text-xs">How to earn</TabsTrigger>
+                <TabsTrigger value="redeem" className="text-xs">How to redeem</TabsTrigger>
+              </TabsList>
+              <TabsContent value="history" className="mt-3 space-y-4">
+                {userId && <CreditsHistory userId={userId} refreshKey={visitRefreshKey} />}
+              </TabsContent>
+              <TabsContent value="earn" className="mt-3">
+                <CreditsEarningChart />
+              </TabsContent>
+              <TabsContent value="redeem" className="mt-3">
+                <CreditsRedemptionChart />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
         </Tabs>

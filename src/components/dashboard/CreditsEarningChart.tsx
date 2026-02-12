@@ -1,5 +1,4 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const CREDITS_EARNING_DATA = [
   { task: "Check-in", guest: null, member: 5 },
@@ -8,6 +7,14 @@ const CREDITS_EARNING_DATA = [
   { task: "Virtual sprint (45–60 min)", guest: 15, member: 30 },
   { task: "IRL sprint (45–60 min)", guest: null, member: 60 },
   { task: "New Member Quest (5-step wizard completion)", guest: null, member: 100 },
+] as const;
+
+const CREDITS_REDEMPTION_DATA = [
+  { task: "Day pass", guest: 30, member: 30 },
+  { task: "Get a coffee ($5)", guest: null, member: 100 },
+  { task: "Lunch on us ($10)", guest: null, member: 200 },
+  { task: "Mentorship / accountability session", guest: null, member: 500 },
+  { task: "Your own private desk for the month", guest: null, member: 1800 },
 ] as const;
 
 const CreditValue = ({ value }: { value: number | null }) => {
@@ -21,43 +28,45 @@ const CreditValue = ({ value }: { value: number | null }) => {
   );
 };
 
-export const CreditsEarningChart = () => {
-  return (
-    <Accordion type="single" collapsible>
-      <AccordionItem value="earning-chart" className="border rounded-lg px-3">
-        <AccordionTrigger className="py-3 text-sm font-medium hover:no-underline">
-          <div className="text-left">
-            <span>How to earn</span>
-            <span className="block text-xs font-normal text-muted-foreground">See the earning chart (Guest vs Member)</span>
-          </div>
-        </AccordionTrigger>
-        <AccordionContent>
-          <div className="rounded-lg border overflow-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-xs font-semibold">Task</TableHead>
-                  <TableHead className="text-xs font-semibold text-center w-[80px]">Guest</TableHead>
-                  <TableHead className="text-xs font-semibold text-center w-[80px]">Member</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {CREDITS_EARNING_DATA.map((row) => (
-                  <TableRow key={row.task}>
-                    <TableCell className="text-xs py-2">{row.task}</TableCell>
-                    <TableCell className="text-xs text-center py-2">
-                      <CreditValue value={row.guest} />
-                    </TableCell>
-                    <TableCell className="text-xs text-center py-2">
-                      <CreditValue value={row.member} />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </AccordionContent>
-      </AccordionItem>
-    </Accordion>
-  );
-};
+const CreditsTable = ({ data, firstColumnHeader }: { data: readonly { task: string; guest: number | null; member: number | null }[]; firstColumnHeader: string }) => (
+  <div className="rounded-lg border overflow-auto">
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead className="text-xs font-semibold">{firstColumnHeader}</TableHead>
+          <TableHead className="text-xs font-semibold text-center w-[80px]">Guest</TableHead>
+          <TableHead className="text-xs font-semibold text-center w-[80px]">Member</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {data.map((row) => (
+          <TableRow key={row.task}>
+            <TableCell className="text-xs py-2">{row.task}</TableCell>
+            <TableCell className="text-xs text-center py-2">
+              <CreditValue value={row.guest} />
+            </TableCell>
+            <TableCell className="text-xs text-center py-2">
+              <CreditValue value={row.member} />
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  </div>
+);
+
+export const CreditsEarningChart = () => (
+  <div className="space-y-2">
+    <h4 className="text-sm font-medium text-foreground">How to earn Haven Credits</h4>
+    <p className="text-xs text-muted-foreground">Credits vary by role (Guest vs Member).</p>
+    <CreditsTable data={CREDITS_EARNING_DATA} firstColumnHeader="Task" />
+  </div>
+);
+
+export const CreditsRedemptionChart = () => (
+  <div className="space-y-2">
+    <h4 className="text-sm font-medium text-foreground">How to redeem Haven Credits</h4>
+    <p className="text-xs text-muted-foreground">Redemption options vary by role (Guest vs Member).</p>
+    <CreditsTable data={CREDITS_REDEMPTION_DATA} firstColumnHeader="Redemption" />
+  </div>
+);
