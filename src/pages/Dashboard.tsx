@@ -346,9 +346,9 @@ export default function Dashboard() {
               {/* Show Livestream OR Haven Updates based on replace mode */}
               {shouldReplaceDashboard && !isGuest ? (
                 <LivestreamPanel mode="full" />
-              ) : hasHavenUpdate ? (
+              ) : (
                 <HavenUpdates onVisibilityChange={handleHavenUpdateVisibilityChange} />
-              ) : null}
+              )}
               
               <div className="h-[400px]">
                 <Feed userId={userId} userName={userName} isGuestViewer={isGuest} />
