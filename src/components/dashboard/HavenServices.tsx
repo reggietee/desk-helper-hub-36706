@@ -13,6 +13,7 @@ import {
   Handshake,
   Lock,
   Briefcase,
+  ExternalLink,
 } from 'lucide-react';
 import {
   Dialog,
@@ -125,12 +126,19 @@ export function HavenServices({ isGuest }: HavenServicesProps) {
   const navigate = useNavigate();
   const [lockedModalOpen, setLockedModalOpen] = useState(false);
   const [selectedLockedService, setSelectedLockedService] = useState<ServiceCard | null>(null);
+  const [guestDayPassOpen, setGuestDayPassOpen] = useState(false);
 
   const handleCardClick = (service: ServiceCard) => {
     // If guest and service is not guest-accessible, show modal
     if (isGuest && !service.guestAccessible) {
       setSelectedLockedService(service);
       setLockedModalOpen(true);
+      return;
+    }
+
+    // Guest clicking Day Pass → show purchase modal
+    if (isGuest && service.id === 'day-pass') {
+      setGuestDayPassOpen(true);
       return;
     }
     
@@ -243,6 +251,35 @@ export function HavenServices({ isGuest }: HavenServicesProps) {
                 Got it
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Guest Day Pass Purchase Modal */}
+      <Dialog open={guestDayPassOpen} onOpenChange={setGuestDayPassOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5" />
+              Day Pass
+            </DialogTitle>
+            <DialogDescription asChild>
+              <div className="pt-3 space-y-3 text-sm leading-relaxed">
+                <p className="font-semibold text-foreground">Day Pass: $30 + HST</p>
+                <p>Access: Monday–Friday, 9am–6pm</p>
+                <p>After payment, you'll be redirected to our form + community guidelines to choose your arrival date/time.</p>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="pt-2 border-t border-border mt-4 space-y-3">
+            <Button
+              className="w-full"
+              onClick={() => window.open('https://buy.stripe.com/28E5kD7R57TA4Fq3Rr0Ny0p', '_blank')}
+            >
+              Buy Day Pass
+              <ExternalLink className="h-4 w-4 ml-1" />
+            </Button>
+            <p className="text-xs text-muted-foreground text-center">Secure checkout via Stripe</p>
           </div>
         </DialogContent>
       </Dialog>
