@@ -127,6 +127,7 @@ export function HavenServices({ isGuest }: HavenServicesProps) {
   const [lockedModalOpen, setLockedModalOpen] = useState(false);
   const [selectedLockedService, setSelectedLockedService] = useState<ServiceCard | null>(null);
   const [guestDayPassOpen, setGuestDayPassOpen] = useState(false);
+  const [guestBoardroomOpen, setGuestBoardroomOpen] = useState(false);
 
   const handleCardClick = (service: ServiceCard) => {
     // If guest and service is not guest-accessible, show modal
@@ -139,6 +140,12 @@ export function HavenServices({ isGuest }: HavenServicesProps) {
     // Guest clicking Day Pass → show purchase modal
     if (isGuest && service.id === 'day-pass') {
       setGuestDayPassOpen(true);
+      return;
+    }
+
+    // Guest clicking Boardroom → show purchase modal
+    if (isGuest && service.id === 'boardroom') {
+      setGuestBoardroomOpen(true);
       return;
     }
     
@@ -277,6 +284,35 @@ export function HavenServices({ isGuest }: HavenServicesProps) {
               onClick={() => window.open('https://buy.stripe.com/28E5kD7R57TA4Fq3Rr0Ny0p', '_blank')}
             >
               Buy Day Pass
+              <ExternalLink className="h-4 w-4 ml-1" />
+            </Button>
+            <p className="text-xs text-muted-foreground text-center">Secure checkout via Stripe</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Guest Boardroom Purchase Modal */}
+      <Dialog open={guestBoardroomOpen} onOpenChange={setGuestBoardroomOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Boardroom
+            </DialogTitle>
+            <DialogDescription asChild>
+              <div className="pt-3 space-y-3 text-sm leading-relaxed">
+                <p className="font-semibold text-foreground">Boardroom booking: $35/hour</p>
+                <p>Ideal for meetings up to 6–8 people.</p>
+                <p>After payment, you'll be redirected to our booking form to choose your date/time.</p>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="pt-2 border-t border-border mt-4 space-y-3">
+            <Button
+              className="w-full"
+              onClick={() => window.open('https://buy.stripe.com/dRm3cvc7l2zggo8cnX0Ny0e', '_blank')}
+            >
+              Book Boardroom
               <ExternalLink className="h-4 w-4 ml-1" />
             </Button>
             <p className="text-xs text-muted-foreground text-center">Secure checkout via Stripe</p>
