@@ -222,7 +222,7 @@ export function HavenServices({ isGuest }: HavenServicesProps) {
                 <CardDescription className={`text-base leading-relaxed ${
                   isLocked ? 'text-muted-foreground/70' : 'text-muted-foreground'
                 }`}>
-                  {isLocked ? service.lockedTeaser : (isGuest && service.id === 'day-pass') ? 'Buy a day pass' : service.description}
+                  {isLocked ? service.lockedTeaser : (isGuest && service.id === 'day-pass') ? 'Cowork from Haven for the day and get stuff done.' : service.description}
                 </CardDescription>
                 
                 {/* Subtle hint for locked cards */}
