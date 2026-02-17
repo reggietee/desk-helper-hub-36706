@@ -82,7 +82,7 @@ export const CreditsHistory = ({ userId, refreshKey = 0 }: CreditsHistoryProps) 
       case "weekly_planning":
         return "Weekly planning";
       case "onboarding_bonus":
-        return "Onboarding bonus";
+        return "New Member Quest";
       default:
         return reason;
     }

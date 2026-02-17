@@ -196,8 +196,8 @@ Deno.serve(async (req) => {
           .update({ balance: newBalance, updated_at: now })
           .eq("user_id", user.id);
 
-        // Create ledger entry with unique reference
-        const { data: ledgerEntry } = await supabaseClient
+        // Create ledger entry with unique constraint protection (ON CONFLICT DO NOTHING)
+        const { data: ledgerEntry, error: ledgerError } = await supabaseClient
           .from("haven_credits_ledger")
           .insert({
             user_id: user.id,
@@ -208,6 +208,21 @@ Deno.serve(async (req) => {
           })
           .select("id")
           .single();
+
+        // If ledger insert failed due to unique constraint, bonus was already awarded
+        if (ledgerError) {
+          console.log("[onboarding-progress] Bonus already awarded (duplicate prevented):", ledgerError.message);
+          // Update the flag anyway to prevent future attempts
+          await supabaseClient
+            .from("onboarding_progress")
+            .update({ bonus_awarded_at: now })
+            .eq("user_id", user.id);
+          
+          return new Response(
+            JSON.stringify({ progress, completed: true, bonusAwarded: true, bonusJustAwarded: false }),
+            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
 
         // Mark bonus as awarded
         await supabaseClient
