@@ -53,10 +53,16 @@ export function OnboardingChecklist({ userId, onCreditsEarned, onOpenProfile, on
   const [hasAnimated, setHasAnimated] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
+  const fetchInFlightRef = useRef(false);
+
   const fetchProgress = useCallback(async () => {
+    // Prevent concurrent calls (race condition that caused multiple awards)
+    if (fetchInFlightRef.current) return;
+    fetchInFlightRef.current = true;
+
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session) { fetchInFlightRef.current = false; return; }
 
       const response = await supabase.functions.invoke("onboarding-progress", {
         headers: { Authorization: `Bearer ${session.access_token}` },
@@ -103,22 +109,12 @@ export function OnboardingChecklist({ userId, onCreditsEarned, onOpenProfile, on
       setHidden(true);
     } finally {
       setLoading(false);
+      fetchInFlightRef.current = false;
     }
   }, [userId, onCreditsEarned]);
 
   useEffect(() => {
     fetchProgress();
-    const handleFocus = () => fetchProgress();
-    window.addEventListener("focus", handleFocus);
-    return () => window.removeEventListener("focus", handleFocus);
-  }, [fetchProgress]);
-
-  useEffect(() => {
-    const handleVisibility = () => {
-      if (document.visibilityState === "visible") fetchProgress();
-    };
-    document.addEventListener("visibilitychange", handleVisibility);
-    return () => document.removeEventListener("visibilitychange", handleVisibility);
   }, [fetchProgress]);
 
   // Entrance animation (once per session)
