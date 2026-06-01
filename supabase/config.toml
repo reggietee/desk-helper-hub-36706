@@ -1,5 +1,8 @@
 project_id = "qzqucuiwgdilgramnizm"
 
+[functions.export-all]
+verify_jwt = false
+
 [functions.send-calendar-invite]
 verify_jwt = true
 
